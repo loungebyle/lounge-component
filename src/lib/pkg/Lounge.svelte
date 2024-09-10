@@ -3,13 +3,14 @@
 
 	import { onDestroy, onMount } from 'svelte';
   import * as api from '../assets/js/api';
-  // import * as utils from '../assets/js/utils';
-  import SampleText from '../components/SampleText.svelte';
-  import sample_image from '../assets/images/sample.png';
+  import * as utils from '../assets/js/utils';
+  // import SampleText from '../components/SampleText.svelte';
+  // import sample_image from '../assets/images/sample.png';
 
 	// exports
 
-  export let sample_text = `Sample text`;
+  export let api_key = ``;
+	export let context = ``; // <`component`, `frame`, `fullscreen`>
 
 	// consts
 
@@ -20,6 +21,13 @@
 	let is_active = false;
 	let data;
 	let user;
+	let project;
+	let room_id = ``;
+	let staff_projects = [];
+	let bookmarked_projects = [];
+	let explorable_projects = [];
+
+	let is_toggled = false;
 
 	// dynamics
 	// none
@@ -59,20 +67,22 @@
 
 			if (!(user && user.id)) {
 				user = null;
-			}
-
-			data = await api.restPost({
-				url: `load`,
-				payload: {
-					type: `component_sample`, // note: returns `{text}` as defined in ollesocket->adhoc
-					obj: {
-						sample_var: sample_text || ``
+			} else {
+				data = await api.restPost({
+					url: `load`,
+					payload: {
+						type: `lounge_main`,
+						obj: {
+							project_api_key: api_key || ``,
+							user_id: utils.clone(user.id) || ``,
+							room_id: ``, // note: empty on first load
+						}
 					}
-				}
-			}) || null;
+				}) || null;
 
-			if (data) {
-				// todo: data
+				if (data) {
+					// todo: data
+				}
 			}
 
 			jobs = jobs.filter(j => j !== `get_data`);
@@ -85,52 +95,69 @@
 	// none
 
 	// funcs
-	// none
+	
+	function toggle() {
+		try {
+			is_toggled = !is_toggled;
+		} catch (e) {
+			console.log(e);
+		}
+	}
 </script>
 
 {#if
   !IN_MAINTENANCE &&
-  !jobs.includes(`get_data`) &&
-  data
+  !jobs.includes(`get_data`)
 }
-  <!-- lounge -->
-  <div class="container  row--  row-centre--  text  text-black--  card  white--  lounge">
-    <!-- image -->
-    <img
-      src={sample_image}
-      alt=""
-      class="o-image"
-    />
+	<!-- lounge -->
+	<div class="container  col--  lounge  l-{context}--">
+		<!-- background -->
+		<!-- tba -->
 
-    <!-- sampletext -->
-    <SampleText
-      d={{
-        text: (data || {}).text || ``
-      }}
-    />
-  </div>
+		<!-- toggle -->
+		<!-- tba -->
+
+		<!-- panel -->
+		<div class="container  row--  row-centre--  text  text-white--  card  black--  panel">
+			<!-- top -->
+			<div class="container  stretch--  row--  row-left--  p-top">
+				<!-- top -> text -->
+				<!-- tba -->
+	
+				<!-- top -> close -->
+				<div
+					class="p-to__close"
+					on:click={() => {
+						try {
+							toggle();
+						} catch (e) {
+							console.log(e);
+						}
+					}}
+				>
+					<img
+						src="/images/icons/close.svg"
+						alt=""
+						class="svg  svg-white--"
+					/>
+				</div>
+			</div>
+	
+			{#if !(user && user.id)}
+				<!-- tba: logged-out view -->
+			{:else if
+				data &&
+				project &&
+				project.id	
+			}
+				<!-- tba: full view -->
+			{/if}
+		</div>
+	</div>
 {/if}
  
 <style lang="scss">
 	@import '../assets/scss/all.scss';
 
-  // lounge
-  .lounge.card {
-		@include hover-forward(1.04);
-    position: fixed;
-    top: unset;
-    left: unset;
-    bottom: 2em;
-    right: 2em;
-    padding: 0.35em 0.6em 0.3em;
-    --bg-a1: 1;
-    --bg-a2: 1;
-    --bd-w: 0em;
-  }
-
-  // image
-  .o-image {
-    height: 1em;
-    margin-right: 0.3em;
-  }
+	// tba
 </style>
