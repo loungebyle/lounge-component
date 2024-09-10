@@ -4,7 +4,7 @@
 	import { onDestroy, onMount } from 'svelte';
   import * as api from '../assets/js/api';
   import * as utils from '../assets/js/utils';
-  // import SampleText from '../components/SampleText.svelte';
+  import Avatar from '../components/Avatar.svelte';
   // import sample_image from '../assets/images/sample.png';
 
 	// exports
@@ -240,8 +240,13 @@
 							<!-- overlay (user) -> [row] (1) -->
 							<!-- note: use `p-row` styles -->
 							<div class="container  stretch--  row--  row-left--  p-row">
-								<!-- overlay (user) -> row (1) -> avatar -->
-								<!-- tba -->
+								<!-- overlay (user) -> row (1) -> [avatar] -->
+								<Avatar
+									display="icon"
+									pet="tba"
+									body="tba"
+									size_em={4}
+								/>
 
 								<!-- overlay (user) -> row (1) -> user -->
 								<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ov__user">
@@ -275,7 +280,7 @@
 							<!-- overlay (project) -> [row] (1) -->
 							<!-- note: use `p-row` styles -->
 							<div class="container  stretch--  row--  row-left--  p-row">
-								<!-- overlay (project) -> row (1) -> avatar -->
+								<!-- overlay (project) -> row (1) -> image -->
 								<!-- tba -->
 
 								<!-- overlay (project) -> row (1) -> project -->
