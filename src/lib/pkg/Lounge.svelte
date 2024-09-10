@@ -373,7 +373,17 @@
 								<div class="container  stretch--  row--  row-left--  p-row">
 									<!-- overlay -> user -> row (3) -> cxs -->
 									<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-ov__us-cxs">
-										<!-- tba -->
+										<!-- overlay -> user -> row (3) -> cxs -> text -->
+										<div class="p-ov__us-cx-text">
+											<span>In</span>
+											<span>{(overlay_user.nft_cxs || []).length || 0}</span>
+											<span class="text  text-white--">NFT collections</span>
+										</div>
+
+										<!-- overlay -> user -> row (3) -> cxs -> list -->
+										<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
+											<!-- tba -->
+										</div>
 									</div>
 
 									<!-- overlay -> user -> row (3) -> xp -->
