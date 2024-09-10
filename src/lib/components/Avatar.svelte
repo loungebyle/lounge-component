@@ -8,8 +8,8 @@
 	// exports
 
   export let display = ``; // <`lounge`, `icon`, `preview`>
-  export let pet = null; // note: leave null to not display pet
   export let body = null; // note: leave null to not display body
+  export let pet = null; // note: leave null to not display pet
   export let size_em = 1; // note: 1:1 aspect ratio, hence this defines both width and height
 
 	// consts

@@ -5,7 +5,12 @@
   import * as api from '../assets/js/api';
   import * as utils from '../assets/js/utils';
   import Avatar from '../components/Avatar.svelte';
-  // import sample_image from '../assets/images/sample.png';
+  import Loader from '../components/Loader.svelte';
+
+	// icon imports
+
+  import close_icon from '../assets/images/icons/close.svg';
+  import friend_icon from '../assets/images/icons/friend.svg';
 
 	// exports
 
@@ -15,6 +20,11 @@
 	// consts
 
 	const IN_MAINTENANCE = false;
+
+	const ICONS = {
+		close: close_icon,
+		friend: friend_icon
+	}
 
 	// vars
 
@@ -145,6 +155,7 @@
 				}) || null;
 
 				if (data) {
+					user = data.user || null;
 					project = data.project || null;
 					room_id = data.room_id || ``;
 					staffed_projects = data.staffed_projects || [];
@@ -229,7 +240,7 @@
 								}}
 							>
 								<img
-									src="/images/icons/close.svg"
+									src={ICONS.close}
 									alt=""
 									class="svg  svg-white--"
 								/>
@@ -237,74 +248,172 @@
 						</div>
 
 						{#if overlay_user && overlay_user.id}
-							<!-- overlay (user) -> [row] (1) -->
-							<!-- note: use `p-row` styles -->
-							<div class="container  stretch--  row--  row-left--  p-row">
-								<!-- overlay (user) -> row (1) -> [avatar] -->
-								<Avatar
-									display="icon"
-									pet="tba"
-									body="tba"
-									size_em={4}
-								/>
+							<!-- overlay -> user -->
+							<div class="container  stretch--  col--  p-ov__user">
+								<!-- overlay -> user -> [row] (1) -->
+								<!-- note: use `p-row` styles -->
+								<div class="container  stretch--  row--  row-left--  p-row">
+									{#if ((overlay_user.default_avatar || {}).parts || []).some(p =>
+										p.type === `body`
+									)}
+										<!-- overlay -> user -> row (1) -> [avatar] -->
+										<Avatar
+											display="icon"
+											body={overlay_user.default_avatar.parts.find(p => p.type === `body`)}
+											pet={overlay_user.default_avatar.parts.find(p => p.type === `pet`)}
+											size_em={4}
+										/>
+									{/if}
 
-								<!-- overlay (user) -> row (1) -> user -->
-								<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ov__user">
-									<div class="text  text-white--">{overlay_user.name || `n/a`}</div>
-									<div>@{overlay_user.code || `n/a`}</div>
+									<!-- overlay -> user -> row (1) -> profile -->
+									<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ov__us-profile">
+										<div class="text  text-white--">{overlay_user.name || `n/a`}</div>
+										<div>@{overlay_user.code || `n/a`}</div>
+									</div>
+								</div>
+
+								<!-- overlay -> user -> [row] (2) -->
+								<!-- note: use `p-row` styles -->
+								<div class="container  stretch--  row--  row-left--  p-row">
+									<!-- overlay -> user -> row (2) -> friend -->
+									<div
+										class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-ov__us-friend"
+										class:p-pending--={(user.relationships || []).some(r =>
+											(r.users || []).some(ru =>
+												ru.id === overlay_user.id
+											) &&
+											(r.status === `pending`)
+										)}
+										class:p-accepted--={(user.relationships || []).some(r =>
+											(r.users || []).some(ru =>
+												ru.id === overlay_user.id
+											) &&
+											(r.status === `accepted`)
+										)}
+										on:click={() => {
+											try {
+												if (!(user.relationships || []).some(r =>
+													(r.users || []).some(ru =>
+														ru.id === overlay_user.id
+													)
+												)) {
+													// tba: add as friend
+												}
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<span class="text  text-white--">
+											{#if (user.relationships || []).some(r =>
+												(r.users || []).some(ru =>
+													ru.id === overlay_user.id
+												) &&
+												(r.status === `accepted`)
+											)}
+												Added as a
+											{:else if (user.relationships || []).some(r =>
+												(r.users || []).some(ru =>
+													ru.id === overlay_user.id
+												) &&
+												(r.status === `pending`)
+											)}
+												Adding... as a
+											{:else}
+												Add as a
+											{/if}
+										</span>
+
+										<img
+											src={ICONS.friend}
+											alt=""
+											class="svg  svg-yellow"
+										/>
+
+										<span>friend</span>
+									</div>
+
+									{#if (user.relationships || []).some(r =>
+										(r.users || []).some(ru =>
+											ru.id === overlay_user.id
+										)
+									)}
+										<!-- overlay -> user -> row (2) -> remove -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-ov__us-remove"
+											on:click={async () => {
+												try {
+
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`del_relationship_${(user.relationships || []).find(r =>
+													(r.users || []).some(ru =>
+														ru.id === overlay_user.id
+													)
+												).id}`)}
+													<Loader />
+												{:else}
+													<img
+														src={ICONS.close}
+														alt=""
+														class="svg  svg-red-light--"
+													/>
+												{/if}
+											</div>
+										</div>
+									{/if}
+								</div>
+
+								<!-- overlay -> user -> [row] (3) -->
+								<!-- note: use `p-row` styles -->
+								<div class="container  stretch--  row--  row-left--  p-row">
+									<!-- overlay -> user -> row (3) -> cxs -->
+									<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-ov__us-cxs">
+										<!-- tba -->
+									</div>
+
+									<!-- overlay -> user -> row (3) -> xp -->
+									<div class="container  stretch--  col--  text  text-green--  card  green--  p-ov__us-xp">
+										<!-- tba -->
+									</div>
 								</div>
 							</div>
-
-							<!-- overlay (user) -> [row] (2) -->
-							<!-- note: use `p-row` styles -->
-							<div class="container  stretch--  row--  row-left--  p-row">
-								<!-- overlay (user) -> row (2) -> friend -->
-								<!-- tba -->
-
-								{#if false}
-									<!-- overlay (user) -> row (2) -> remove -->
-									<!-- tba -->
-								{/if}
-							</div>
-
-							<!-- overlay (user) -> [row] (3) -->
-							<!-- note: use `p-row` styles -->
-							<div class="container  stretch--  row--  row-left--  p-row">
-								<!-- overlay (user) -> row (3) -> cxs -->
-								<!-- tba -->
-
-								<!-- overlay (user) -> row (3) -> xp -->
-								<!-- tba -->
-							</div>
 						{:else if overlay_project && overlay_project.id}
-							<!-- overlay (project) -> [row] (1) -->
-							<!-- note: use `p-row` styles -->
-							<div class="container  stretch--  row--  row-left--  p-row">
-								<!-- overlay (project) -> row (1) -> image -->
-								<!-- tba -->
+							<!-- overlay -> project -->
+							<div class="container  stretch--  col--  p-ov__project">
+								<!-- overlay -> project -> [row] (1) -->
+								<!-- note: use `p-row` styles -->
+								<div class="container  stretch--  row--  row-left--  p-row">
+									<!-- overlay -> project -> row (1) -> image -->
+									<!-- tba -->
 
-								<!-- overlay (project) -> row (1) -> project -->
-								<!-- tba -->
-							</div>
+									<!-- overlay -> project -> row (1) -> profile -->
+									<!-- tba -->
+								</div>
 
-							<!-- overlay (project) -> [row] (2) -->
-							<!-- note: use `p-row` styles -->
-							<div class="container  stretch--   row--  row-left--  p-row">
-								<!-- overlay (project) -> row (2) -> users -->
-								<!-- tba -->
+								<!-- overlay -> project -> [row] (2) -->
+								<!-- note: use `p-row` styles -->
+								<div class="container  stretch--   row--  row-left--  p-row">
+									<!-- overlay -> project -> row (2) -> users -->
+									<!-- tba -->
 
-								<!-- overlay (project) -> row (2) -> rooms -->
-								<!-- tba -->
-							</div>
+									<!-- overlay -> project -> row (2) -> rooms -->
+									<!-- tba -->
+								</div>
 
-							<!-- overlay (project) -> [row] (3) -->
-							<!-- note: use `p-row` styles -->
-							<div class="container  stretch--  row--  row-left--  p-row">
-								<!-- overlay (project) -> row (3) -> cxs -->
-								<!-- tba -->
+								<!-- overlay -> project -> [row] (3) -->
+								<!-- note: use `p-row` styles -->
+								<div class="container  stretch--  row--  row-left--  p-row">
+									<!-- overlay -> project -> row (3) -> cxs -->
+									<!-- tba -->
 
-								<!-- overlay (project) -> row (3) -> xp -->
-								<!-- tba -->
+									<!-- overlay -> project -> row (3) -> xp -->
+									<!-- tba -->
+								</div>
 							</div>
 						{/if}
 					</div>
@@ -339,7 +448,7 @@
 					}}
 				>
 					<img
-						src="/images/icons/close.svg"
+						src={ICONS.close}
 						alt=""
 						class="svg  svg-white--"
 					/>
