@@ -79,7 +79,7 @@
 	// tba
 
 	// vars (rooms)
-	// tba
+	let editing_room;
 
 	// vars (project_settings)
 	// tba
@@ -391,49 +391,167 @@
 
 					<!-- panel -> account -> inputs -->
 					<div class="container  stretch--  col--  p-ac__inputs">
-						<!-- panel -> account -> [input] (name) -->
+						<!-- panel -> account -> inputs -> [input] (name) -->
 						<!-- tba -->
 
-						<!-- panel -> account -> [input] (code) -->
+						<!-- panel -> account -> inputs -> [input] (code) -->
 						<!-- tba -->
 
-						<!-- panel -> account -> [input] (link url) -->
+						<!-- panel -> account -> inputs -> [input] (link url) -->
 						<!-- todo -->
 
-						<!-- panel -> account -> connection (google) -->
+						<!-- panel -> account -> inputs -> connection (google) -->
 						<!-- tba -->
 
-						<!-- panel -> account -> connection (discord) -->
+						<!-- panel -> account -> inputs -> connection (discord) -->
 						<!-- tba -->
 
-						<!-- panel -> account -> connection (solana) -->
+						<!-- panel -> account -> inputs -> connection (solana) -->
 						<!-- tba -->
 					</div>
 				</div>
 			{:else if view === `projects`}
 				<!-- panel -> projects -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-projects">
+					<!-- panel -> projects -> [heading] -->
+					<!-- tba -->
+
+					<!-- panel -> projects -> [tabs] -->
+					<!-- tba -->
+
+					<!-- panel -> projects -> add -->
+					<!-- tba -->
+
+					<!-- panel -> projects -> list -->
+					<!-- tba -->
+				</div>
 			{:else if view === `users`}
 				<!-- panel -> users -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-users">
+					<!-- panel -> users -> [heading] -->
+					<!-- tba -->
+
+					<!-- panel -> users -> sections -->
+					<!-- tba -->
+				</div>
 			{:else if view === `friends`}
 				<!-- panel -> friends -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-friends">
+					<!-- panel -> friends -> [heading] -->
+					<!-- tba -->
+
+					<!-- panel -> friends -> tabs -->
+					<!-- tba -->
+
+					<!-- panel -> friends -> sections -->
+					<!-- tba -->
+				</div>
 			{:else if view === `rooms`}
 				<!-- panel -> rooms -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-rooms">
+					<!-- panel -> rooms -> [heading] -->
+					<!-- tba -->
+
+					{#if editing_room && editing_room.id}
+						<!-- panel -> rooms -> inputs -->
+						<div class="container  stretch--  col--  p-ro__inputs">
+							<!-- panel -> rooms -> inputs -> [input] name -->
+							<!-- tba -->
+
+							<!-- panel -> rooms -> inputs -> [input] desc -->
+							<!-- tba -->
+
+							<!-- panel -> rooms -> inputs -> [input] nft -->
+							<!-- tba -->
+
+							<!-- panel -> rooms -> inputs -> bar -->
+							<!-- tba -->
+
+							<!-- panel -> rooms -> inputs -> edit -->
+							<!-- tba -->
+						</div>
+					{:else}
+						{#if false}
+							<!-- panel -> rooms -> add -->
+							<!-- tba -->
+						{/if}
+
+						<!-- panel -> rooms -> list -->
+						<!-- tba -->
+					{/if}
+				</div>
 			{:else if view === `project_settings`}
 				<!-- panel -> psettings -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-psettings">
+					<!-- panel -> psettings -> [heading] -->
+					<!-- tba -->
+
+					<!-- panel -> psettings -> tabs -->
+					<!-- tba -->
+
+					<!-- panel -> psettings -> inputs -->
+					<div class="container  stretch--  col--  p-ps__main">
+						<!-- panel -> psettings -> inputs -> [input] (name) -->
+						<!-- tba -->
+
+						<!-- panel -> psettings -> inputs -> [input] (code) -->
+						<!-- tba -->
+
+						<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
+						<!-- tba -->
+
+						<!-- panel -> psettings -> inputs -> [input] (description) -->
+						<!-- tba -->
+
+						<!-- panel -> psettings -> inputs -> rooms -->
+						<!-- tba -->
+
+						<!-- panel -> psettings -> inputs -> status -->
+						<!-- tba -->
+					</div>
+				</div>
 			{:else if view === `shop`}
 				<!-- panel -> shop -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-shop">
+					<!-- panel -> shop -> [heading] -->
+					<!-- tba -->
+
+					<!-- panel -> shop -> note (checkout email) -->
+					<!-- tba -->
+
+					<!-- panel -> shop -> list (checkout) -->
+					<!-- tba -->
+
+					<!-- panel -> shop -> note (stripe redirect) -->
+					<!-- tba -->
+
+					<!-- panel -> shop -> list (nft) -->
+					<!-- tba -->
+
+					<!-- panel -> shop -> note (tensor redirect) -->
+					<!-- tba -->
+				</div>
 			{:else if view === `help`}
 				<!-- panel -> help -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-help">
+					<!-- panel -> help -> [heading] -->
+					<!-- tba -->
+
+					<!-- panel -> help -> list -->
+					<!-- tba -->
+				</div>
 			{:else if view === `lounge_settings`}
 				<!-- panel -> lsettings -->
-				<!-- tba -->
+				<div class="container  stretch--  col--  p-lsettings">
+					<!-- panel -> lsettings -> [heading] -->
+					<!-- tba -->
+
+					<!-- panel -> lsettings -> section (display) -->
+					<!-- tba -->
+					
+					<!-- panel -> lsettings -> section (audio) -->
+					<!-- tba -->
+				</div>
 			{/if}
 		</div>
 	</div>
