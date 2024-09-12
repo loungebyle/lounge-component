@@ -12,7 +12,9 @@
 
   import close_icon from '../assets/images/icons/close.svg';
   import friend_icon from '../assets/images/icons/friend.svg';
+	import rooms_icon from '../assets/images/icons/rooms.svg';
   import xp_icon from '../assets/images/icons/xp.svg';
+	import users_icon from '../assets/images/icons/users.svg';
 
 	// exports
 
@@ -26,7 +28,9 @@
 	const ICONS = {
 		close: close_icon,
 		friend: friend_icon,
-		xp: xp_icon
+		rooms: rooms_icon,
+		xp: xp_icon,
+		users: users_icon
 	}
 
 	// vars
@@ -107,7 +111,7 @@
 	// todo
 
 	// dynamics
-	// none
+	// tba
 
 	// mount
 
@@ -424,7 +428,7 @@
 										<!-- overlay -> user -> row (3) -> xp -> label -->
 										<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
 											<img
-												src={xp_icon}
+												src={ICONS.xp}
 												alt=""
 											/>
 											<div>XP</div>
@@ -445,20 +449,55 @@
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--  row--  row-left--  p-row">
 									<!-- overlay -> project -> row (1) -> image -->
-									<!-- tba -->
+									<img
+										src={overlay_project.icon_image_url || FALLBACK_USER_IMAGE}
+										alt=""
+										class="p-ov__pr-image"
+									/>
 
 									<!-- overlay -> project -> row (1) -> profile -->
-									<!-- tba -->
+									<!-- note: use `p-ov__us-profile` styles -->
+									<div class="container  grow--  stretch  col--  text  text-cream--  card  cream--  p-ov__us-profile">
+										<div class="text  text-white--">{overlay_project.name || `n/a`}</div>
+										<div>@{overlay_project.code || `n/a`}</div>
+									</div>
 								</div>
 
 								<!-- overlay -> project -> [row] (2) -->
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--   row--  row-left--  p-row">
 									<!-- overlay -> project -> row (2) -> users -->
-									<!-- tba -->
+									<div class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-ov__pr-users">
+										<span class="text  text-white--">
+											{(overlay_project.rooms || []).reduce((total_user_count, room) =>
+												total_user_count += (room.users || []).length,
+												0
+											) || 0}
+										</span>
+
+										<img
+											src={ICONS.users}
+											alt=""
+											class="svg  svg-lime-light--"
+										/>
+
+										<span>online</span>
+									</div>
 
 									<!-- overlay -> project -> row (2) -> rooms -->
-									<!-- tba -->
+									<div class="container  stretch--  row-centre-  text  text-blue-light--  card  blue--  p-ov__pr-rooms">
+										<span class="text  text-white--">
+											{(overlay_project.rooms || []).length || 0}
+										</span>
+
+										<img
+											src={ICONS.rooms}
+											alt=""
+											class="svg  svg-blue-light--"
+										/>
+
+										<span>rooms</span>
+									</div>
 								</div>
 
 								<!-- overlay -> project -> [row] (3) -->
