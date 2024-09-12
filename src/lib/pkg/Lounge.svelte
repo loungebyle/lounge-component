@@ -282,9 +282,9 @@
 								<!-- overlay -> user -> [row] (2) -->
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--  row--  row-left--  p-row">
-									<!-- overlay -> user -> row (2) -> friend -->
+									<!-- overlay -> user -> row (2) -> [stat] friend -->
 									<div
-										class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-ov__us-friend"
+										class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-stat  p-ov__us-friend"
 										class:p-pending--={(user.relationships || []).some(r =>
 											(r.users || []).some(ru =>
 												ru.id === overlay_user.id
@@ -411,15 +411,17 @@
 												</div>
 											{/each}
 
-											<!-- item (placeholder) -->
-											<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
-												<!-- item -> image -->
-												<img
-													src={FALLBACK_USER_IMAGE}
-													alt=""
-													class="p-ov__us-cx-li-it-image"
-												/>
-											</div>
+											{#each Array(5 - Math.min((overlay_user.nft_cxs || []).length, 5)) as _}
+												<!-- item (placeholder) -->
+												<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
+													<!-- item -> image -->
+													<img
+														src={FALLBACK_USER_IMAGE}
+														alt=""
+														class="p-ov__us-cx-li-it-image"
+													/>
+												</div>
+											{/each}
 										</div>
 									</div>
 
@@ -466,8 +468,9 @@
 								<!-- overlay -> project -> [row] (2) -->
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--   row--  row-left--  p-row">
-									<!-- overlay -> project -> row (2) -> users -->
-									<div class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-ov__pr-users">
+									<!-- overlay -> project -> row (2) -> [stat] users -->
+									<!-- note: use `p-ma__users` styles -->
+									<div class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users">
 										<span class="text  text-white--">
 											{(overlay_project.rooms || []).reduce((total_user_count, room) =>
 												total_user_count += (room.users || []).length,
@@ -484,8 +487,8 @@
 										<span>online</span>
 									</div>
 
-									<!-- overlay -> project -> row (2) -> rooms -->
-									<div class="container  stretch--  row-centre-  text  text-blue-light--  card  blue--  p-ov__pr-rooms">
+									<!-- overlay -> project -> row (2) -> [stat] rooms -->
+									<div class="container  stretch--  row-centre-  text  text-blue-light--  card  blue--  p-stat  p-ov__pr-rooms">
 										<span class="text  text-white--">
 											{(overlay_project.rooms || []).length || 0}
 										</span>
@@ -504,10 +507,71 @@
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--  row--  row-left--  p-row">
 									<!-- overlay -> project -> row (3) -> cxs -->
-									<!-- tba -->
+									<!-- note: use `p-ov__us-cxs` styles -->
+									<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-ov__us-cxs">
+										<!-- overlay -> project -> row (3) -> cxs -> text -->
+										<div class="p-ov__us-cx-text">
+											<span>In</span>
+											<span>{(overlay_project.nft_cxs || []).length || 0}</span>
+											<span class="text  text-white--">NFT collections</span>
+										</div>
+
+										<!-- overlay -> project -> row (3) -> cxs -> list -->
+										<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
+											{#each utils.shuffleArray((overlay_project.nft_cxs || []).slice(0, 5) || []) as project_nft_cx}
+												<!-- item -->
+												<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
+													<!-- item -> label -->
+													<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
+														<div>
+															{utils.shortenString({
+																string: project_nft_cx.name || ``,
+																length: 15
+															}) || `n/a`}
+														</div>
+													</div>
+
+													<!-- item -> image -->
+													<img
+														src={project_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
+														alt=""
+														class="p-ov__us-cx-li-it-image"
+													/>
+												</div>
+											{/each}
+
+											{#each Array(5 - Math.min((overlay_project.nft_cxs || []).length, 5)) as _}
+												<!-- item (placeholder) -->
+												<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
+													<!-- item -> image -->
+													<img
+														src={FALLBACK_USER_IMAGE}
+														alt=""
+														class="p-ov__us-cx-li-it-image"
+													/>
+												</div>
+											{/each}
+										</div>
+									</div>
 
 									<!-- overlay -> project -> row (3) -> xp -->
-									<!-- tba -->
+									<!-- note: use `p-ov__us-xp` styles -->
+									<div class="container  stretch--  col--  text  text-green--  card  green--  p-ov__us-xp">
+										<!-- overlay -> project -> row (3) -> xp -> label -->
+										<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
+											<img
+												src={ICONS.xp}
+												alt=""
+											/>
+											<div>XP</div>
+										</div>
+
+										<!-- overlay -> project -> row (3) -> xp -> value -->
+										<div class="text  text-white--">
+											--
+											<!-- todo: project xp -->
+										</div>
+									</div>
 								</div>
 							</div>
 						{/if}
@@ -558,19 +622,49 @@
 				<!-- panel -> main -->
 				<div class="container  stretch--  col--  p-main">
 					<!-- panel -> main -> [row] (1) -->
-					<!-- tba -->
+					<div class="container  stretch--  row--  row-left--  p-row">
+						<!-- panel -> main -> row (1) -> image -->
+						<!-- tba -->
+
+						<!-- panel -> main -> row (1) -> project -->
+						<!-- tba -->
+					</div>
 
 					<!-- panel -> main -> [row] (2) -->
-					<!-- tba -->
+					<div class="container  stretch--  row--  row-left--  p-row">
+						<!-- panel -> main -> row (2) -> [stat] users -->
+						<!-- tba -->
+
+						<!-- panel -> main -> row (2) -> [stat] friends -->
+						<!-- tba -->
+					</div>
 
 					<!-- panel -> main -> [row] (3) -->
-					<!-- tba -->
+					<div class="container  stretch--  row--  row-left--  p-row">
+						<!-- panel -> main -> row (3) -> room -->
+						<!-- tba -->
+
+						<!-- panel -> main -> row (3) -> preview -->
+						<!-- tba -->
+					</div>
 
 					<!-- panel -> main -> [row] (4) -->
-					<!-- tba -->
+					<div class="container  stretch--  row--  row-left--  p-row">
+						<!-- panel -> main -> row (4) -> [avatar] -->
+						<!-- tba -->
+
+						<!-- panel -> main -> row (4) -> user -->
+						<!-- tba -->
+					</div>
 
 					<!-- panel -> main -> [row] (5) -->
-					<!-- tba -->
+					<div class="container  stretch--  row--  row-left--  p-row">
+						<!-- panel -> main -> row (5) -> [button] (settings) -->
+						<!-- tba -->
+
+						<!-- panel -> main -> row (5) -> [button] (projects) -->
+						<!-- tba -->
+					</div>
 				</div>
 			{:else if view === `avatar`}
 				<!-- panel -> avatar -->
