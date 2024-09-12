@@ -6,11 +6,13 @@
   import * as utils from '../assets/js/utils';
   import Avatar from '../components/Avatar.svelte';
   import Loader from '../components/Loader.svelte';
+	import { FALLBACK_USER_IMAGE } from '../assets/js/vars';
 
 	// icon imports
 
   import close_icon from '../assets/images/icons/close.svg';
   import friend_icon from '../assets/images/icons/friend.svg';
+  import xp_icon from '../assets/images/icons/xp.svg';
 
 	// exports
 
@@ -23,7 +25,8 @@
 
 	const ICONS = {
 		close: close_icon,
-		friend: friend_icon
+		friend: friend_icon,
+		xp: xp_icon
 	}
 
 	// vars
@@ -43,7 +46,7 @@
 	let overlay_project;
 
 	// vars (main)
-	// tba
+	// todo
 
 	// vars (avatar)
 
@@ -77,31 +80,31 @@
 	let avatar_part_tab = ``; // based on AVATAR_PART_TABS
 
 	// vars (account)
-	// tba
+	// todo
 
 	// vars (projects)
-	// tba
+	// todo
 
 	// vars (users)
-	// tba
+	// todo
 
 	// vars (friends)
-	// tba
+	// todo
 
 	// vars (rooms)
 	let editing_room;
 
 	// vars (project_settings)
-	// tba
+	// todo
 
 	// vars (shop)
-	// tba
+	// todo
 
 	// vars (help)
-	// tba
+	// todo
 
 	// vars (lounge_settings)
-	// tba
+	// todo
 
 	// dynamics
 	// none
@@ -382,13 +385,56 @@
 
 										<!-- overlay -> user -> row (3) -> cxs -> list -->
 										<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
-											<!-- tba -->
+											{#each utils.shuffleArray((overlay_user.nft_cxs || []).slice(0, 5) || []) as user_nft_cx}
+												<!-- item -->
+												<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
+													<!-- item -> label -->
+													<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
+														<div>
+															{utils.shortenString({
+																string: user_nft_cx.name || ``,
+																length: 15
+															}) || `n/a`}
+														</div>
+													</div>
+
+													<!-- item -> image -->
+													<img
+														src={user_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
+														alt=""
+														class="p-ov__us-cx-li-it-image"
+													/>
+												</div>
+											{/each}
+
+											<!-- item (placeholder) -->
+											<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
+												<!-- item -> image -->
+												<img
+													src={FALLBACK_USER_IMAGE}
+													alt=""
+													class="p-ov__us-cx-li-it-image"
+												/>
+											</div>
 										</div>
 									</div>
 
 									<!-- overlay -> user -> row (3) -> xp -->
 									<div class="container  stretch--  col--  text  text-green--  card  green--  p-ov__us-xp">
-										<!-- tba -->
+										<!-- overlay -> user -> row (3) -> xp -> label -->
+										<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
+											<img
+												src={xp_icon}
+												alt=""
+											/>
+											<div>XP</div>
+										</div>
+
+										<!-- overlay -> user -> row (3) -> xp -> value -->
+										<div class="text  text-white--">
+											--
+											<!-- todo: user xp -->
+										</div>
 									</div>
 								</div>
 							</div>
