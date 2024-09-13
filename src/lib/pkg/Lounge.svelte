@@ -10,8 +10,10 @@
 
 	// icon imports
 
+	import bookmark_icon from '../assets/images/icons/bookmark.svg';
   import close_icon from '../assets/images/icons/close.svg';
-  import friend_icon from '../assets/images/icons/friend.svg';
+  import friends_icon from '../assets/images/icons/friend.svg';
+	import hashtag_icon from '../assets/images/icons/hashtag.svg';
 	import rooms_icon from '../assets/images/icons/rooms.svg';
   import xp_icon from '../assets/images/icons/xp.svg';
 	import users_icon from '../assets/images/icons/users.svg';
@@ -26,8 +28,10 @@
 	const IN_MAINTENANCE = false;
 
 	const ICONS = {
+		bookmark: bookmark_icon,
 		close: close_icon,
-		friend: friend_icon,
+		friends: friends_icon,
+		hashtag: hashtag_icon,
 		rooms: rooms_icon,
 		xp: xp_icon,
 		users: users_icon
@@ -48,6 +52,8 @@
 	let view = `main`; // <`main`, `avatar`, `account`, `projects`, `users`, `friends`, `rooms`, `project_settings`, `shop`, `help`, `lounge_settings`>
 	let overlay_user;
 	let overlay_project;
+
+	let user_staff_type = ``;
 
 	// vars (main)
 	// todo
@@ -111,7 +117,21 @@
 	// todo
 
 	// dynamics
-	// tba
+	
+	$: if (project || user) {
+		if (
+			project &&
+			project.id &&
+			user &&
+			user.id
+		) {
+			user_staff_type = (project.staff_users || []).slice().find(su =>
+				su.id === user.id
+			).type || ``;
+		} else {
+			user_staff_type = ``;
+		}
+	}
 
 	// mount
 
@@ -260,20 +280,20 @@
 								<!-- overlay -> user -> [row] (1) -->
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--  row--  row-left--  p-row">
-									{#if ((overlay_user.default_avatar || {}).parts || []).some(p =>
+									{#if ((overlay_user.project_avatar || {}).parts || []).some(p =>
 										p.type === `body`
 									)}
 										<!-- overlay -> user -> row (1) -> [avatar] -->
 										<Avatar
 											display="icon"
-											body={overlay_user.default_avatar.parts.find(p => p.type === `body`)}
-											pet={overlay_user.default_avatar.parts.find(p => p.type === `pet`)}
+											body={overlay_user.project_avatar.parts.find(p => p.type === `body`)}
+											pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`)}
 											size_em={4}
 										/>
 									{/if}
 
-									<!-- overlay -> user -> row (1) -> profile -->
-									<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ov__us-profile">
+									<!-- overlay -> user -> row (1) -> [panel] profile -->
+									<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-panel  p-ov__us-profile">
 										<div class="text  text-white--">{overlay_user.name || `n/a`}</div>
 										<div>@{overlay_user.code || `n/a`}</div>
 									</div>
@@ -304,7 +324,7 @@
 														ru.id === overlay_user.id
 													)
 												)) {
-													// tba: add as friend
+													// tba: add user relationship
 												}
 											} catch (e) {
 												console.log(e);
@@ -332,7 +352,7 @@
 										</span>
 
 										<img
-											src={ICONS.friend}
+											src={ICONS.friends}
 											alt=""
 											class="svg  svg-yellow"
 										/>
@@ -350,7 +370,7 @@
 											class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-ov__us-remove"
 											on:click={async () => {
 												try {
-
+													// tba: del user relationship
 												} catch (e) {
 													console.log(e);
 												}
@@ -378,8 +398,8 @@
 								<!-- overlay -> user -> [row] (3) -->
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--  row--  row-left--  p-row">
-									<!-- overlay -> user -> row (3) -> cxs -->
-									<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-ov__us-cxs">
+									<!-- overlay -> user -> row (3) -> [panel] cxs -->
+									<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-panel  p-ov__us-cxs">
 										<!-- overlay -> user -> row (3) -> cxs -> text -->
 										<div class="p-ov__us-cx-text">
 											<span>In</span>
@@ -425,8 +445,8 @@
 										</div>
 									</div>
 
-									<!-- overlay -> user -> row (3) -> xp -->
-									<div class="container  stretch--  col--  text  text-green--  card  green--  p-ov__us-xp">
+									<!-- overlay -> user -> row (3) -> [panel] xp -->
+									<div class="container  stretch--  col--  text  text-green--  card  green--  p-panel  p-ov__us-xp">
 										<!-- overlay -> user -> row (3) -> xp -> label -->
 										<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
 											<img
@@ -454,7 +474,7 @@
 									<img
 										src={overlay_project.icon_image_url || FALLBACK_USER_IMAGE}
 										alt=""
-										class="p-ov__pr-image"
+										class="container  col--  stretch--  p-ov__pr-image"
 									/>
 
 									<!-- overlay -> project -> row (1) -> profile -->
@@ -624,34 +644,256 @@
 					<!-- panel -> main -> [row] (1) -->
 					<div class="container  stretch--  row--  row-left--  p-row">
 						<!-- panel -> main -> row (1) -> image -->
-						<!-- tba -->
+						<img
+							src={project.icon_image_url || FALLBACK_USER_IMAGE}
+							alt=""
+							class="container  col--  stretch--  p-ma__image"
+						/>
 
 						<!-- panel -> main -> row (1) -> project -->
-						<!-- tba -->
+						<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ma__project">
+							<!-- panel -> main -> row (1) -> project -> actions -->
+							<div class="container  row--  row-right--  p-ma__pr-actions">
+								{#if [`owner`, `admin`, `staff`].includes(user_staff_type)}
+									<!-- panel -> main -> row (1) -> project -> [action] -> edit -->
+									<div
+										class="container  stretch--  row--  row-centre--  text  text-white--  card  yellow--  p-action  p-ma__pr-edit"
+										on:click={() => {
+											try {
+												// tba: toggle edit project
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>Staff</div>
+										<div>Edit</div>
+									</div>
+								{/if}
+
+								<!-- panel -> main -> row (1) -> project -> [action] bookmark -->
+								<div
+									class="container  stretch--  row--  row-centre--  card  yellow--  p-action  p-ma__pr-bookmark"
+									on:click={async () => {
+										try {
+											let job_code = `bookmark_project_${utils.clone(project.id)}`;
+											let other_job_codes = [];
+											
+											if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+												jobs.push(job_code);
+												jobs = jobs;
+
+												// tba: push/pull project bookmark
+
+												jobs = jobs.filter(j => j !== job_code);
+											}
+										} catch (e) {
+											console.log(e);
+										}
+									}}
+								>
+									<div>
+										{#if jobs.includes(`bookmark_project_${project.id}`)}
+											<Loader/>
+										{:else}
+											<img
+												src={ICONS.bookmark}
+												alt=""
+												class="svg  svg-yellow--"
+											/>
+										{/if}
+									</div>
+								</div>
+							</div>
+
+							<!-- panel -> main -> row (1) -> project -> label -->
+							<div class="p-ma__pr-label">
+								This is
+							</div>
+
+							<!-- panel -> main -> row (1) -> project -> name -->
+							<div class="text  text-white--  p-ma__pr-name">
+								{project.name || `n/a`}
+							</div>
+
+							<!-- panel -> main -> row (1) -> project -> [notes] -->
+							<div class="container  stretch--  row--  row-left--  p-pa__notes">
+								<!-- panel -> main -> row (1) -> project -> [note] (verified) -->
+								<!-- todo: project verification -->
+
+								<!-- panel -> main -> row (1) -> project -> [note] (xp) -->
+								<div class="container  row--  row-left--  p-pa__note  p-faded--">
+									<img
+										src={ICONS.xp}
+										alt=""
+										class="svg  svg-cream--"
+									/>
+
+									<div>
+										--
+										<!-- todo: project xp -->
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 
 					<!-- panel -> main -> [row] (2) -->
 					<div class="container  stretch--  row--  row-left--  p-row">
 						<!-- panel -> main -> row (2) -> [stat] users -->
-						<!-- tba -->
+						<div
+							class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users"
+							on:click={() => {
+								try {
+									// tba: goto project users
+								} catch (e) {
+									console.log(e);
+								}
+							}}
+						>
+							<span class="text  text-white--">
+								{(overlay_project.rooms || []).reduce((total_user_count, room) =>
+									total_user_count += (room.users || []).length,
+									0
+								) || 0}
+							</span>
+
+							<img
+								src={ICONS.users}
+								alt=""
+								class="svg  svg-lime-light--"
+							/>
+
+							<span>online</span>
+						</div>
 
 						<!-- panel -> main -> row (2) -> [stat] friends -->
-						<!-- tba -->
+						<div
+							class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-stat  p-ma__friends"
+							on:click={() => {
+								try {
+									// tba: goto friends
+								} catch (e) {
+									console.log(e);
+								}
+							}}
+						>
+							<span class="text  text-white--">
+								{(overlay_project.rooms || []).reduce((total_user_count, room) =>
+									total_user_count += (room.users || []).filter(ru =>
+										(user.retationships || []).some(ur =>
+											(ur.users || []).some(uru =>
+												uru.id === ru.id
+											)
+										)
+									).length,
+									0
+								) || 0}
+							</span>
+
+							<img
+								src={ICONS.friends}
+								alt=""
+								class="svg  svg-yellow--"
+							/>
+
+							<span>friends</span>
+						</div>
 					</div>
 
 					<!-- panel -> main -> [row] (3) -->
 					<div class="container  stretch--  row--  row-left--  p-row">
 						<!-- panel -> main -> row (3) -> room -->
-						<!-- tba -->
+						<div
+							class="container grow--  stretch--  col--  text  text-blue-light--  card  blue--  p-ma__room"
+							on:click={() => {
+								try {
+									// tba: goto project rooms
+								} catch (e) {
+									console.log(e);
+								}
+							}}	
+						>
+							<!-- panel -> main -> row (3) -> room -> top -->
+							<div class="p-ma__ro-top">
+								<div>Inside</div>
+								<div>Click to view list</div>
+							</div>
+
+							<!-- panel -> main -> row (3) -> room -> name -->
+							<div class="text  text-white--  p-ma__ro-name">
+								<img
+									src={ICONS.hashtag}
+									alt=""
+									class="svg  svg-white--"
+								/>
+								<div>
+									{((project.rooms || []).find(r =>
+										r.id === room_id
+									) || {}).name || `unknown`}
+								</div>
+							</div>
+
+							<!-- panel -> main -> row (3) -> room -> [notes] -->
+							<div class="container  stretch--  row--  row-left--  p-pa__notes">
+								<!-- panel -> main -> row (3) -> room -> [note] (users) -->
+								<div class="container  row--  row-left--  p-pa__note">
+									<img
+										src={ICONS.users}
+										alt=""
+										class="svg  svg-blue-light--"
+									/>
+									<div>
+										{(((project.rooms || []).find(r =>
+											r.id === room_id
+										) || {}).users || []).length || 0}
+									</div>
+									<div>online</div>
+								</div>
+
+								<!-- panel -> main -> row (3) -> room -> [note] (friends) -->
+								<div class="container  row--  row-left--  p-pa__note  p-faded--">
+									<img
+										src={ICONS.users}
+										alt=""
+										class="svg  svg-blue-light--"
+									/>
+									<div>
+										{(((project.rooms || []).find(r =>
+											r.id === room_id
+										) || {}).users || []).filter(ru =>
+											(user.relationships || []).some(ur =>
+												(ur.users || []).somme(uru =>
+													uru.id == ru.id
+												)
+											)
+										).length || 0}
+									</div>
+									<div>online</div>
+								</div>
+							</div>
+						</div>
 
 						<!-- panel -> main -> row (3) -> preview -->
-						<!-- tba -->
+						<div
+							class="container  stretch--  col--  card  white--  p-ma__ro-preview"
+							style="
+								background-image: url('{((project.rooms || []).find(r =>
+									r.id === room_id
+								) || {}).background_image_url || ``}');
+							"
+						/>
 					</div>
 
 					<!-- panel -> main -> [row] (4) -->
 					<div class="container  stretch--  row--  row-left--  p-row">
 						<!-- panel -> main -> row (4) -> [avatar] -->
-						<!-- tba -->
+						<Avatar
+							display="icon"
+							body={overlay_user.project_avatar.parts.find(p => p.type === `body`)}
+							pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`)}
+							size_em={5.4}
+						/>
 
 						<!-- panel -> main -> row (4) -> user -->
 						<!-- tba -->
