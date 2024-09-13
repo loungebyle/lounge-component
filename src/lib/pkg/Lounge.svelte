@@ -257,7 +257,7 @@
 							<!-- top -> close -->
 							<div
 								class="p-to__close"
-								on:click={() => {
+								on:click|stopPropagation={() => {
 									try {
 										overlay_user = null;
 										overlay_project = null;
@@ -292,8 +292,8 @@
 										/>
 									{/if}
 
-									<!-- overlay -> user -> row (1) -> [panel] profile -->
-									<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-panel  p-ov__us-profile">
+									<!-- overlay -> user -> row (1) -> [card] profile -->
+									<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-card  p-ov__us-profile">
 										<div class="text  text-white--">{overlay_user.name || `n/a`}</div>
 										<div>@{overlay_user.code || `n/a`}</div>
 									</div>
@@ -317,7 +317,7 @@
 											) &&
 											(r.status === `accepted`)
 										)}
-										on:click={() => {
+										on:click|stopPropagation={() => {
 											try {
 												if (!(user.relationships || []).some(r =>
 													(r.users || []).some(ru =>
@@ -368,7 +368,7 @@
 										<!-- overlay -> user -> row (2) -> remove -->
 										<div
 											class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-ov__us-remove"
-											on:click={async () => {
+											on:click|stopPropagation={async () => {
 												try {
 													// tba: del user relationship
 												} catch (e) {
@@ -398,8 +398,8 @@
 								<!-- overlay -> user -> [row] (3) -->
 								<!-- note: use `p-row` styles -->
 								<div class="container  stretch--  row--  row-left--  p-row">
-									<!-- overlay -> user -> row (3) -> [panel] cxs -->
-									<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-panel  p-ov__us-cxs">
+									<!-- overlay -> user -> row (3) -> [panecard] cxs -->
+									<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-card  p-ov__us-cxs">
 										<!-- overlay -> user -> row (3) -> cxs -> text -->
 										<div class="p-ov__us-cx-text">
 											<span>In</span>
@@ -445,8 +445,8 @@
 										</div>
 									</div>
 
-									<!-- overlay -> user -> row (3) -> [panel] xp -->
-									<div class="container  stretch--  col--  text  text-green--  card  green--  p-panel  p-ov__us-xp">
+									<!-- overlay -> user -> row (3) -> [card] xp -->
+									<div class="container  stretch--  col--  text  text-green--  card  green--  p-card  p-ov__us-xp">
 										<!-- overlay -> user -> row (3) -> xp -> label -->
 										<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
 											<img
@@ -618,7 +618,7 @@
 				<!-- top -> close -->
 				<div
 					class="p-to__close"
-					on:click={() => {
+					on:click|stopPropagation={() => {
 						try {
 							toggle();
 						} catch (e) {
@@ -651,16 +651,25 @@
 						/>
 
 						<!-- panel -> main -> row (1) -> project -->
-						<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ma__project">
-							<!-- panel -> main -> row (1) -> project -> actions -->
-							<div class="container  row--  row-right--  p-ma__pr-actions">
+						<div
+							class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ma__project"
+							on:click|stopPropagation={() => {
+								try {
+									overlay_project = utils.clone(project);
+								} catch (e) {
+									console.log(e);
+								}
+							}}	
+						>
+							<!-- panel -> main -> row (1) -> project -> [actions] -->
+							<div class="container  row--  row-right--  p-ca__actions">
 								{#if [`owner`, `admin`, `staff`].includes(user_staff_type)}
-									<!-- panel -> main -> row (1) -> project -> [action] -> edit -->
+									<!-- panel -> main -> row (1) -> project -> [action] (edit) -->
 									<div
-										class="container  stretch--  row--  row-centre--  text  text-white--  card  yellow--  p-action  p-ma__pr-edit"
-										on:click={() => {
+										class="container  stretch--  row--  row-centre--  text  text-white--  card  yellow--  p-ca__action  p-ma__pr-edit"
+										on:click|stopPropagation={() => {
 											try {
-												// tba: toggle edit project
+												// tba: goto project settings
 											} catch (e) {
 												console.log(e);
 											}
@@ -671,10 +680,10 @@
 									</div>
 								{/if}
 
-								<!-- panel -> main -> row (1) -> project -> [action] bookmark -->
+								<!-- panel -> main -> row (1) -> project -> [action] (bookmark) -->
 								<div
-									class="container  stretch--  row--  row-centre--  card  yellow--  p-action  p-ma__pr-bookmark"
-									on:click={async () => {
+									class="container  stretch--  row--  row-centre--  card  yellow--  p-ca__action  p-ma__pr-bookmark"
+									on:click|stopPropagation={async () => {
 										try {
 											let job_code = `bookmark_project_${utils.clone(project.id)}`;
 											let other_job_codes = [];
@@ -717,12 +726,12 @@
 							</div>
 
 							<!-- panel -> main -> row (1) -> project -> [notes] -->
-							<div class="container  stretch--  row--  row-left--  p-pa__notes">
+							<div class="container  stretch--  row--  row-left--  p-ca__notes">
 								<!-- panel -> main -> row (1) -> project -> [note] (verified) -->
 								<!-- todo: project verification -->
 
 								<!-- panel -> main -> row (1) -> project -> [note] (xp) -->
-								<div class="container  row--  row-left--  p-pa__note  p-faded--">
+								<div class="container  row--  row-left--  p-ca__note  p-faded--">
 									<img
 										src={ICONS.xp}
 										alt=""
@@ -743,7 +752,7 @@
 						<!-- panel -> main -> row (2) -> [stat] users -->
 						<div
 							class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users"
-							on:click={() => {
+							on:click|stopPropagation={() => {
 								try {
 									// tba: goto project users
 								} catch (e) {
@@ -770,7 +779,7 @@
 						<!-- panel -> main -> row (2) -> [stat] friends -->
 						<div
 							class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-stat  p-ma__friends"
-							on:click={() => {
+							on:click|stopPropagation={() => {
 								try {
 									// tba: goto friends
 								} catch (e) {
@@ -803,10 +812,10 @@
 
 					<!-- panel -> main -> [row] (3) -->
 					<div class="container  stretch--  row--  row-left--  p-row">
-						<!-- panel -> main -> row (3) -> room -->
+						<!-- panel -> main -> row (3) -> [card] room -->
 						<div
-							class="container grow--  stretch--  col--  text  text-blue-light--  card  blue--  p-ma__room"
-							on:click={() => {
+							class="container grow--  stretch--  col--  text  text-blue-light--  card  blue--  p-card  p-ma__room"
+							on:click|stopPropagation={() => {
 								try {
 									// tba: goto project rooms
 								} catch (e) {
@@ -830,14 +839,14 @@
 								<div>
 									{((project.rooms || []).find(r =>
 										r.id === room_id
-									) || {}).name || `unknown`}
+									) || {}).name || `n/a`}
 								</div>
 							</div>
 
 							<!-- panel -> main -> row (3) -> room -> [notes] -->
-							<div class="container  stretch--  row--  row-left--  p-pa__notes">
+							<div class="container  stretch--  row--  row-left--  p-ca__notes">
 								<!-- panel -> main -> row (3) -> room -> [note] (users) -->
-								<div class="container  row--  row-left--  p-pa__note">
+								<div class="container  row--  row-left--  p-ca__note">
 									<img
 										src={ICONS.users}
 										alt=""
@@ -852,7 +861,7 @@
 								</div>
 
 								<!-- panel -> main -> row (3) -> room -> [note] (friends) -->
-								<div class="container  row--  row-left--  p-pa__note  p-faded--">
+								<div class="container  row--  row-left--  p-ca__note  p-faded--">
 									<img
 										src={ICONS.users}
 										alt=""
@@ -895,17 +904,95 @@
 							size_em={5.4}
 						/>
 
-						<!-- panel -> main -> row (4) -> user -->
-						<!-- tba -->
+						<!-- panel -> main -> row (4) -> [card] user -->
+						<div
+							class="container  grow--  stretch--  col--  text  text-mint-light--  card  mint--  p-card  p-ma__user"
+							on:click|stopPropagation={() => {
+								try {
+									overlay_user = utils.clone(user);
+								} catch (e) {
+									console.log(e);
+								}
+							}}
+						>
+							<!-- panel -> main -> row (4) -> user -> [actions] -->
+							<div class="container  row--  row-right--  p-ca__actions">
+								<!-- panel -> main -> row (4) -> user -> [action] (edit) -->
+								<div
+									class="container  stretch--  row--  row-centre--  text  text-white---  card  yellow-  p-ca__action  p-ma__us-edit"
+									on:click|stopPropagation={() => {
+										try {
+											// tba: goto account settings
+										} catch (e) {
+											console.log(e);
+										}
+									}}
+								>
+									<div>Me</div>
+									<div>Edit</div>
+								</div>
+							</div>
+
+							<!-- panel -> main -> row (4) -> user -> label -->
+							<div class="p-ma__us-label">
+								Logged in as
+							</div>
+
+							<!-- panel -> main -> row (4) -> user -> name -->
+							<div class="text  text-white--  p-ma__us-name">
+								{user.name || `n/a`}
+							</div>
+
+							<!-- panel -> main -> row (4) -> user -> [notes] -->
+							<div class="container  stretch--  row--  row-left--  p-ca__notes">
+								<!-- panel -> main -> row (4) -> user -> [note] (xp) -->
+								<div class="container  row--  row-left--  p-ca__note  p-faded--">
+									<img
+										src={ICONS.xp}
+										alt=""
+										class="svg  svg-mint-light--"
+									/>
+
+									<div>
+										--
+										<!-- todo: user xp -->
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 
 					<!-- panel -> main -> [row] (5) -->
 					<div class="container  stretch--  row--  row-left--  p-row">
 						<!-- panel -> main -> row (5) -> [button] (settings) -->
-						<!-- tba -->
+						<div
+							class="container  stretch--  row--  row-centre--  text  text-white--  card  white--  p-ma__button  p-settings--"
+							on:click|stopPropagation={() => {
+								try {
+									// tba: goto lounge settings
+								} catch (e) {
+									console.log(e);
+								}
+							}}
+						>
+							<div>Lounge</div>
+							<div>settings</div>
+						</div>
 
 						<!-- panel -> main -> row (5) -> [button] (projects) -->
-						<!-- tba -->
+						<div
+							class="container  stretch--  row--  row-centre--  text  text-purple-light--  card  purple--  p-ma__button  p-projects--"
+							on:click|stopPropagation={() => {
+								try {
+									// tba: goto user projects
+								} catch (e) {
+									console.log(e);
+								}
+							}}
+						>
+							<div>My</div>
+							<div>Projects</div>
+						</div>
 					</div>
 				</div>
 			{:else if view === `avatar`}
