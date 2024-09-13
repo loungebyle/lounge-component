@@ -40,6 +40,7 @@
 	// vars
 
 	let is_active = false;
+	let socket;
 	let data;
 	let user;
 	let project;
@@ -165,7 +166,57 @@
 			jobs.push(`get_data`);
 			jobs = jobs;
 
+      socket = await api.getSocket();
 			user = await api.getCurrentUser() || null;
+
+			if (socket) {
+				socket.on(`load`, async (d) => {
+					try {
+						if (!d) return;
+
+						let type = d.type || ``;
+						let data = d.data || {};
+
+						switch (d.type) {
+							// tba: handle `load` socket events (user-triggered adhoc events)
+						}
+					} catch (e) {
+						console.log(e);
+					}
+				});
+
+				
+				socket.on(`exec`, async (d) => {
+					try {
+						if (!d) return;
+
+						let type = d.type || ``;
+						let data = d.data || {};
+
+						switch (d.type) {
+							// tba: handle `exec` socket events (user-triggered non-adhoc events)
+						}
+					} catch (e) {
+						console.log(e);
+					}
+				});
+
+				
+				socket.on(`process`, async (d) => {
+					try {
+						if (!d) return;
+
+						let type = d.type || ``;
+						let data = d.data || {};
+
+						switch (d.type) {
+							// tba: handle `process` socket events (system-triggered events)
+						}
+					} catch (e) {
+						console.log(e);
+					}
+				});
+			}
 
 			if (!(user && user.id)) {
 				user = null;
@@ -201,22 +252,23 @@
 						pr.id === room_id
 					)
 				) {
-					// tba: send `user_instanec_push` adhoc call through socket instead of restpost, and set up socket.on listeners for the 3 types of lounge-api socket events: `load`, `exec, and `process`; ie. 3 separate socket.on listeners
-
-					// let user_instance_push_res = await api.restPost({
-					// 	url: `load`,
-					// 	payload: {
-					// 		type: `user_instance_push`,
-					// 		obj: {
-					// 			project_id: utils.clone(project.id) || ``,
-					// 			room_id: utils.clone(room_id) || ``,
-					// 			user_id: utils.clone(user.id) || ``,
-					// 			user_avatar: utils.clone(user.project_avatar || user.default_avatar) || null,
-					// 			x_perc: 0, // tba: get random valid position within project room's polygons to fill initial x_perc and y_perc
-					// 			y_perc: 0
-					// 		}
-					// 	}
-					// }) || null;
+					socket.emit(
+						`load`,
+						{
+							type: `user_instance_push`,
+							obj: {
+								project_id: utils.clone(project.id) || ``,
+								room_id: utils.clone(room_id) || ``,
+								user_id: utils.clone(user.id) || ``,
+								user_avatar: utils.clone(user.project_avatar || user.default_avatar) || null,
+								x_perc: 0, // tba: get random valid position within project room's polygons to fill initial x_perc and y_perc
+								y_perc: 0	
+							}
+						},
+						(r) => {
+							// none
+						}
+					);
 				}
 			}
 
