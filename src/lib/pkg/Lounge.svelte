@@ -304,28 +304,28 @@
 									project = utils.clone(updated_project);
 								}
 
-								let staffed_projects_index = staffed_projects.findIndex(p =>
+								let staffed_project_index = staffed_projects.findIndex(p =>
 									p.id === updated_project.id
 								);
 								
-								if (staffed_projects_index >= 0) {
-									staffed_projects[staffed_projects_index] = utils.clone(updated_project);
+								if (staffed_project_index >= 0) {
+									staffed_projects[staffed_project_index] = utils.clone(updated_project);
 								}
 
-								let bookmarked_projects_index = bookmarked_projects.findIndex(p =>
+								let bookmarked_project_index = bookmarked_projects.findIndex(p =>
 									p.id === updated_project.id
 								);
 
-								if (bookmarked_projects_index >= 0) {
-									bookmarked_projects[bookmarked_projects_index] = utils.clone(updated_project);
+								if (bookmarked_project_index >= 0) {
+									bookmarked_projects[bookmarked_project_index] = utils.clone(updated_project);
 								}
 
-								let explorable_projects_index = explorable_projects.findIndex(p =>
+								let explorable_project_index = explorable_projects.findIndex(p =>
 									p.id === updated_project.id
 								);
 
-								if (explorable_projects_index >= 0) {
-									explorable_projects[explorable_projects_index] = utils.clone(updated_project);
+								if (explorable_project_index >= 0) {
+									explorable_projects[explorable_project_index] = utils.clone(updated_project);
 								}
 
 								break;
@@ -365,7 +365,24 @@
 							}
 
 							case `reaction_pull`: {
-								// tba
+								let deleted_reaction_ids = data.deleted_reaction_ids || [];
+
+								if (deleted_reaction_ids.length === 0) break;
+
+								for (let deleted_reaction_id of deleted_reaction_ids) {
+									let message_index = messages.findIndex(m =>
+										(m.reactions || []).some(r =>
+											r.id === deleted_reaction_id
+										)
+									);
+
+									if (message_index >= 0) {
+										messages[message_index].reactions = messages[message_index].reactions.filter(r =>
+											r.id !== deleted_reaction_id
+										);
+									}
+								}
+
 								break;
 							}
 
