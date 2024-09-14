@@ -63,6 +63,9 @@
 	// vars (main)
 	// todo
 
+	// vars (login)
+	let access_token_string = ``;
+
 	// vars (avatar)
 
 	const AVATAR_PROFILE_TABS = [
@@ -471,8 +474,36 @@
 								// check vars
 
 								if (!(updated_room && updated_room.id)) break;
+								
+								let updated_room_c = utils.clone(updated_room);
 
-								// tba
+								// if room is part of current project, edit the room
+
+								if (
+									project &&
+									project.id &&
+									updated_room.project_id &&
+									(project.id === updated_room.project_id) &&
+									(project.rooms || []).some(pr =>
+										pr.id === updated_room.id
+									)
+								) {
+									let room_index = (project.rooms || []).findIndex(pr =>
+										pr.id === updated_room_c.id
+									);
+
+									if (room_index >= 0) {
+										for (let key of Object.keys(updated_room_c)) {
+											try {
+												if (JSON.parse(project.rooms[room_index][key]) !== JSON.parse(updated_room_c[key])) {
+													project.rooms[room_index][key] = updated_room_c[key];
+												}
+											} catch (ie) {
+												console.log(ie);
+											}
+										}
+									}
+								}
 
 								break;
 							}
@@ -486,6 +517,8 @@
 
 								if (!(updated_user && updated_user.id)) break;
 
+								let updated_user_c = utils.clone(updated_user);
+
 								// edit user obj from here if the updated user isn't the logged-in user
 								
 								if (
@@ -495,20 +528,54 @@
 										(user.id === updated_user.id)
 									)
 								) {
-									// tba: use project_edit technique for updating item values by looping updated item's object keys
+									// update user of any matching user instances across all project rooms
+
+									for (let ri = 0; (project.rooms || []); ri++) {
+										let room_matching_user_instances = (project.rooms[ri].user_instances || []).filter(rui =>
+											rui.user &&
+											rui.user.id &&
+											(rui.user.id === updated_user.id)
+										) || [];
+
+										if (room_matching_user_instances.length >= 1) {
+											let room_matching_user_instance_indexes = room_matching_user_instances.slice().map(mui =>
+												(project.rooms[ri].user_instances || []).findIndex(rui =>
+													rui.id === mui.id
+												)
+											).filter(mui =>
+												mui >= 0
+											) || [];
+
+											for (let uii of room_matching_user_instance_indexes) {
+												for (let key of Object.keys(updated_user_c)) {
+													try {
+														if (JSON.parse(project.rooms[ri].user_instances[uii].user[key]) !== JSON.parse(updated_user_c[key])) {
+															project.rooms[ri].user_instances[uii].user[key] = updated_user_c[key];
+														}
+													} catch (ie) {
+														console.log(ie);
+													}
+												}
+											}
+										}
+									}
 								}
 
 								break;
 							}
 
 							case `user_instance_push`: {
-								let new_user_instance = data.user_instance || null;
+								let updated_user_instance = data.user_instance || null;
 								
 								// check vars
 								
-								if (!(new_user_instance && new_user_instance.id)) break;
+								if (!(updated_user_instance && updated_user_instance.id)) break;
 								
-								// tba
+								// if updated user instance is associated with logged-in user, update `user_instance` var
+								// tba: use object.keys technique when updating the user instance obj itself
+
+								// update any matching user instances across all project rooms
+								// tba: use object.keys technique when updating the user instance obj itself
 
 								break;
 							}
@@ -520,19 +587,36 @@
 
 								if (!(updated_minimal_user_instance && updated_minimal_user_instance.id)) break;
 
-								// tba
+								// if updated mininmal user instance is associated with logged-in user, update `user_instance` var
+								// tba: use object.keys technique when updating the user instance obj itself
+								
+								// update any matching user instances across all project rooms
+								// tba: use object.keys technique when updating the user instance obj itself
 
 								break;
 							}
 
 							case `user_login_by_access_token`: {
 								let logged_in_user = data.user || null;
+								let inbound_access_token_string = data.access_token_string || ``;
 							
 								// check vars
 
-								if (!(logged_in_user && logged_in_user.id)) break;
+								if (!(
+									logged_in_user &&
+									logged_in_user.id &&
+									inbound_access_token_string
+								)) break;
 
-								// tba
+								// check if inbound access token string matches the `access_token_string` var previously generated during login ui flow in this client --- if yes, then set the `user` var to the inbound user obj, and call the getData mount function again
+								
+								if (
+									access_token_string &&
+									(inbound_access_token_string === access_token_string)
+								) {
+									user = utils.clone(logged_in_user);
+									getData();
+								}
 
 								break;
 							}
@@ -556,8 +640,9 @@
 								let deleted_message_ids = data.deleted_message_ids || [];
 
 								// check vars
-								// noen
+								// none
 
+								// delete matching messages from `messages` var if not already
 								// tba
 
 								break;
@@ -570,7 +655,8 @@
 								// check vars
 								// none
 
-								// tba
+								// update or delete (depending on whether they are in the inbound `newly_idle...` or `deleted_...` array) any matching user instances across all project rooms
+								// tba: if updating, use the object.keys technique when updating the user instance obj itself
 
 								break;
 							}
@@ -623,8 +709,7 @@
 </script>
 
 {#if
-  !IN_MAINTENANCE &&
-  !jobs.includes(`get_data`)
+  !IN_MAINTENANCE
 }
 	<!-- lounge -->
 	<div class="container  col--  lounge  l-{context}--">
@@ -634,20 +719,11 @@
 		<!-- toggle -->
 		<!-- tba -->
 
+		<!-- label (powered by) -->
+		<!-- tba -->
+
 		<!-- panel -->
 		<div class="container  row--  row-centre--  text  text-white--  card  black--  panel">
-			<!-- label -->
-			<a
-				href="https://lounge.so"
-				target="_blank"
-				rel="noreferrer"
-				class="container  row--  row-centre--  text-white--  card  black--  p-label"
-			>
-				<span>Powered by</span>
-				<span>Lounge.so</span>
-				<span>by Lefrost</span>
-			</a>
-
 			{#if
 				(overlay_user && overlay_user.id) ||
 				(overlay_project && overlay_project.id)	
@@ -904,7 +980,7 @@
 									<div class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users">
 										<span class="text  text-white--">
 											{(overlay_project.rooms || []).reduce((total_user_count, room) =>
-												total_user_count += (room.users || []).length,
+												total_user_count += (room.user_instances || []).length,
 												0
 											) || 0}
 										</span>
@@ -1017,6 +1093,9 @@
 					{#if !(user && user.id)}
 						<span>Login to the</span>
 						<span>Lounge.</span>
+					{:else if jobs.includes(`get_data`)}
+						<span>Loading the</span>
+						<span>Lounge...</span>
 					{:else if view === `main`}
 						<span>Welcome to the</span>
 						<span>Lounge.</span>
@@ -1047,6 +1126,8 @@
 	
 			{#if !(user && user.id)}
 				<!-- tba: logged-out view -->
+			{:else if jobs.includes(`get_data`)}
+				<Loader />
 			{:else if !(project && project.id)}
 				<!-- tba: error -->
 			{:else if view === `main`}
@@ -1173,7 +1254,7 @@
 						>
 							<span class="text  text-white--">
 								{(overlay_project.rooms || []).reduce((total_user_count, room) =>
-									total_user_count += (room.users || []).length,
+									total_user_count += (room.user_instances || []).length,
 									0
 								) || 0}
 							</span>
@@ -1200,7 +1281,7 @@
 						>
 							<span class="text  text-white--">
 								{(overlay_project.rooms || []).reduce((total_user_count, room) =>
-									total_user_count += (room.users || []).filter(ru =>
+									total_user_count += (room.user_instances || []).filter(ru =>
 										(user.retationships || []).some(ur =>
 											(ur.users || []).some(uru =>
 												uru.id === ru.id
@@ -1266,7 +1347,7 @@
 									<div>
 										{(((project.rooms || []).find(r =>
 											r.id === room_id
-										) || {}).users || []).length || 0}
+										) || {}).user_instances || []).length || 0}
 									</div>
 									<div>online</div>
 								</div>
@@ -1281,9 +1362,9 @@
 									<div>
 										{(((project.rooms || []).find(r =>
 											r.id === room_id
-										) || {}).users || []).filter(ru =>
+										) || {}).user_instances || []).filter(ru =>
 											(user.relationships || []).some(ur =>
-												(ur.users || []).somme(uru =>
+												(ur.users || []).some(uru =>
 													uru.id == ru.id
 												)
 											)
