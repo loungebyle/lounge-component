@@ -199,34 +199,7 @@
 					explorable_projects = data.explorable_projects || [];
 				}
 
-				if (
-					user &&
-					user.id &&
-					project &&
-					project.id &&
-					room_id &&
-					(project.rooms || []).some(pr =>
-						pr.id === room_id
-					)
-				) {
-					socket.emit(
-						`load`,
-						{
-							type: `user_instance_push`,
-							obj: {
-								project_id: utils.clone(project.id) || ``,
-								room_id: utils.clone(room_id) || ``,
-								user_id: utils.clone(user.id) || ``,
-								user_avatar: utils.clone(user.project_avatar || user.default_avatar) || null,
-								x_perc: 0, // tba: get random valid position within project room's polygons to fill initial x_perc and y_perc
-								y_perc: 0	
-							}
-						},
-						(r) => {
-							// none
-						}
-					);
-				}
+				userInstancePush();
 			}
 
 			jobs = jobs.filter(j => j !== `get_data`);
@@ -247,7 +220,6 @@
 			console.log(e);
 		}
 	}
-
 	
 	async function initSocket() {
 		try {
@@ -267,7 +239,11 @@
 							case `message_add`: {
 								let new_message = data.message || null;
 
+								// check vars
+
 								if (!(new_message && new_message.id)) break;
+
+								// add new message to messages if not already
 
 								if (!messages.some(m =>
 									m.id === new_message.id
@@ -282,7 +258,11 @@
 							case `message_del`: {
 								let deleted_message_id = data.message_id || ``;
 
+								// check vars
+
 								if (!deleted_message_id) break;
+
+								// del matching message if not already
 
 								if (messages.some(m =>
 									m.id === deleted_message_id
@@ -296,18 +276,29 @@
 							}
 							
 							case `project_edit`: {
-								// note: don't affect project if user is a staff user; if this is the case, project obj is affected by project_edit callback instead, so that the staff user gets the `project_staff` map item instead
-								
 								let updated_project = data.project || null;
+
+								// check vars
 
 								if (!(updated_project && updated_project.id)) break;
 
-								if (
-									((project || {}).id === updated_project.id) &&
-									!user_staff_type
-								) {
-									project = utils.clone(updated_project);
+								// edit current project if it matches the updated project
+
+								if ((project || {}).id === updated_project.id) {
+									let updated_project_c = utils.clone(updated_project);
+
+									for (let key of Object.keys(updated_project_c)) {
+										try {
+											if (JSON.parse(project[key]) !== JSON.parse(updated_project_c[key])) {
+												project[key] = updated_project_c[key];
+											}
+										} catch (ie) {
+											console.log(ie);
+										}
+									}
 								}
+
+								// edit project in staffed projects if found
 
 								let staffed_project_index = staffed_projects.findIndex(p =>
 									p.id === updated_project.id
@@ -317,6 +308,8 @@
 									staffed_projects[staffed_project_index] = utils.clone(updated_project);
 								}
 
+								// edit project in bookmarked projects if found
+
 								let bookmarked_project_index = bookmarked_projects.findIndex(p =>
 									p.id === updated_project.id
 								);
@@ -324,6 +317,8 @@
 								if (bookmarked_project_index >= 0) {
 									bookmarked_projects[bookmarked_project_index] = utils.clone(updated_project);
 								}
+
+								// edit project in explorable projects if found
 
 								let explorable_project_index = explorable_projects.findIndex(p =>
 									p.id === updated_project.id
@@ -339,9 +334,13 @@
 							case `reaction_push`: {
 								let new_reaction = data.reaction || null;
 
+								// check vars
+
 								if (!(new_reaction && new_reaction.id)) break;
 
 								if (new_reaction.item_type === `message`) {
+									// for message reactions, add the reaction to the matching message if not already
+
 									let message_index = messages.findIndex(m =>
 										m.id === new_reaction.item_id
 									);
@@ -372,7 +371,10 @@
 							case `reaction_pull`: {
 								let deleted_reaction_ids = data.deleted_reaction_ids || [];
 
-								if (deleted_reaction_ids.length === 0) break;
+								// check vars
+								// none
+
+								// remove matching deleted reactions from any messages
 
 								for (let deleted_reaction_id of deleted_reaction_ids) {
 									let message_index = messages.findIndex(m =>
@@ -394,9 +396,31 @@
 							case `room_add`: {
 								let new_room = data.room || null;
 
+								// check vars
+
 								if (!(new_room && new_room.id)) break;
 								
-								// tba
+								// if room is part of current project, add it to project's rooms if not already
+
+								if (
+									project &&
+									project.id &&
+									new_room.project_id &&
+									(project.id === new_room.project_id) &&
+									!(project.rooms || []).some(pr =>
+										pr.id === new_room.id
+									)
+								) {
+									if (!project.rooms) {
+										project.rooms = [];
+									}
+
+									project.rooms.push(
+										utils.clone(new_room)
+									);
+
+									project.rooms = project.rooms;
+								}
 
 								break;
 							}
@@ -404,15 +428,47 @@
 							case `room_del`: {
 								let deleted_room_id = data.room_id || ``;
 
+								// check vars
+
 								if (!deleted_room_id) break;
 
-								// tba
+								// if room is part of current project, remove it from project's rooms if not already
+
+								if (
+									project &&
+									project.id &&
+									(project.rooms || []).some(pr =>
+										pr.id === deleted_room_id
+									)
+								) {
+									project.rooms = project.rooms.filter(pr =>
+										pr.id !== deleted_room_id
+									) || [];
+
+									// also reomve the deleted room's id from the project's room_ids_order
+
+									project.room_ids_order = (project.room_ids_order || []).filter(id =>
+										id !== deleted_room_id
+									) || [];
+
+									// if the user is currently in the deleted room, move the user to the project's default room (if any) and update user instance
+
+									if (room_id === deleted_room_id) {
+										room_id = (project.rooms.find(pr =>
+											pr.id === ((project.room_ids_order || [])[0] || ``)
+										) || {}).id || ``;
+
+										userInstancePush();
+									}
+								}
 								
 								break;
 							}
 
 							case `room_edit`: {
 								let updated_room = data.room || null;
+
+								// check vars
 
 								if (!(updated_room && updated_room.id)) break;
 
@@ -426,15 +482,29 @@
 
 								let updated_user = data.user || null;
 
+								// check vars
+
 								if (!(updated_user && updated_user.id)) break;
 
-								// tba
+								// edit user obj from here if the updated user isn't the logged-in user
+								
+								if (
+									!(
+										user &&
+										user.id &&
+										(user.id === updated_user.id)
+									)
+								) {
+									// tba: use project_edit technique for updating item values by looping updated item's object keys
+								}
 
 								break;
 							}
 
 							case `user_instance_push`: {
 								let new_user_instance = data.user_instance || null;
+								
+								// check vars
 								
 								if (!(new_user_instance && new_user_instance.id)) break;
 								
@@ -446,6 +516,8 @@
 							case `user_instance_move`: {
 								let updated_minimal_user_instance = data.user_instance || null;
 
+								// check vars
+
 								if (!(updated_minimal_user_instance && updated_minimal_user_instance.id)) break;
 
 								// tba
@@ -455,7 +527,9 @@
 
 							case `user_login_by_access_token`: {
 								let logged_in_user = data.user || null;
-								
+							
+								// check vars
+
 								if (!(logged_in_user && logged_in_user.id)) break;
 
 								// tba
@@ -479,12 +553,25 @@
 
 						switch (d.type) {
 							case `process_lounge_items`: {
+								let deleted_message_ids = data.deleted_message_ids || [];
+
+								// check vars
+								// noen
+
 								// tba
+
 								break;
 							}
 							
 							case `process_user_instances`: {
+								let newly_idle_user_instance_ids = data.newly_idle_user_instance_ids || [];
+								let deleted_user_instance_ids = data.deleted_user_instance_ids || [];
+
+								// check vars
+								// none
+
 								// tba
+
 								break;
 							}
 						}
@@ -492,6 +579,42 @@
 						console.log(e);
 					}
 				});
+			}
+		} catch (e) {
+			console.log(e);
+		}
+	}
+
+	function userInstancePush() {
+		try {
+			if (
+				socket &&
+				user &&
+				user.id &&
+				project &&
+				project.id &&
+				room_id &&
+				(project.rooms || []).some(pr =>
+					pr.id === room_id
+				)
+			) {
+				socket.emit(
+					`load`,
+					{
+						type: `user_instance_push`,
+						obj: {
+							project_id: utils.clone(project.id) || ``,
+							room_id: utils.clone(room_id) || ``,
+							user_id: utils.clone(user.id) || ``,
+							user_avatar: utils.clone(user.project_avatar || user.default_avatar) || null,
+							x_perc: 0, // tba: get random valid position within project room's polygons to fill initial x_perc and y_perc
+							y_perc: 0	
+						}
+					},
+					(r) => {
+						// none
+					}
+				);
 			}
 		} catch (e) {
 			console.log(e);
