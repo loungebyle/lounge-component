@@ -17,6 +17,7 @@
 	import rooms_icon from '../assets/images/icons/rooms.svg';
   import xp_icon from '../assets/images/icons/xp.svg';
 	import users_icon from '../assets/images/icons/users.svg';
+	import { MessageAccountKeys } from '@solana/web3.js';
 
 	// exports
 
@@ -57,8 +58,7 @@
 
 	let user_staff_type = ``;
 
-	let messages = [];
-	let reactions = [] 
+	let messages = []; 
 
 	// vars (main)
 	// todo
@@ -169,9 +169,90 @@
 			jobs.push(`get_data`);
 			jobs = jobs;
 
-      socket = await api.getSocket();
+			if (!socket) {
+				await initSocket();
+			}
+
 			user = await api.getCurrentUser() || null;
 
+			if (!(user && user.id)) {
+				user = null;
+			} else {
+				data = await api.restPost({
+					url: `load`,
+					payload: {
+						type: `lounge_main`,
+						obj: {
+							project_api_key: api_key || ``,
+							user_id: utils.clone(user.id) || ``,
+							room_id: ``, // note: empty on first load
+						}
+					}
+				}) || null;
+
+				if (data) {
+					user = data.user || null;
+					project = data.project || null;
+					room_id = data.room_id || ``;
+					staffed_projects = data.staffed_projects || [];
+					bookmarked_projects = data.bookmarked_projects || [];
+					explorable_projects = data.explorable_projects || [];
+				}
+
+				if (
+					user &&
+					user.id &&
+					project &&
+					project.id &&
+					room_id &&
+					(project.rooms || []).some(pr =>
+						pr.id === room_id
+					)
+				) {
+					socket.emit(
+						`load`,
+						{
+							type: `user_instance_push`,
+							obj: {
+								project_id: utils.clone(project.id) || ``,
+								room_id: utils.clone(room_id) || ``,
+								user_id: utils.clone(user.id) || ``,
+								user_avatar: utils.clone(user.project_avatar || user.default_avatar) || null,
+								x_perc: 0, // tba: get random valid position within project room's polygons to fill initial x_perc and y_perc
+								y_perc: 0	
+							}
+						},
+						(r) => {
+							// none
+						}
+					);
+				}
+			}
+
+			jobs = jobs.filter(j => j !== `get_data`);
+		} catch (e) {
+			console.log(e);
+		}
+	}
+
+	// execs
+	// none
+
+	// funcs
+	
+	function toggle() {
+		try {
+			is_toggled = !is_toggled;
+		} catch (e) {
+			console.log(e);
+		}
+	}
+
+	
+	async function initSocket() {
+		try {
+      socket = await api.getSocket();
+			
 			if (socket) {
 				socket.on(`load`, async (d) => {
 					try {
@@ -184,27 +265,102 @@
 
 						switch (d.type) {
 							case `message_add`: {
-								// tba
+								let new_message = data.message || null;
+
+								if (!(new_message && new_message.id)) break;
+
+								if (!messages.some(m =>
+									m.id === new_message.id
+								)) {
+									messages.push(new_message);
+									messages = messages;
+								}
+
 								break;
 							}
 
 							case `message_del`: {
-								// tba
-								break;
-							}
+								let deleted_message_id = data.message_id || ``;
 
-							case `project_add`: {
-								// tba
+								if (!deleted_message_id) break;
+
+								if (messages.some(m =>
+									m.id === deleted_message_id
+								)) {
+									messages = messages.filter(m =>
+										m.id !== deleted_message_id
+									) || [];
+								}
+
 								break;
 							}
 							
 							case `project_edit`: {
-								// tba
+								let updated_project = data.project || null;
+
+								if (!(updated_project && updated_project.id)) break;
+
+								if ((project || {}).id === updated_project.id) {
+									project = utils.clone(updated_project);
+								}
+
+								let staffed_projects_index = staffed_projects.findIndex(p =>
+									p.id === updated_project.id
+								);
+								
+								if (staffed_projects_index >= 0) {
+									staffed_projects[staffed_projects_index] = utils.clone(updated_project);
+								}
+
+								let bookmarked_projects_index = bookmarked_projects.findIndex(p =>
+									p.id === updated_project.id
+								);
+
+								if (bookmarked_projects_index >= 0) {
+									bookmarked_projects[bookmarked_projects_index] = utils.clone(updated_project);
+								}
+
+								let explorable_projects_index = explorable_projects.findIndex(p =>
+									p.id === updated_project.id
+								);
+
+								if (explorable_projects_index >= 0) {
+									explorable_projects[explorable_projects_index] = utils.clone(updated_project);
+								}
+
 								break;
 							}
 
 							case `reaction_push`: {
-								// tba
+								let new_reaction = data.reaction || null;
+
+								if (!(new_reaction && new_reaction.id)) break;
+
+								if (new_reaction.item_type === `message`) {
+									let message_index = messages.findIndex(m =>
+										m.id === new_reaction.item_id
+									);
+
+									if (
+										(message_index >= 0) &&
+										!(messages[message_index].reactions || []).some(r =>
+											r.id === new_reaction.id
+										)
+									) {
+										if (!messages[message_index].reactions) {
+											messages[message_index].reactions = [];
+										}
+
+										messages[message_index].reactions.push(
+											utils.clone(new_reaction)
+										);
+
+										messages[message_index].reactions = messages[message_index].reactions;
+									}
+								} else {
+									// todo: more reaction item types
+								}
+
 								break;
 							}
 
@@ -278,75 +434,6 @@
 					}
 				});
 			}
-
-			if (!(user && user.id)) {
-				user = null;
-			} else {
-				data = await api.restPost({
-					url: `load`,
-					payload: {
-						type: `lounge_main`,
-						obj: {
-							project_api_key: api_key || ``,
-							user_id: utils.clone(user.id) || ``,
-							room_id: ``, // note: empty on first load
-						}
-					}
-				}) || null;
-
-				if (data) {
-					user = data.user || null;
-					project = data.project || null;
-					room_id = data.room_id || ``;
-					staffed_projects = data.staffed_projects || [];
-					bookmarked_projects = data.bookmarked_projects || [];
-					explorable_projects = data.explorable_projects || [];
-				}
-
-				if (
-					user &&
-					user.id &&
-					project &&
-					project.id &&
-					room_id &&
-					(project.rooms || []).some(pr =>
-						pr.id === room_id
-					)
-				) {
-					socket.emit(
-						`load`,
-						{
-							type: `user_instance_push`,
-							obj: {
-								project_id: utils.clone(project.id) || ``,
-								room_id: utils.clone(room_id) || ``,
-								user_id: utils.clone(user.id) || ``,
-								user_avatar: utils.clone(user.project_avatar || user.default_avatar) || null,
-								x_perc: 0, // tba: get random valid position within project room's polygons to fill initial x_perc and y_perc
-								y_perc: 0	
-							}
-						},
-						(r) => {
-							// none
-						}
-					);
-				}
-			}
-
-			jobs = jobs.filter(j => j !== `get_data`);
-		} catch (e) {
-			console.log(e);
-		}
-	}
-
-	// execs
-	// none
-
-	// funcs
-	
-	function toggle() {
-		try {
-			is_toggled = !is_toggled;
 		} catch (e) {
 			console.log(e);
 		}
