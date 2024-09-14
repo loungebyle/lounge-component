@@ -57,6 +57,9 @@
 
 	let user_staff_type = ``;
 
+	let messages = [];
+	let reactions = [] 
+
 	// vars (main)
 	// todo
 
@@ -172,45 +175,103 @@
 			if (socket) {
 				socket.on(`load`, async (d) => {
 					try {
+						// note: handle `load` socket events (user-triggered adhoc events)
+
 						if (!d) return;
 
 						let type = d.type || ``;
 						let data = d.data || {};
 
 						switch (d.type) {
-							// tba: handle `load` socket events (user-triggered adhoc events)
+							case `message_add`: {
+								// tba
+								break;
+							}
+
+							case `message_del`: {
+								// tba
+								break;
+							}
+
+							case `project_add`: {
+								// tba
+								break;
+							}
+							
+							case `project_edit`: {
+								// tba
+								break;
+							}
+
+							case `reaction_push`: {
+								// tba
+								break;
+							}
+
+							case `reaction_pull`: {
+								// tba
+								break;
+							}
+
+							case `room_add`: {
+								// tba
+								break;
+							}
+
+							case `room_del`: {
+								// tba
+								break;
+							}
+
+							case `room_edit`: {
+								// bta
+								break;
+							}
+
+							case `user_edit`: {
+								// tba
+								break;
+							}
+
+							case `user_instance_push`: {
+								// tba
+								break;
+							}
+
+							case `user_instance_move`: {
+								// tba
+								break;
+							}
+
+							case `user_login_by_access_token`: {
+								// tba
+								break;
+							}
 						}
 					} catch (e) {
 						console.log(e);
 					}
 				});
-
-				
-				socket.on(`exec`, async (d) => {
-					try {
-						if (!d) return;
-
-						let type = d.type || ``;
-						let data = d.data || {};
-
-						switch (d.type) {
-							// tba: handle `exec` socket events (user-triggered non-adhoc events)
-						}
-					} catch (e) {
-						console.log(e);
-					}
-				});
-
 				
 				socket.on(`process`, async (d) => {
 					try {
+						// note: handle `process` socket events (system-triggered events)
+						
 						if (!d) return;
 
 						let type = d.type || ``;
 						let data = d.data || {};
 
 						switch (d.type) {
-							// tba: handle `process` socket events (system-triggered events)
+							case `process_user_instances`: {
+								// tba
+								break;
+							}
+							
+							case `process_user_instances`: {
+								// tba
+								break;
+							}
 						}
 					} catch (e) {
 						console.log(e);
