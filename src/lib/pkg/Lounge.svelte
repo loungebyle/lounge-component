@@ -296,11 +296,16 @@
 							}
 							
 							case `project_edit`: {
+								// note: don't affect project if user is a staff user; if this is the case, project obj is affected by project_edit callback instead, so that the staff user gets the `project_staff` map item instead
+								
 								let updated_project = data.project || null;
 
 								if (!(updated_project && updated_project.id)) break;
 
-								if ((project || {}).id === updated_project.id) {
+								if (
+									((project || {}).id === updated_project.id) &&
+									!user_staff_type
+								) {
 									project = utils.clone(updated_project);
 								}
 
@@ -387,37 +392,74 @@
 							}
 
 							case `room_add`: {
+								let new_room = data.room || null;
+
+								if (!(new_room && new_room.id)) break;
+								
 								// tba
+
 								break;
 							}
 
 							case `room_del`: {
+								let deleted_room_id = data.room_id || ``;
+
+								if (!deleted_room_id) break;
+
 								// tba
+								
 								break;
 							}
 
 							case `room_edit`: {
-								// bta
+								let updated_room = data.room || null;
+
+								if (!(updated_room && updated_room.id)) break;
+
+								// tba
+
 								break;
 							}
 
 							case `user_edit`: {
+								// note: don't affect logged-in user if they are the updated_user; their user obj is affected by user_edit callback instead
+
+								let updated_user = data.user || null;
+
+								if (!(updated_user && updated_user.id)) break;
+
 								// tba
+
 								break;
 							}
 
 							case `user_instance_push`: {
+								let new_user_instance = data.user_instance || null;
+								
+								if (!(new_user_instance && new_user_instance.id)) break;
+								
 								// tba
+
 								break;
 							}
 
 							case `user_instance_move`: {
+								let updated_minimal_user_instance = data.user_instance || null;
+
+								if (!(updated_minimal_user_instance && updated_minimal_user_instance.id)) break;
+
 								// tba
+
 								break;
 							}
 
 							case `user_login_by_access_token`: {
+								let logged_in_user = data.user || null;
+								
+								if (!(logged_in_user && logged_in_user.id)) break;
+
 								// tba
+
 								break;
 							}
 						}
