@@ -263,7 +263,7 @@
 						let data = d.data || {};
 
 						switch (d.type) {
-							case `process_user_instances`: {
+							case `process_lounge_items`: {
 								// tba
 								break;
 							}
