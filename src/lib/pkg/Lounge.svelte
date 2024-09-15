@@ -103,11 +103,13 @@
 	const AVATAR_PART_DATA_TYPES = [
 		{
 			code: `nft`,
-			name: `Your NFTs`
+			name: `Your NFTs`,
+			part_tabs: [`body`, `pet`]
 		},
 		{
 			code: `skin`,
-			name: `Default skins`
+			name: `Default skins`,
+			part_tabs: [`body`]
 		}
 	];
 	
@@ -1818,7 +1820,7 @@
 							<!-- panel -> avatar -> heading -> row -> button (save) -->
 							<div
 								class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
-								class:disabled={[`edit_user_avatars`, `edit_user`].some(j => jobs.includes(j))}
+								class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
 								on:click={() => {
 									try {
 										let job_code = `edit_user_avatars`;
@@ -1996,6 +1998,7 @@
 										<!-- panel -> avatar -> preview (project) -> delete -> button -->
 										<div
 											class="container  row--  row-centre--  text  text-red-light--  card  red--  p-av__pr-de-button"
+											class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
 											on:click={() => {
 												try {
 													let job_code = `del_user_project_avatar`;
@@ -2061,13 +2064,195 @@
 
 								<!-- panel -> avatar -> part (body/pet) -> sections -->
 								<!-- tba: use AVATAR_PART_DATA_TYPES and avatar_part_data_type_tab -->
+								<div
+									class="container  stretch--  col--  p-av__pa-sections"
+									class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}	
+								>
+									{#each AVATAR_PART_DATA_TYPES.filter(T =>
+										(T.part_tabs || []).includes(avatar_part_tab)
+									) as TYPE}
+										<!-- section -->
+										<div
+											class="container  stretch--  col--  text  card  p-av__pa-section"
+											class:text-yellow-light--={TYPE.code === avatar_part_data_type_tab}
+											class:yellow--={TYPE.code === avatar_part_data_type_tab}
+											class:text-white--={TYPE.code !== avatar_part_data_type_tab}
+											class:white--={TYPE.code !== avatar_part_data_type_tab}
+											on:click={() => {
+												try {
+													if (TYPE.code !== avatar_part_data_type_tab) {
+														avatar_part_data_type_tab = utils.clone(TYPE.code) || ``;
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<!-- section -> row -->
+											<!-- tba -->
+
+											{#if TYPE.code === avatar_part_data_type_tab}
+												<!-- section -> list -->
+												<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-list">
+													{#if TYPE.code === `nft`}
+														{#each (user.nft_cxs || []).sort((a, b) =>
+															(b.nfts || []).length - (a.nfts || []).length
+														).slice() as nft_cx}
+															{#each (nft_cx.nfts || []).slice() as nft}
+																<!-- item (nft) -->
+																<div
+																	class="container  stretch--  col--  col-centre--  p-av__pa-se-li-item"
+																	class:p-selected--={
+																		user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
+																		(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`) &&
+																		((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_cx_id === nft_cx.id) &&
+																		((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_addy === nft.addy)
+																	}
+																	on:click={() => {
+																		try {
+																			if (!(	
+																				user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
+																				(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`) &&
+																				((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_cx_id === nft_cx.id) &&
+																				((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_addy === nft.addy)
+																			)) {
+																				let part_obj = {
+																					part_type: utils.clone(avatar_part_tab) || ``,
+																					data_type: utils.clone(avatar_part_data_type_tab) || ``,
+																					data: {
+																						nft_cx_id: utils.clone(nft_cx.id) || ``,
+																						nft_addy: utils.clone(nft.addy) || ``
+																					}
+																				}
+
+																				let part_index = user_avatar_inputs[avatar_profile_tab].parts.findIndex(p => p.type === avatar_part_tab);
+
+																				if (part_index >= 0) {
+																					user_avatar_inputs[avatar_profile_tab].parts[part_index] = part_obj;
+																				} else {
+																					user_avatar_inputs[avatar_profile_tab].parts.push(part_obj);
+																					
+																					user_avatar_inputs[avatar_profile_tab].parts = user_avatar_inputs[avatar_profile_tab].parts;
+																				}
+																			}
+																		} catch (e) {
+																			console.log(e);
+																		}
+																	}}
+																>
+																	<!-- item (nft) -> label -->
+																	<div class="container  row--  row-centre--  text  text-white--  card  black--  p-av__pa-se-li-it-label">
+																		<div>
+																			{utils.shortenString({
+																				string: utils.clone(nft.name) || ``,
+																				length: 25
+																			}) || `n/a`}
+																		</div>
+																	</div>
+
+																	<!-- item (nft) -> avatar -->								
+																	<Avatar
+																		display="preview"
+																		body={(avatar_part_tab === `body`) ? {
+																			part_type: `body`,
+																			data_type: `nft`,
+																			data: {
+																				nft_cx_id: nft_cx.id || ``,
+																				nft_addy: nft.addy || ``
+																			}
+																		} : null}
+																		pet={(avatar_part_tab === `pet`) ? {
+																			part_type: `pet`,
+																			data_type: `nft`,
+																			data: {
+																				nft_cx_id: nft_cx.id || ``,
+																				nft_addy: nft.addy || ``
+																			}
+																		} : null}
+																		size_em={2.2}
+																	/>
+																</div>
+															{/each}
+														{/each}
+													{:else if TYPE.code === `skin`}
+														{#each LOUNGE_AVATAR_SKINS as SKIN}
+															<!-- item (skin) -->
+															<div
+																class="container  stretch--  col--  col-centre--  p-av__pa-se-li-item"
+																class:p-selected--={
+																	user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
+																	(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`) &&
+																	((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).skin_code === SKIN.code)
+																}
+																on:click={() => {
+																	try {
+																		if (!(	
+																			user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
+																			(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`) &&
+																			((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).skin_code === SKIN.code)
+																		)) {
+																			let part_obj = {
+																				part_type: utils.clone(avatar_part_tab) || ``,
+																				data_type: utils.clone(avatar_part_data_type_tab) || ``,
+																				data: {
+																					skin_code: utils.clone(SKIN.code) || ``
+																				}
+																			}
+
+																			let part_index = user_avatar_inputs[avatar_profile_tab].parts.findIndex(p => p.type === avatar_part_tab);
+
+																			if (part_index >= 0) {
+																				user_avatar_inputs[avatar_profile_tab].parts[part_index] = part_obj;
+																			} else {
+																				user_avatar_inputs[avatar_profile_tab].parts.push(part_obj);
+																				
+																				user_avatar_inputs[avatar_profile_tab].parts = user_avatar_inputs[avatar_profile_tab].parts;
+																			}
+																		}
+																	} catch (e) {
+																		console.log(e);
+																	}
+																}}
+															>
+																<!-- item (skin) -> label -->
+																<div class="container  row--  row-centre--  text  text-white--  card  black--  p-av__pa-se-li-it-label">
+																	<div>
+																		{utils.shortenString({
+																			string: utils.clone(SKIN.name) || ``,
+																			length: 25
+																		}) || `n/a`}
+																	</div>
+																</div>
+
+																<!-- item (skin) -> avatar -->
+																<!-- note: data_type `skin` can't be used as a pet, only as a body, so avatar.pet below will always be null -->
+																<Avatar
+																	display="preview"
+																	body={(avatar_part_tab === `body`) ? {
+																		part_type: `body`,
+																		data_type: `skin`,
+																		data: {
+																			skin_code: SKIN.code || ``
+																		}
+																	} : null}
+																	pet={null}
+																	size_em={2.2}
+																/>
+															</div>
+														{/each}
+													{/if}
+												</div>
+											{/if}
+										</div>
+									{/each}
+								</div>
 							</div>
 						{/if}
 					{:else}
 						<!-- panel -> avatar -> preview -> create -->
 						<div
 							class="container  stretch--  row--  row-left--  text  text-green--  card  green--  p-av__pr-create"
-							class:disabled={[`edit_user_avatars`, `edit_user`].some(j => jobs.includes(j))}
+							class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
 							on:click={async () => {
 								try {
 									let job_code = `edit_user_avatars`;
