@@ -19,8 +19,6 @@
 	import rooms_icon from '../assets/images/icons/rooms.svg';
   import xp_icon from '../assets/images/icons/xp.svg';
 	import users_icon from '../assets/images/icons/users.svg';
-	import { MessageAccountKeys } from '@solana/web3.js';
-	import { ParticleAdapter } from '@solana/wallet-adapter-wallets';
 
 	// exports
 
@@ -41,6 +39,10 @@
 		xp: xp_icon,
 		users: users_icon
 	}
+
+	// consts (freezed during runtime)
+
+	let LOUNGE_AVATAR_SKINS = [];
 
 	// vars
 
@@ -97,6 +99,17 @@
 			name: `Pet`
 		}
 	];
+
+	const AVATAR_PART_DATA_TYPES = [
+		{
+			code: `nft`,
+			name: `Your NFTs`
+		},
+		{
+			code: `skin`,
+			name: `Default skins`
+		}
+	];
 	
 	let avatar_profile_tab = (AVATAR_PROFILE_TABS.find(T =>
 		T.code === `default`
@@ -105,6 +118,15 @@
 	let avatar_part_tab = (AVATAR_PART_TABS.find(T =>
 		T.code === `preview`
 	) || {}).code || (AVATAR_PART_TABS[0] ||{}).code || ``; // based on AVATAR_PART_TABS
+
+	let avatar_part_data_type_tab = (AVATAR_PART_DATA_TYPES.find(T =>
+		T.code === `nft`
+	) || {}).code || (AVATAR_PART_DATA_TYPES[0] ||{}).code || ``; // based on AVATAR_PART_DATA_TYPES
+
+	let user_avatar_inputs = {
+		default: null,
+		project: null
+	}
 
 	// vars (account)
 	// todo
@@ -209,6 +231,9 @@
 					staffed_projects = data.staffed_projects || [];
 					bookmarked_projects = data.bookmarked_projects || [];
 					explorable_projects = data.explorable_projects || [];
+
+					LOUNGE_AVATAR_SKINS = data.LOUNGE_AVATAR_SKINS || [];
+					Object.freeze(LOUNGE_AVATAR_SKINS);
 				}
 
 				userInstancePush();
@@ -228,6 +253,20 @@
 	function toggle() {
 		try {
 			is_toggled = !is_toggled;
+		} catch (e) {
+			console.log(e);
+		}
+	}
+
+	function back() {
+		try {
+			let previous_view = utils.clone(view) || ``;
+
+			view = `main`;
+
+			switch (previous_view) {
+				// todo: other view types if required
+			}
 		} catch (e) {
 			console.log(e);
 		}
@@ -947,6 +986,22 @@
 	}
 </script>
 
+<svelte:window on:keydown|preventDefault={(e) => {
+	try {
+		switch (e.key) {
+			case `Escape`: {
+				if (view === `main`) {
+					toggle();
+				} else {
+					back();
+				}
+			}
+		}
+	} catch (e) {
+		console.log(e);
+	}
+}} />
+
 {#if
   !IN_MAINTENANCE
 }
@@ -1012,8 +1067,8 @@
 										<!-- overlay -> user -> row (1) -> [avatar] -->
 										<Avatar
 											display="icon"
-											body={overlay_user.project_avatar.parts.find(p => p.type === `body`)}
-											pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`)}
+											body={overlay_user.project_avatar.parts.find(p => p.type === `body`) || null}
+											pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`) || null}
 											size_em={4}
 										/>
 									{/if}
@@ -1631,9 +1686,30 @@
 						<!-- panel -> main -> row (4) -> [avatar] -->
 						<Avatar
 							display="icon"
-							body={overlay_user.project_avatar.parts.find(p => p.type === `body`)}
-							pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`)}
+							body={overlay_user.project_avatar.parts.find(p => p.type === `body`) || null}
+							pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`) || null}
 							size_em={5.4}
+							events={{
+								click: () => {
+									try {
+										if (![`del_user_project_avatar`, `edit_user_avatars`].some(j => jobs.includes(j))) {
+											user_avatar_inputs.default = utils.clone((user.avatars || []).find(ua =>
+												ua.type === `default`
+											)) || null;
+
+											user_avatar_inputs.project = utils.clone((user.avatars || []).find(ua =>
+												(ua.type === `project`) &&
+												ua.project_id &&
+												((project || {}).id === ua.project_id)
+											)) || null;
+										}
+
+										view = `avatar`;
+									} catch (e) {
+										console.log(e);
+									}
+								}
+							}}
 						/>
 
 						<!-- panel -> main -> row (4) -> [card] user -->
@@ -1746,7 +1822,7 @@
 								on:click={() => {
 									try {
 										let job_code = `edit_user_avatars`;
-										let other_job_codes = [`edit_user`];
+										let other_job_codes = [`del_user_project_avatar`, `edit_user`];
 											
 										if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
 											jobs.push(job_code);
@@ -1792,44 +1868,24 @@
 									}
 								}}
 							>
-								{#if (user.avatars || []).some(ua =>
-									(ua.type === TAB.code) &&
+								{#if
+									user_avatar_inputs[TAB.code] &&
 									(
-										(ua.type === `default`) ||
+										(TAB.code === `default`) ||
 										(
-											(ua.type === `project`) &&
-											ua.project_id &&
-											(ua.project_id === (project || {}).id)
+											(TAB.code === `project`) &&
+											user_avatar_inputs[TAB.code].project_id &&
+											(user_avatar_inputs[TAB.code].project_id === (project || {}).id)
 										)
 									)
-								)}
+								}
 									<!-- profile -> avatar -->
 									<Avatar
 										display="icon"
-										body={((user.avatars || []).find(ua =>
-											(ua.type === TAB.code) &&
-											(
-												(ua.type === `default`) ||
-												(
-													(ua.type === `project`) &&
-													ua.project_id &&
-													(ua.project_id === (project || {}).id)
-												)
-											)
-										).parts || []).find(uap =>
+										body={(user_avatar_inputs[TAB.code].parts || []).find(uap =>
 											uap.part_type === `body`
 										) || null}
-										pet={((user.avatars || []).find(ua =>
-											(ua.type === TAB.code) &&
-											(
-												(ua.type === `default`) ||
-												(
-													(ua.type === `project`) &&
-													ua.project_id &&
-													(ua.project_id === (project || {}).id)
-												)
-											)
-										).parts || []).find(uap =>
+										pet={(user_avatar_inputs[TAB.code].parts || []).find(uap =>
 											uap.part_type === `pet`
 										) || null}
 										size_em={1.6}
@@ -1860,68 +1916,48 @@
 						{/each}
 					</div>
 
-					<!-- panel -> avatar -> [tabs] -->
-					<div class="container  stretch--  row--  row-left--  p-tabs">
-						{#each AVATAR_PART_TABS as TAB}
-							<!-- [tab] -->
-							<div
-								class="container  stretch--  row--  row-centre--  text  card  p-tab"
-								on:click={() => {
-									try {
-										if (avatar_part_tab !== TAB.code) {
-											avatar_part_tab = utils.clone(TAB.code) || ``;
+					{#if
+						user_avatar_inputs[avatar_profile_tab] &&
+						(
+							(avatar_profile_tab === `default`) ||
+							(
+								(avatar_profile_tab === `project`) &&
+								user_avatar_inputs[avatar_profile_tab].project_id &&
+								(user_avatar_inputs[avatar_profile_tab].project_id === (project || {}).id)
+							)
+						)
+					}
+						<!-- panel -> avatar -> [tabs] -->
+						<div class="container  stretch--  row--  row-left--  p-tabs">
+							{#each AVATAR_PART_TABS as TAB}
+								<!-- [tab] -->
+								<div
+									class="container  stretch--  row--  row-centre--  text  card  p-tab"
+									on:click={() => {
+										try {
+											if (avatar_part_tab !== TAB.code) {
+												avatar_part_tab = utils.clone(TAB.code) || ``;
+											}
+										} catch (e) {
+											console.log(e);
 										}
-									} catch (e) {
-										console.log(e);
-									}
-								}}
-							>
-								<div>{TAB.name || `n/a`}</div>
-							</div>
-						{/each}
-					</div>
+									}}
+								>
+									<div>{TAB.name || `n/a`}</div>
+								</div>
+							{/each}
+						</div>
 
-					{#if avatar_part_tab === `preview`}
-						<!-- panel -> avatar -> preview -->
-						<div class="container  stretch--  col--  col-centre--  p-av__preview">
-							{#if (user.avatars || []).some(ua =>
-								(ua.type === avatar_profile_tab) &&
-								(
-									(ua.type === `default`) ||
-									(
-										(ua.type === `project`) &&
-										ua.project_id &&
-										(ua.project_id === (project || {}).id)
-									)
-								)
-							)}
+						{#if avatar_part_tab === `preview`}
+							<!-- panel -> avatar -> preview -->
+							<div class="container  stretch--  col--  col-centre--  p-av__preview">
 								<!-- panel -> avatar -> preview -> [avatar] -->
 								<Avatar
 									display="icon"
-									body={((user.avatars || []).find(ua =>
-										(ua.type === avatar_profile_tab) &&
-										(
-											(ua.type === `default`) ||
-											(
-												(ua.type === `project`) &&
-												ua.project_id &&
-												(ua.project_id === (project || {}).id)
-											)
-										)
-									).parts || []).find(uap =>
+									body={(user_avatar_inputs[avatar_profile_tab].parts || []).find(uap =>
 										uap.part_type === `body`
 									) || null}
-									pet={((user.avatars || []).find(ua =>
-										(ua.type === avatar_profile_tab) &&
-										(
-											(ua.type === `default`) ||
-											(
-												(ua.type === `project`) &&
-												ua.project_id &&
-												(ua.project_id === (project || {}).id)
-											)
-										)
-									).parts || []).find(uap =>
+									pet={(user_avatar_inputs[avatar_profile_tab].parts || []).find(uap =>
 										uap.part_type === `pet`
 									) || null}
 									size_em={10}
@@ -1934,34 +1970,14 @@
 										user_instance &&
 										user_instance.id &&
 										user_instance.user_avatar &&
-										(JSON.stringify(user_instance.user_avatar) === JSON.stringify((user.avatars || []).find(ua =>
-											(ua.type === avatar_profile_tab) &&
-											(
-												(ua.type === `default`) ||
-												(
-													(ua.type === `project`) &&
-													ua.project_id &&
-													(ua.project_id === (project || {}).id)
-												)
-											)
-										)))
+										(JSON.stringify(user_instance.user_avatar) === JSON.stringify(user_avatar_inputs[avatar_profile_tab]))
 									)}
 								>
 									{#if (
 										user_instance &&
 										user_instance.id &&
 										user_instance.user_avatar &&
-										(JSON.stringify(user_instance.user_avatar) === JSON.stringify((user.avatars || []).find(ua =>
-											(ua.type === avatar_profile_tab) &&
-											(
-												(ua.type === `default`) ||
-												(
-													(ua.type === `project`) &&
-													ua.project_id &&
-													(ua.project_id === (project || {}).id)
-												)
-											)
-										)))
+										(JSON.stringify(user_instance.user_avatar) === JSON.stringify(user_avatar_inputs[avatar_profile_tab]))
 									)}
 										This avatar configuration is currently in use!
 									{:else}
@@ -1973,76 +1989,127 @@
 									<!-- panel -> avatar -> preview (project) -> delete -->
 									<div class="container  stretch--  co--  p-av__pr-delete">
 										<!-- panel -> avatar -> preview (project) -> delete -> text -->
-										<!-- tba -->
+										<div class="p-av__pr-de-text">
+											This avatar profile is only applied inside {(project || {}).name || `n/a`}.
+										</div>
 
 										<!-- panel -> avatar -> preview (project) -> delete -> button -->
-										<!-- tba -->
+										<div
+											class="container  row--  row-centre--  text  text-red-light--  card  red--  p-av__pr-de-button"
+											on:click={() => {
+												try {
+													let job_code = `del_user_project_avatar`;
+													let other_job_codes = [`edit_user`, `edit_user_avatars`];
+													
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: del user's project avatar
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`del_user_project_avatar`)}
+													<Loader />
+												{:else}
+													Delete
+												{/if}
+											</div>
+										</div>
 									</div>
 								{/if}
-							{:else}
-								<!-- panel -> avatar -> preview -> create -->
-								<div
-									class="container  stretch--  row--  row-left--  text  text-green--  card  green--  p-av__pr-create"
-									class:disabled={[`edit_user_avatars`, `edit_user`].some(j => jobs.includes(j))}
-									on:click={async () => {
-										try {
-											let job_code = `edit_user_avatars`;
-											let other_job_codes = [`edit_user`];
-											
-											if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
-												jobs.push(job_code);
-												jobs = jobs;
+							</div>
+						{:else if [`body`, `pet`].includes(avatar_part_tab)}
+							<!-- panel -> avatar -> part (body/pet) -->
+							<div class="container  stretch--  col--  p-av__part">
+								<!-- panel -> avatar -> part (body/pet) -> selected -->
+								<div class="container  stretch--  row--  row-left--  p-av__pa-selected">
+									<!-- panel -> avatar -> part (body/pet) -> selected -> [avatar] -->
+									<Avatar
+										display="preview"
+										body={(avatar_part_tab === `body`) ? (user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === `body`) || null) : null}
+										pet={(avatar_part_tab === `pet`) ? (user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === `pet`) || null) : null}
+										size_em={2.7}
+									/>
 
-												// tba: add new user.avatar associated with this project, with default settings; override if matchnhig user.avatar has been added for this project eg. another tab
-
-												jobs = jobs.filter(j => j !== job_code);
-											}
-										} catch (e) {
-											console.log(e);
-										}
-									}}
-								>
-									<!-- panel -> avatar -> preview -> create -> text -->
-									<div class="container  grow--  col--  p-av__pr-cr-text">
+									<!-- panel -> avatar -> part (body/pet) -> selected -> text -->
+									<div class="container  grow--  p-av__pa-se-text">
+										<div>Selected body</div>
 										<div>
-											{#if jobs.includes(`edit_user_avatars`)}
-												Creating new avatar profile...
+											{#if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab)}
+												{#if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`}
+													{((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft || {}).name || `Unknown NFT`}
+												{:else if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`}
+													{(LOUNGE_AVATAR_SKINS.find(S =>
+														S.code === ((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft || {}).skin_code
+													) || {}).name || `Unknown skin`}
+												{:else}
+													Unknown
+												{/if}
 											{:else}
-												Create new avatar profile
+												Unselected
 											{/if}
 										</div>
-										<div>for this Project</div>
 									</div>
+								</div>
 
+								<!-- panel -> avatar -> part (body/pet) -> sections -->
+								<!-- tba: use AVATAR_PART_DATA_TYPES and avatar_part_data_type_tab -->
+							</div>
+						{/if}
+					{:else}
+						<!-- panel -> avatar -> preview -> create -->
+						<div
+							class="container  stretch--  row--  row-left--  text  text-green--  card  green--  p-av__pr-create"
+							class:disabled={[`edit_user_avatars`, `edit_user`].some(j => jobs.includes(j))}
+							on:click={async () => {
+								try {
+									let job_code = `edit_user_avatars`;
+									let other_job_codes = [`del_user_project_avatar`, `edit_user`];
+									
+									if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+										jobs.push(job_code);
+										jobs = jobs;
+
+										// tba: add new user.avatar associated with this project, with default settings; override if matchnhig user.avatar has been added for this project eg. another tab
+
+										jobs = jobs.filter(j => j !== job_code);
+									}
+								} catch (e) {
+									console.log(e);
+								}
+							}}
+						>
+							<!-- panel -> avatar -> preview -> create -> text -->
+							<div class="container  grow--  col--  p-av__pr-cr-text">
+								<div>
 									{#if jobs.includes(`edit_user_avatars`)}
-										<!-- panel -> avatar -> preview -> create -> [loader] -->
-										<Loader />
+										Creating new avatar profile...
 									{:else}
-										<!-- panel -> avatar -> preview -> create -> icon -->
-										<img
-											src={ICONS.add}
-											alt=""
-											class="p-av__pr-cr-icon"
-										/>
+										Create new avatar profile
 									{/if}
 								</div>
+								<div>for this Project</div>
+							</div>
+
+							{#if jobs.includes(`edit_user_avatars`)}
+								<!-- panel -> avatar -> preview -> create -> [loader] -->
+								<Loader />
+							{:else}
+								<!-- panel -> avatar -> preview -> create -> icon -->
+								<img
+									src={ICONS.add}
+									alt=""
+									class="p-av__pr-cr-icon"
+								/>
 							{/if}
 						</div>
-					{:else if avatar_part_tab === `body`}
-						<!-- panel -> avatar -> part (body) -->
-						<div class="container  stretch--  col--  p-av__part">
-							<!-- panel -> avatar -> part (body) -> select -->
-							<!-- tba -->
-
-							<!-- panel -> avatar -> part (body) -> sections -->
-							<!-- tba -->
-
-
-						</div>
-						<!-- tba -->
-					{:else if avatar_part_tab === `pet`}
-						<!-- panel -> avatar -> part (pet) -->
-						<!-- tba -->
 					{/if}
 				</div>
 			{:else if view === `account`}
