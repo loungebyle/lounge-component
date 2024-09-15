@@ -95,8 +95,13 @@
 		}
 	];
 	
-	let avatar_profile_tab = ``; // based on AVATAR_PROFILE_TABS
-	let avatar_part_tab = ``; // based on AVATAR_PART_TABS
+	let avatar_profile_tab = (AVATAR_PROFILE_TABS.find(T =>
+		T.code === `default`
+	) || {}).code || (AVATAR_PROFILE_TABS[0] ||{}).code || ``; // based on AVATAR_PROFILE_TABS
+
+	let avatar_part_tab = (AVATAR_PART_TABS.find(T =>
+		T.code === `preview`
+	) || {}).code || (AVATAR_PART_TABS[0] ||{}).code || ``; // based on AVATAR_PART_TABS
 
 	// vars (account)
 	// todo
@@ -1764,11 +1769,66 @@
 
 					<!-- panel -> avatar -> profiles -->
 					<div class="container  stretch--  row--  row-left--  p-av__profiles">
-						<!-- panel -> avatar -> profile (project) -->
-						<!-- tba -->
+						{#each AVATAR_PROFILE_TABS as TAB}
+							<!-- panel -> avatar -> profile -->
+							<div
+								class="container  stretch--  row--  row-left--  text  card  p-av__profile"
+								class:text-lime-light--={avatar_profile_tab === TAB.code}
+								class:lime--={avatar_profile_tab === TAB.code}
+								class:text-white--={avatar_profile_tab !== TAB.code}
+								class:white--={avatar_profile_tab !== TAB.code}
+								on:click={() => {
+									try {
+										if (avatar_profile_tab !== TAB.code) {
+											avatar_profile_tab = utils.clone(TAB.code) || ``;
+										}
+									} catch (e) {
+										console.log(e);
+									}
+								}}
+							>
+								{#if (user.avatars || []).some(ua =>
+									ua.type === TAB.code
+								)}
+									<!-- profile -> avatar -->
+									<Avatar
+										display="icon"
+										body={((user.avatars || []).some(ua =>
+											ua.type === TAB.code
+										).parts || []).find(uap =>
+											uap.part_type === `body`
+										) || null}
+										pet={((user.avatars || []).some(ua =>
+											ua.type === TAB.code
+										).parts || []).find(uap =>
+											uap.part_type === `pet`
+										) || null}
+										size_em={1.6}
+									/>
+								{:else}
+									<!-- profile -> image -->
+									<img
+										src={FALLBACK_USER_IMAGE}
+										alt=""
+										class="p-av__pr-image"
+									/>
+								{/if}
 
-						<!-- panel -> avatar -> profile (default) -->
-						<!-- tba -->
+								<!-- profile -> text -->
+								<div class="container  grow--  col--  p-av__pr-text">
+									<div>
+										{#if TAB.code === `project`}
+											{(project || {}).name || `n/a`}
+										{:else if TAB.code === `default`}
+											Default
+										{:else}
+											n/a
+										{/if}
+									</div>
+									<div>{TAB.label || ``}</div>
+								</div>
+							</div>
+						{/each}
 					</div>
 
 					<!-- panel -> avatar -> [tabs] -->
