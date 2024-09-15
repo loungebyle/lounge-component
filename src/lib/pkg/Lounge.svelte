@@ -581,6 +581,7 @@
 								let updated_user_instance_c = utils.clone(updated_user_instance);
 								
 								// if updated user instance is associated with logged-in user, update `user_instance` var
+
 								if (
 									user &&
 									user.id &&
@@ -633,11 +634,63 @@
 
 								if (!(updated_minimal_user_instance && updated_minimal_user_instance.id)) break;
 
-								// if updated mininmal user instance is associated with logged-in user, update `user_instance` var
-								// tba: use object.keys technique when updating the user instance obj itself
+								let updated_minimal_user_instance_c = utils.clone(updated_minimal_user_instance);
+
+								// if updated mininmal user instance is associated with the client's active `user_instance` var, update that `user_instance` var
+								
+								if (
+									user_instance &&
+									user_instance.id &&
+									(user_instance.id === updated_minimal_user_instance.id)
+								) {
+									let client_minimal_user_instance_c = utils.clone(updated_minimal_user_instance); 
+									// note: clone separately becuse `updated_minimal_user_instance_c` is used below
+									
+									for (let key of Object.keys(client_minimal_user_instance_c)) {
+										try {
+											if (JSON.parse(user_instance[key]) !== JSON.parse(client_minimal_user_instance_c[key])) {
+												user_instance[key] = client_minimal_user_instance_c[key];
+											}
+										} catch (ie) {
+											console.log(ie);
+										}
+									}
+								}
 								
 								// update any matching user instances across all project rooms
-								// tba: use object.keys technique when updating the user instance obj itself
+
+								if (
+									project &&
+									project.id
+								) {
+									for (let ri = 0; (project.rooms || []); ri++) {
+										let room_matching_user_instances = (project.rooms[ri].user_instances || []).filter(rui =>
+											rui.id === updated_minimal_user_instance_c.id
+										) || [];
+											
+										if (room_matching_user_instances.length >= 1) {
+											let room_matching_user_instance_indexes = room_matching_user_instances.slice().map(mui =>
+												(project.rooms[ri].user_instances || []).findIndex(rui =>
+													rui.id === mui.id
+												)
+											).filter(mui =>
+												mui >= 0
+											) || [];
+										
+											for (let uii of room_matching_user_instance_indexes) {
+												for (let key of Object.keys(updated_minimal_user_instance_c)) {
+													try {
+														if (JSON.parse(project.rooms[ri].user_instances[uii][key]) !== JSON.parse(updated_minimal_user_instance_c[key])) {
+															project.rooms[ri].user_instances[uii][key] = updated_minimal_user_instance_c[key];
+														}
+													} catch (ie) {
+														console.log(ie);
+													}
+												}
+											}
+										}
+									}
+								}
 
 								break;
 							}
@@ -689,7 +742,16 @@
 								// none
 
 								// delete matching messages from `messages` var if not already
-								// tba
+
+								for (let id of deleted_message_ids) {
+									if (messages.some(m =>
+										m.id === id
+									)) {
+										messages = messages.filter(m =>
+											m.id !== id
+										) || [];
+									}
+								}
 
 								break;
 							}
@@ -701,8 +763,72 @@
 								// check vars
 								// none
 
-								// update or delete (depending on whether they are in the inbound `newly_idle...` or `deleted_...` array) any matching user instances across all project rooms
-								// tba: if updating, use the object.keys technique when updating the user instance obj itself
+								// if client's active user instance is in newly idle user instance ids, update accordingly
+
+								if (
+									user_instance &&
+									user_instance.id &&
+									newly_idle_user_instance_ids.includes(user_instance.id)
+								) {
+									user_instance.status = `idle`;
+								}
+
+								// if client's active user instance is in deleted user instance ids, delete accordingly
+								
+								if (
+									user_instance &&
+									user_instance.id &&
+									deleted_user_instance_ids.includes(user_instance.id)
+								) {
+									user_instance = null;
+								}
+
+								if (
+									project &&
+									project.id
+								) {
+									// update any matching newly idle user instances across all project rooms
+
+									for (let id of newly_idle_user_instance_ids) {
+										for (let ri = 0; (project.rooms || []); ri++) {
+											let room_matching_user_instances = (project.rooms[ri].user_instances || []).filter(rui =>
+												rui.id === id
+											) || [];
+
+											if (room_matching_user_instances.length >= 1) {
+												let room_matching_user_instance_indexes = room_matching_user_instances.slice().map(mui =>
+													(project.rooms[ri].user_instances || []).findIndex(rui =>
+														rui.id === mui.id
+													)
+												).filter(mui =>
+													mui >= 0
+												) || [];
+
+												for (let uii of room_matching_user_instance_indexes) {
+													project.rooms[ri].user_instances[uii].status = `idle`;
+												}
+											}
+										}
+									}
+									
+									// delete any matching deleted user instances across all project rooms
+									
+									for (let id of deleted_user_instance_ids) {
+										for (let ri = 0; (project.rooms || []); ri++) {
+											let room_matching_user_instances = (project.rooms[ri].user_instances || []).filter(rui =>
+												rui.id === id
+											) || [];
+
+											if (room_matching_user_instances.length >= 1) {
+												project.rooms[ri].user_instances = project.rooms[ri].user_instances.filter(rui =>
+													!room_matching_user_instances.some(mui =>
+														mui.id === rui.id
+													)
+												) || [];
+											}
+										}
+									}
+								}
 
 								break;
 							}
