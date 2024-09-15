@@ -1968,6 +1968,17 @@
 										This avatar configuration is not in use yet, please save your changes.
 									{/if}
 								</div>
+
+								{#if avatar_profile_tab === `project`}
+									<!-- panel -> avatar -> preview (project) -> delete -->
+									<div class="container  stretch--  co--  p-av__pr-delete">
+										<!-- panel -> avatar -> preview (project) -> delete -> text -->
+										<!-- tba -->
+
+										<!-- panel -> avatar -> preview (project) -> delete -> button -->
+										<!-- tba -->
+									</div>
+								{/if}
 							{:else}
 								<!-- panel -> avatar -> preview -> create -->
 								<div
@@ -2018,8 +2029,19 @@
 							{/if}
 						</div>
 					{:else if avatar_part_tab === `body`}
+						<!-- panel -> avatar -> part (body) -->
+						<div class="container  stretch--  col--  p-av__part">
+							<!-- panel -> avatar -> part (body) -> select -->
+							<!-- tba -->
+
+							<!-- panel -> avatar -> part (body) -> sections -->
+							<!-- tba -->
+
+
+						</div>
 						<!-- tba -->
 					{:else if avatar_part_tab === `pet`}
+						<!-- panel -> avatar -> part (pet) -->
 						<!-- tba -->
 					{/if}
 				</div>
