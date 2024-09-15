@@ -40,7 +40,7 @@
 		users: users_icon
 	}
 
-	const NFT_CXS_LINK_URL = ``; // tba
+	const NFT_CXS_LINK_URL = `https://lounge.so/nfts`; // tba
 
 	// consts (freezed during runtime)
 
@@ -59,7 +59,11 @@
 	let bookmarked_projects = [];
 	let explorable_projects = [];
 
-	let is_toggled = false;
+	let is_component_toggled = ([`component`].includes(context)) ? false : true;
+
+	let is_chat_toggled = false;
+
+	let is_panel_toggled = false;
 	let view = `main`; // <`main`, `avatar`, `account`, `projects`, `users`, `friends`, `rooms`, `project_settings`, `shop`, `help`, `lounge_settings`>
 	let overlay_user;
 	let overlay_project;
@@ -253,16 +257,28 @@
 	// none
 
 	// funcs
-	
-	function toggle() {
+
+	function toggleComponent() {
 		try {
-			is_toggled = !is_toggled;
+			// for non-`component` contexts, `is_component_toggled` is always true since the component's full size would always be visible, as it's not in widget form
+
+			if ([`component`].includes(context)) {
+				is_component_toggled = !is_component_toggled;
+			}
+		} catch (e) {
+			console.log(e);
+		}
+	}
+	
+	function togglePanel() {
+		try {
+			is_panel_toggled = !is_panel_toggled;
 		} catch (e) {
 			console.log(e);
 		}
 	}
 
-	function back() {
+	function backInPanel() {
 		try {
 			let previous_view = utils.clone(view) || ``;
 
@@ -271,6 +287,14 @@
 			switch (previous_view) {
 				// todo: other view types if required
 			}
+		} catch (e) {
+			console.log(e);
+		}
+	}
+
+	function toggleChat() {
+		try {
+			is_chat_toggled = !is_chat_toggled;
 		} catch (e) {
 			console.log(e);
 		}
@@ -994,14 +1018,20 @@
 	try {
 		switch (e.key) {
 			case `Escape`: {
-				if (view === `main`) {
-					toggle();
-				} else {
-					back();
+				if (is_panel_toggled) {
+					if (view === `main`) {
+						togglePanel();
+					} else {
+						backInPanel();
+					}
+				} else if (is_chat_toggled) {
+					toggleChat();
 				}
 			}
 
-			// tba: listen to wasd keystrokes to facilitate avatar movements, auto push new/updated user instance if necessary and if able to, ie. user is logge/d in
+			// tba: listen to enter keydown to toggle chat or submit chat message if chat already toggled open
+
+			// tba: listen to wasd keydowns to facilitate avatar movements if !is_chat_toggled, auto push new/updated user instance if necessary and if able to, ie. user is logge/d in
 		}
 	} catch (e) {
 		console.log(e);
@@ -1013,480 +1043,833 @@
 }
 	<!-- lounge -->
 	<div class="container  col--  lounge  l-{context}--">
-		<!-- background -->
-		<!-- tba -->
-
 		<!-- toggle -->
-		<!-- tba -->
+		<!-- tba: toggleComponent on click, only does anything if context is `component` -->
 
-		<!-- label (powered by) -->
-		<!-- tba -->
+		{#if is_component_toggled}
+			<!-- background -->
+			<!-- tba -->
 
-		{#if is_toggled}
-			<!-- panel -->
-			<div class="container  row--  row-centre--  text  text-white--  card  black--  panel">
-				{#if
-					(overlay_user && overlay_user.id) ||
-					(overlay_project && overlay_project.id)	
-				}
-					<!-- overlay container -->
-					<div class="container  grow--  stretch--  col--  col-bottom--  card  black--  p-overlay-container">
-						<!-- overlay -->
-						<div class="container  stretch--  col--  text  text-white--  card  black--  p-overlay">
-							<!-- overlay -> top -->
-							<!-- note: use `p-top` styles -->
-							<div class="container  stretch--  row--  row-left--  p-top">
-								<!-- overlay -> top -> text -->
-								<div class="container  grow--  row--  row-left--  p-to__text">
-									<span>Esc</span>
-									<span>to close</span>
+			<!-- label (powered by) -->
+			<!-- tba -->
+			
+			<!-- chat -->
+			<!-- tba: use is_chat_toggled to switch between "minimised" and "opened" ui -->
+
+			{#if is_panel_toggled}
+				<!-- panel -->
+				<div class="container  row--  row-centre--  text  text-white--  card  black--  panel">
+					{#if
+						(overlay_user && overlay_user.id) ||
+						(overlay_project && overlay_project.id)	
+					}
+						<!-- overlay container -->
+						<div class="container  grow--  stretch--  col--  col-bottom--  card  black--  p-overlay-container">
+							<!-- overlay -->
+							<div class="container  stretch--  col--  text  text-white--  card  black--  p-overlay">
+								<!-- overlay -> top -->
+								<!-- note: use `p-top` styles -->
+								<div class="container  stretch--  row--  row-left--  p-top">
+									<!-- overlay -> top -> text -->
+									<div class="container  grow--  row--  row-left--  p-to__text">
+										<span>Esc</span>
+										<span>to close</span>
+									</div>
+
+									<!-- top -> close -->
+									<div
+										class="p-to__close"
+										on:click|stopPropagation={() => {
+											try {
+												overlay_user = null;
+												overlay_project = null;
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<img
+											src={ICONS.close}
+											alt=""
+											class="svg  svg-white--"
+										/>
+									</div>
 								</div>
 
-								<!-- top -> close -->
+								{#if overlay_user && overlay_user.id}
+									<!-- overlay -> user -->
+									<div class="container  stretch--  col--  p-ov__user">
+										<!-- overlay -> user -> [row] (1) -->
+										<!-- note: use `p-row` styles -->
+										<div class="container  stretch--  row--  row-left--  p-row">
+											{#if ((overlay_user.project_avatar || {}).parts || []).some(p =>
+												p.type === `body`
+											)}
+												<!-- overlay -> user -> row (1) -> [avatar] -->
+												<Avatar
+													display="icon"
+													body={overlay_user.project_avatar.parts.find(p => p.type === `body`) || null}
+													pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`) || null}
+													size_em={4}
+												/>
+											{/if}
+
+											<!-- overlay -> user -> row (1) -> [card] profile -->
+											<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-card  p-ov__us-profile">
+												<div class="text  text-white--">{overlay_user.name || `n/a`}</div>
+												<div>@{overlay_user.code || `n/a`}</div>
+											</div>
+										</div>
+
+										<!-- overlay -> user -> [row] (2) -->
+										<!-- note: use `p-row` styles -->
+										<div class="container  stretch--  row--  row-left--  p-row">
+											<!-- overlay -> user -> row (2) -> [stat] friend -->
+											<div
+												class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-stat  p-ov__us-friend"
+												class:p-pending--={(user.relationships || []).some(r =>
+													(r.users || []).some(ru =>
+														ru.id === overlay_user.id
+													) &&
+													(r.status === `pending`)
+												)}
+												class:p-accepted--={(user.relationships || []).some(r =>
+													(r.users || []).some(ru =>
+														ru.id === overlay_user.id
+													) &&
+													(r.status === `accepted`)
+												)}
+												on:click|stopPropagation={() => {
+													try {
+														if (!(user.relationships || []).some(r =>
+															(r.users || []).some(ru =>
+																ru.id === overlay_user.id
+															)
+														)) {
+															// tba: add user relationship
+														}
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<span class="text  text-white--">
+													{#if (user.relationships || []).some(r =>
+														(r.users || []).some(ru =>
+															ru.id === overlay_user.id
+														) &&
+														(r.status === `accepted`)
+													)}
+														Added as a
+													{:else if (user.relationships || []).some(r =>
+														(r.users || []).some(ru =>
+															ru.id === overlay_user.id
+														) &&
+														(r.status === `pending`)
+													)}
+														Adding... as a
+													{:else}
+														Add as a
+													{/if}
+												</span>
+
+												<img
+													src={ICONS.friends}
+													alt=""
+													class="svg  svg-yellow"
+												/>
+
+												<span>friend</span>
+											</div>
+
+											{#if (user.relationships || []).some(r =>
+												(r.users || []).some(ru =>
+													ru.id === overlay_user.id
+												)
+											)}
+												<!-- overlay -> user -> row (2) -> remove -->
+												<div
+													class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-ov__us-remove"
+													on:click|stopPropagation={async () => {
+														try {
+															// tba: del user relationship
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<div>
+														{#if jobs.includes(`del_relationship_${(user.relationships || []).find(r =>
+															(r.users || []).some(ru =>
+																ru.id === overlay_user.id
+															)
+														).id}`)}
+															<Loader />
+														{:else}
+															<img
+																src={ICONS.close}
+																alt=""
+																class="svg  svg-red-light--"
+															/>
+														{/if}
+													</div>
+												</div>
+											{/if}
+										</div>
+
+										<!-- overlay -> user -> [row] (3) -->
+										<!-- note: use `p-row` styles -->
+										<div class="container  stretch--  row--  row-left--  p-row">
+											<!-- overlay -> user -> row (3) -> [panecard] cxs -->
+											<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-card  p-ov__us-cxs">
+												<!-- overlay -> user -> row (3) -> cxs -> text -->
+												<div class="p-ov__us-cx-text">
+													<span>In</span>
+													<span>{(overlay_user.nft_cxs || []).length || 0}</span>
+													<span class="text  text-white--">NFT collections</span>
+												</div>
+
+												<!-- overlay -> user -> row (3) -> cxs -> list -->
+												<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
+													{#each utils.shuffleArray((overlay_user.nft_cxs || []).slice(0, 5) || []) as user_nft_cx}
+														<!-- item -->
+														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
+															<!-- item -> label -->
+															<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
+																<div>
+																	{utils.shortenString({
+																		string: user_nft_cx.name || ``,
+																		length: 15
+																	}) || `n/a`}
+																</div>
+															</div>
+
+															<!-- item -> image -->
+															<img
+																src={user_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
+																alt=""
+																class="p-ov__us-cx-li-it-image"
+															/>
+														</div>
+													{/each}
+
+													{#each Array(5 - Math.min((overlay_user.nft_cxs || []).length, 5)) as _}
+														<!-- item (placeholder) -->
+														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
+															<!-- item -> image -->
+															<img
+																src={FALLBACK_USER_IMAGE}
+																alt=""
+																class="p-ov__us-cx-li-it-image"
+															/>
+														</div>
+													{/each}
+												</div>
+											</div>
+
+											<!-- overlay -> user -> row (3) -> [card] xp -->
+											<div class="container  stretch--  col--  text  text-green--  card  green--  p-card  p-ov__us-xp">
+												<!-- overlay -> user -> row (3) -> xp -> label -->
+												<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
+													<img
+														src={ICONS.xp}
+														alt=""
+													/>
+													<div>XP</div>
+												</div>
+
+												<!-- overlay -> user -> row (3) -> xp -> value -->
+												<div class="text  text-white--">
+													--
+													<!-- todo: user xp -->
+												</div>
+											</div>
+										</div>
+									</div>
+								{:else if overlay_project && overlay_project.id}
+									<!-- overlay -> project -->
+									<div class="container  stretch--  col--  p-ov__project">
+										<!-- overlay -> project -> [row] (1) -->
+										<!-- note: use `p-row` styles -->
+										<div class="container  stretch--  row--  row-left--  p-row">
+											<!-- overlay -> project -> row (1) -> image -->
+											<img
+												src={overlay_project.icon_image_url || FALLBACK_USER_IMAGE}
+												alt=""
+												class="container  col--  stretch--  p-ov__pr-image"
+											/>
+
+											<!-- overlay -> project -> row (1) -> profile -->
+											<!-- note: use `p-ov__us-profile` styles -->
+											<div class="container  grow--  stretch  col--  text  text-cream--  card  cream--  p-ov__us-profile">
+												<div class="text  text-white--">{overlay_project.name || `n/a`}</div>
+												<div>@{overlay_project.code || `n/a`}</div>
+											</div>
+										</div>
+
+										<!-- overlay -> project -> [row] (2) -->
+										<!-- note: use `p-row` styles -->
+										<div class="container  stretch--   row--  row-left--  p-row">
+											<!-- overlay -> project -> row (2) -> [stat] users -->
+											<!-- note: use `p-ma__users` styles -->
+											<div class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users">
+												<span class="text  text-white--">
+													{(overlay_project.rooms || []).reduce((total_user_count, room) =>
+														total_user_count += (room.user_instances || []).length,
+														0
+													) || 0}
+												</span>
+
+												<img
+													src={ICONS.users}
+													alt=""
+													class="svg  svg-lime-light--"
+												/>
+
+												<span>online</span>
+											</div>
+
+											<!-- overlay -> project -> row (2) -> [stat] rooms -->
+											<div class="container  stretch--  row-centre-  text  text-blue-light--  card  blue--  p-stat  p-ov__pr-rooms">
+												<span class="text  text-white--">
+													{(overlay_project.rooms || []).length || 0}
+												</span>
+
+												<img
+													src={ICONS.rooms}
+													alt=""
+													class="svg  svg-blue-light--"
+												/>
+
+												<span>rooms</span>
+											</div>
+										</div>
+
+										<!-- overlay -> project -> [row] (3) -->
+										<!-- note: use `p-row` styles -->
+										<div class="container  stretch--  row--  row-left--  p-row">
+											<!-- overlay -> project -> row (3) -> cxs -->
+											<!-- note: use `p-ov__us-cxs` styles -->
+											<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-ov__us-cxs">
+												<!-- overlay -> project -> row (3) -> cxs -> text -->
+												<div class="p-ov__us-cx-text">
+													<span>In</span>
+													<span>{(overlay_project.nft_cxs || []).length || 0}</span>
+													<span class="text  text-white--">NFT collections</span>
+												</div>
+
+												<!-- overlay -> project -> row (3) -> cxs -> list -->
+												<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
+													{#each utils.shuffleArray((overlay_project.nft_cxs || []).slice(0, 5) || []) as project_nft_cx}
+														<!-- item -->
+														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
+															<!-- item -> label -->
+															<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
+																<div>
+																	{utils.shortenString({
+																		string: project_nft_cx.name || ``,
+																		length: 15
+																	}) || `n/a`}
+																</div>
+															</div>
+
+															<!-- item -> image -->
+															<img
+																src={project_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
+																alt=""
+																class="p-ov__us-cx-li-it-image"
+															/>
+														</div>
+													{/each}
+
+													{#each Array(5 - Math.min((overlay_project.nft_cxs || []).length, 5)) as _}
+														<!-- item (placeholder) -->
+														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
+															<!-- item -> image -->
+															<img
+																src={FALLBACK_USER_IMAGE}
+																alt=""
+																class="p-ov__us-cx-li-it-image"
+															/>
+														</div>
+													{/each}
+												</div>
+											</div>
+
+											<!-- overlay -> project -> row (3) -> xp -->
+											<!-- note: use `p-ov__us-xp` styles -->
+											<div class="container  stretch--  col--  text  text-green--  card  green--  p-ov__us-xp">
+												<!-- overlay -> project -> row (3) -> xp -> label -->
+												<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
+													<img
+														src={ICONS.xp}
+														alt=""
+													/>
+													<div>XP</div>
+												</div>
+
+												<!-- overlay -> project -> row (3) -> xp -> value -->
+												<div class="text  text-white--">
+													--
+													<!-- todo: project xp -->
+												</div>
+											</div>
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/if}
+
+					<!-- top -->
+					<div class="container  stretch--  row--  row-left--  p-top">
+						<!-- top -> text -->
+						<div class="container  grow--  row--  row-left--  p-to__text">
+							{#if !(user && user.id)}
+								<span>Login to the</span>
+								<span>Lounge.</span>
+							{:else if jobs.includes(`get_data`)}
+								<span>Loading the</span>
+								<span>Lounge...</span>
+							{:else if view === `main`}
+								<span>Welcome to the</span>
+								<span>Lounge.</span>
+							{:else}
+								<span>Esc</span>
+								<span>to go back</span>
+							{/if}
+						</div>
+			
+						<!-- top -> close -->
+						<div
+							class="p-to__close"
+							on:click|stopPropagation={() => {
+								try {
+									togglePanel();
+								} catch (e) {
+									console.log(e);
+								}
+							}}
+						>
+							<img
+								src={ICONS.close}
+								alt=""
+								class="svg  svg-white--"
+							/>
+						</div>
+					</div>
+			
+					{#if !(user && user.id)}
+						<!-- tba: logged-out view -->
+					{:else if jobs.includes(`get_data`)}
+						<Loader />
+					{:else if !(project && project.id)}
+						<!-- tba: error -->
+					{:else if view === `main`}
+						<!-- panel -> main -->
+						<div class="container  stretch--  col--  p-main">
+							<!-- panel -> main -> [row] (1) -->
+							<div class="container  stretch--  row--  row-left--  p-row">
+								<!-- panel -> main -> row (1) -> image -->
+								<img
+									src={project.icon_image_url || FALLBACK_USER_IMAGE}
+									alt=""
+									class="container  col--  stretch--  p-ma__image"
+								/>
+
+								<!-- panel -> main -> row (1) -> project -->
 								<div
-									class="p-to__close"
+									class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ma__project"
 									on:click|stopPropagation={() => {
 										try {
-											overlay_user = null;
-											overlay_project = null;
+											overlay_project = utils.clone(project);
 										} catch (e) {
 											console.log(e);
 										}
-									}}
+									}}	
 								>
-									<img
-										src={ICONS.close}
-										alt=""
-										class="svg  svg-white--"
-									/>
-								</div>
-							</div>
-
-							{#if overlay_user && overlay_user.id}
-								<!-- overlay -> user -->
-								<div class="container  stretch--  col--  p-ov__user">
-									<!-- overlay -> user -> [row] (1) -->
-									<!-- note: use `p-row` styles -->
-									<div class="container  stretch--  row--  row-left--  p-row">
-										{#if ((overlay_user.project_avatar || {}).parts || []).some(p =>
-											p.type === `body`
-										)}
-											<!-- overlay -> user -> row (1) -> [avatar] -->
-											<Avatar
-												display="icon"
-												body={overlay_user.project_avatar.parts.find(p => p.type === `body`) || null}
-												pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`) || null}
-												size_em={4}
-											/>
+									<!-- panel -> main -> row (1) -> project -> [actions] -->
+									<div class="container  row--  row-right--  p-ca__actions">
+										{#if [`owner`, `admin`, `staff`].includes(user_staff_type)}
+											<!-- panel -> main -> row (1) -> project -> [action] (edit) -->
+											<div
+												class="container  stretch--  row--  row-centre--  text  text-white--  card  yellow--  p-ca__action  p-ma__pr-edit"
+												on:click|stopPropagation={() => {
+													try {
+														// tba: goto project settings
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<div>Staff</div>
+												<div>Edit</div>
+											</div>
 										{/if}
 
-										<!-- overlay -> user -> row (1) -> [card] profile -->
-										<div class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-card  p-ov__us-profile">
-											<div class="text  text-white--">{overlay_user.name || `n/a`}</div>
-											<div>@{overlay_user.code || `n/a`}</div>
-										</div>
-									</div>
-
-									<!-- overlay -> user -> [row] (2) -->
-									<!-- note: use `p-row` styles -->
-									<div class="container  stretch--  row--  row-left--  p-row">
-										<!-- overlay -> user -> row (2) -> [stat] friend -->
+										<!-- panel -> main -> row (1) -> project -> [action] (bookmark) -->
 										<div
-											class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-stat  p-ov__us-friend"
-											class:p-pending--={(user.relationships || []).some(r =>
-												(r.users || []).some(ru =>
-													ru.id === overlay_user.id
-												) &&
-												(r.status === `pending`)
-											)}
-											class:p-accepted--={(user.relationships || []).some(r =>
-												(r.users || []).some(ru =>
-													ru.id === overlay_user.id
-												) &&
-												(r.status === `accepted`)
-											)}
-											on:click|stopPropagation={() => {
+											class="container  stretch--  row--  row-centre--  card  yellow--  p-ca__action  p-ma__pr-bookmark"
+											class:disabled={[`bookmark_project_${project.id}`].some(j => jobs.includes(j))}
+											on:click|stopPropagation={async () => {
 												try {
-													if (!(user.relationships || []).some(r =>
-														(r.users || []).some(ru =>
-															ru.id === overlay_user.id
-														)
-													)) {
-														// tba: add user relationship
+													let job_code = `bookmark_project_${utils.clone(project.id)}`;
+													let other_job_codes = [];
+													
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: push/pull project bookmark
+
+														jobs = jobs.filter(j => j !== job_code);
 													}
 												} catch (e) {
 													console.log(e);
 												}
 											}}
 										>
-											<span class="text  text-white--">
-												{#if (user.relationships || []).some(r =>
-													(r.users || []).some(ru =>
-														ru.id === overlay_user.id
-													) &&
-													(r.status === `accepted`)
-												)}
-													Added as a
-												{:else if (user.relationships || []).some(r =>
-													(r.users || []).some(ru =>
-														ru.id === overlay_user.id
-													) &&
-													(r.status === `pending`)
-												)}
-													Adding... as a
+											<div>
+												{#if jobs.includes(`bookmark_project_${project.id}`)}
+													<Loader/>
 												{:else}
-													Add as a
+													<img
+														src={ICONS.bookmark}
+														alt=""
+														class="svg  svg-yellow--"
+													/>
 												{/if}
-											</span>
+											</div>
+										</div>
+									</div>
 
+									<!-- panel -> main -> row (1) -> project -> label -->
+									<div class="p-ma__pr-label">
+										This is
+									</div>
+
+									<!-- panel -> main -> row (1) -> project -> name -->
+									<div class="text  text-white--  p-ma__pr-name">
+										{project.name || `n/a`}
+									</div>
+
+									<!-- panel -> main -> row (1) -> project -> [notes] -->
+									<div class="container  stretch--  row--  row-left--  p-ca__notes">
+										<!-- panel -> main -> row (1) -> project -> [note] (verified) -->
+										<!-- todo: project verification -->
+
+										<!-- panel -> main -> row (1) -> project -> [note] (xp) -->
+										<div class="container  row--  row-left--  p-ca__note  p-faded--">
 											<img
-												src={ICONS.friends}
+												src={ICONS.xp}
 												alt=""
-												class="svg  svg-yellow"
+												class="svg  svg-cream--"
 											/>
 
-											<span>friend</span>
-										</div>
-
-										{#if (user.relationships || []).some(r =>
-											(r.users || []).some(ru =>
-												ru.id === overlay_user.id
-											)
-										)}
-											<!-- overlay -> user -> row (2) -> remove -->
-											<div
-												class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-ov__us-remove"
-												on:click|stopPropagation={async () => {
-													try {
-														// tba: del user relationship
-													} catch (e) {
-														console.log(e);
-													}
-												}}
-											>
-												<div>
-													{#if jobs.includes(`del_relationship_${(user.relationships || []).find(r =>
-														(r.users || []).some(ru =>
-															ru.id === overlay_user.id
-														)
-													).id}`)}
-														<Loader />
-													{:else}
-														<img
-															src={ICONS.close}
-															alt=""
-															class="svg  svg-red-light--"
-														/>
-													{/if}
-												</div>
-											</div>
-										{/if}
-									</div>
-
-									<!-- overlay -> user -> [row] (3) -->
-									<!-- note: use `p-row` styles -->
-									<div class="container  stretch--  row--  row-left--  p-row">
-										<!-- overlay -> user -> row (3) -> [panecard] cxs -->
-										<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-card  p-ov__us-cxs">
-											<!-- overlay -> user -> row (3) -> cxs -> text -->
-											<div class="p-ov__us-cx-text">
-												<span>In</span>
-												<span>{(overlay_user.nft_cxs || []).length || 0}</span>
-												<span class="text  text-white--">NFT collections</span>
-											</div>
-
-											<!-- overlay -> user -> row (3) -> cxs -> list -->
-											<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
-												{#each utils.shuffleArray((overlay_user.nft_cxs || []).slice(0, 5) || []) as user_nft_cx}
-													<!-- item -->
-													<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
-														<!-- item -> label -->
-														<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
-															<div>
-																{utils.shortenString({
-																	string: user_nft_cx.name || ``,
-																	length: 15
-																}) || `n/a`}
-															</div>
-														</div>
-
-														<!-- item -> image -->
-														<img
-															src={user_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
-															alt=""
-															class="p-ov__us-cx-li-it-image"
-														/>
-													</div>
-												{/each}
-
-												{#each Array(5 - Math.min((overlay_user.nft_cxs || []).length, 5)) as _}
-													<!-- item (placeholder) -->
-													<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
-														<!-- item -> image -->
-														<img
-															src={FALLBACK_USER_IMAGE}
-															alt=""
-															class="p-ov__us-cx-li-it-image"
-														/>
-													</div>
-												{/each}
-											</div>
-										</div>
-
-										<!-- overlay -> user -> row (3) -> [card] xp -->
-										<div class="container  stretch--  col--  text  text-green--  card  green--  p-card  p-ov__us-xp">
-											<!-- overlay -> user -> row (3) -> xp -> label -->
-											<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
-												<img
-													src={ICONS.xp}
-													alt=""
-												/>
-												<div>XP</div>
-											</div>
-
-											<!-- overlay -> user -> row (3) -> xp -> value -->
-											<div class="text  text-white--">
-												--
-												<!-- todo: user xp -->
-											</div>
-										</div>
-									</div>
-								</div>
-							{:else if overlay_project && overlay_project.id}
-								<!-- overlay -> project -->
-								<div class="container  stretch--  col--  p-ov__project">
-									<!-- overlay -> project -> [row] (1) -->
-									<!-- note: use `p-row` styles -->
-									<div class="container  stretch--  row--  row-left--  p-row">
-										<!-- overlay -> project -> row (1) -> image -->
-										<img
-											src={overlay_project.icon_image_url || FALLBACK_USER_IMAGE}
-											alt=""
-											class="container  col--  stretch--  p-ov__pr-image"
-										/>
-
-										<!-- overlay -> project -> row (1) -> profile -->
-										<!-- note: use `p-ov__us-profile` styles -->
-										<div class="container  grow--  stretch  col--  text  text-cream--  card  cream--  p-ov__us-profile">
-											<div class="text  text-white--">{overlay_project.name || `n/a`}</div>
-											<div>@{overlay_project.code || `n/a`}</div>
-										</div>
-									</div>
-
-									<!-- overlay -> project -> [row] (2) -->
-									<!-- note: use `p-row` styles -->
-									<div class="container  stretch--   row--  row-left--  p-row">
-										<!-- overlay -> project -> row (2) -> [stat] users -->
-										<!-- note: use `p-ma__users` styles -->
-										<div class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users">
-											<span class="text  text-white--">
-												{(overlay_project.rooms || []).reduce((total_user_count, room) =>
-													total_user_count += (room.user_instances || []).length,
-													0
-												) || 0}
-											</span>
-
-											<img
-												src={ICONS.users}
-												alt=""
-												class="svg  svg-lime-light--"
-											/>
-
-											<span>online</span>
-										</div>
-
-										<!-- overlay -> project -> row (2) -> [stat] rooms -->
-										<div class="container  stretch--  row-centre-  text  text-blue-light--  card  blue--  p-stat  p-ov__pr-rooms">
-											<span class="text  text-white--">
-												{(overlay_project.rooms || []).length || 0}
-											</span>
-
-											<img
-												src={ICONS.rooms}
-												alt=""
-												class="svg  svg-blue-light--"
-											/>
-
-											<span>rooms</span>
-										</div>
-									</div>
-
-									<!-- overlay -> project -> [row] (3) -->
-									<!-- note: use `p-row` styles -->
-									<div class="container  stretch--  row--  row-left--  p-row">
-										<!-- overlay -> project -> row (3) -> cxs -->
-										<!-- note: use `p-ov__us-cxs` styles -->
-										<div class="container  grow--  stretch--  col--  text  text-purple-light--  card  purple--  p-ov__us-cxs">
-											<!-- overlay -> project -> row (3) -> cxs -> text -->
-											<div class="p-ov__us-cx-text">
-												<span>In</span>
-												<span>{(overlay_project.nft_cxs || []).length || 0}</span>
-												<span class="text  text-white--">NFT collections</span>
-											</div>
-
-											<!-- overlay -> project -> row (3) -> cxs -> list -->
-											<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
-												{#each utils.shuffleArray((overlay_project.nft_cxs || []).slice(0, 5) || []) as project_nft_cx}
-													<!-- item -->
-													<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
-														<!-- item -> label -->
-														<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
-															<div>
-																{utils.shortenString({
-																	string: project_nft_cx.name || ``,
-																	length: 15
-																}) || `n/a`}
-															</div>
-														</div>
-
-														<!-- item -> image -->
-														<img
-															src={project_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
-															alt=""
-															class="p-ov__us-cx-li-it-image"
-														/>
-													</div>
-												{/each}
-
-												{#each Array(5 - Math.min((overlay_project.nft_cxs || []).length, 5)) as _}
-													<!-- item (placeholder) -->
-													<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
-														<!-- item -> image -->
-														<img
-															src={FALLBACK_USER_IMAGE}
-															alt=""
-															class="p-ov__us-cx-li-it-image"
-														/>
-													</div>
-												{/each}
-											</div>
-										</div>
-
-										<!-- overlay -> project -> row (3) -> xp -->
-										<!-- note: use `p-ov__us-xp` styles -->
-										<div class="container  stretch--  col--  text  text-green--  card  green--  p-ov__us-xp">
-											<!-- overlay -> project -> row (3) -> xp -> label -->
-											<div class="container  stretch--  row--  row-left--  p-ov__us-xp-label">
-												<img
-													src={ICONS.xp}
-													alt=""
-												/>
-												<div>XP</div>
-											</div>
-
-											<!-- overlay -> project -> row (3) -> xp -> value -->
-											<div class="text  text-white--">
+											<div>
 												--
 												<!-- todo: project xp -->
 											</div>
 										</div>
 									</div>
 								</div>
-							{/if}
-						</div>
-					</div>
-				{/if}
+							</div>
 
-				<!-- top -->
-				<div class="container  stretch--  row--  row-left--  p-top">
-					<!-- top -> text -->
-					<div class="container  grow--  row--  row-left--  p-to__text">
-						{#if !(user && user.id)}
-							<span>Login to the</span>
-							<span>Lounge.</span>
-						{:else if jobs.includes(`get_data`)}
-							<span>Loading the</span>
-							<span>Lounge...</span>
-						{:else if view === `main`}
-							<span>Welcome to the</span>
-							<span>Lounge.</span>
-						{:else}
-							<span>Esc</span>
-							<span>to go back</span>
-						{/if}
-					</div>
-		
-					<!-- top -> close -->
-					<div
-						class="p-to__close"
-						on:click|stopPropagation={() => {
-							try {
-								toggle();
-							} catch (e) {
-								console.log(e);
-							}
-						}}
-					>
-						<img
-							src={ICONS.close}
-							alt=""
-							class="svg  svg-white--"
-						/>
-					</div>
-				</div>
-		
-				{#if !(user && user.id)}
-					<!-- tba: logged-out view -->
-				{:else if jobs.includes(`get_data`)}
-					<Loader />
-				{:else if !(project && project.id)}
-					<!-- tba: error -->
-				{:else if view === `main`}
-					<!-- panel -> main -->
-					<div class="container  stretch--  col--  p-main">
-						<!-- panel -> main -> [row] (1) -->
-						<div class="container  stretch--  row--  row-left--  p-row">
-							<!-- panel -> main -> row (1) -> image -->
-							<img
-								src={project.icon_image_url || FALLBACK_USER_IMAGE}
-								alt=""
-								class="container  col--  stretch--  p-ma__image"
-							/>
+							<!-- panel -> main -> [row] (2) -->
+							<div class="container  stretch--  row--  row-left--  p-row">
+								<!-- panel -> main -> row (2) -> [stat] users -->
+								<div
+									class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users"
+									on:click|stopPropagation={() => {
+										try {
+											// tba: goto project users
+										} catch (e) {
+											console.log(e);
+										}
+									}}
+								>
+									<span class="text  text-white--">
+										{(overlay_project.rooms || []).reduce((total_user_count, room) =>
+											total_user_count += (room.user_instances || []).length,
+											0
+										) || 0}
+									</span>
 
-							<!-- panel -> main -> row (1) -> project -->
-							<div
-								class="container  grow--  stretch--  col--  text  text-cream--  card  cream--  p-ma__project"
-								on:click|stopPropagation={() => {
-									try {
-										overlay_project = utils.clone(project);
-									} catch (e) {
-										console.log(e);
-									}
-								}}	
-							>
-								<!-- panel -> main -> row (1) -> project -> [actions] -->
-								<div class="container  row--  row-right--  p-ca__actions">
-									{#if [`owner`, `admin`, `staff`].includes(user_staff_type)}
-										<!-- panel -> main -> row (1) -> project -> [action] (edit) -->
+									<img
+										src={ICONS.users}
+										alt=""
+										class="svg  svg-lime-light--"
+									/>
+
+									<span>online</span>
+								</div>
+
+								<!-- panel -> main -> row (2) -> [stat] friends -->
+								<div
+									class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-stat  p-ma__friends"
+									on:click|stopPropagation={() => {
+										try {
+											// tba: goto friends
+										} catch (e) {
+											console.log(e);
+										}
+									}}
+								>
+									<span class="text  text-white--">
+										{(overlay_project.rooms || []).reduce((total_user_count, room) =>
+											total_user_count += (room.user_instances || []).filter(ru =>
+												(user.retationships || []).some(ur =>
+													(ur.users || []).some(uru =>
+														uru.id === ru.id
+													)
+												)
+											).length,
+											0
+										) || 0}
+									</span>
+
+									<img
+										src={ICONS.friends}
+										alt=""
+										class="svg  svg-yellow--"
+									/>
+
+									<span>friends</span>
+								</div>
+							</div>
+
+							<!-- panel -> main -> [row] (3) -->
+							<div class="container  stretch--  row--  row-left--  p-row">
+								<!-- panel -> main -> row (3) -> [card] room -->
+								<div
+									class="container grow--  stretch--  col--  text  text-blue-light--  card  blue--  p-card  p-ma__room"
+									on:click|stopPropagation={() => {
+										try {
+											// tba: goto project rooms
+										} catch (e) {
+											console.log(e);
+										}
+									}}	
+								>
+									<!-- panel -> main -> row (3) -> room -> top -->
+									<div class="p-ma__ro-top">
+										<div>Inside</div>
+										<div>Click to view list</div>
+									</div>
+
+									<!-- panel -> main -> row (3) -> room -> name -->
+									<div class="text  text-white--  p-ma__ro-name">
+										<img
+											src={ICONS.hashtag}
+											alt=""
+											class="svg  svg-white--"
+										/>
+										<div>
+											{((project.rooms || []).find(r =>
+												r.id === room_id
+											) || {}).name || `n/a`}
+										</div>
+									</div>
+
+									<!-- panel -> main -> row (3) -> room -> [notes] -->
+									<div class="container  stretch--  row--  row-left--  p-ca__notes">
+										<!-- panel -> main -> row (3) -> room -> [note] (users) -->
+										<div class="container  row--  row-left--  p-ca__note">
+											<img
+												src={ICONS.users}
+												alt=""
+												class="svg  svg-blue-light--"
+											/>
+											<div>
+												{(((project.rooms || []).find(r =>
+													r.id === room_id
+												) || {}).user_instances || []).length || 0}
+											</div>
+											<div>online</div>
+										</div>
+
+										<!-- panel -> main -> row (3) -> room -> [note] (friends) -->
+										<div class="container  row--  row-left--  p-ca__note  p-faded--">
+											<img
+												src={ICONS.users}
+												alt=""
+												class="svg  svg-blue-light--"
+											/>
+											<div>
+												{(((project.rooms || []).find(r =>
+													r.id === room_id
+												) || {}).user_instances || []).filter(ru =>
+													(user.relationships || []).some(ur =>
+														(ur.users || []).some(uru =>
+															uru.id == ru.id
+														)
+													)
+												).length || 0}
+											</div>
+											<div>online</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- panel -> main -> row (3) -> preview -->
+								<div
+									class="container  stretch--  col--  card  white--  p-ma__ro-preview"
+									style="
+										background-image: url('{((project.rooms || []).find(r =>
+											r.id === room_id
+										) || {}).background_image_url || ``}');
+									"
+								/>
+							</div>
+
+							<!-- panel -> main -> [row] (4) -->
+							<div class="container  stretch--  row--  row-left--  p-row">
+								<!-- panel -> main -> row (4) -> [avatar] -->
+								<Avatar
+									display="icon"
+									body={overlay_user.project_avatar.parts.find(p => p.type === `body`) || null}
+									pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`) || null}
+									size_em={5.4}
+									events={{
+										click: () => {
+											try {
+												if (![`del_user_project_avatar`, `edit_user_avatars`].some(j => jobs.includes(j))) {
+													user_avatar_inputs.default = utils.clone((user.avatars || []).find(ua =>
+														ua.type === `default`
+													)) || null;
+
+													user_avatar_inputs.project = utils.clone((user.avatars || []).find(ua =>
+														(ua.type === `project`) &&
+														ua.project_id &&
+														((project || {}).id === ua.project_id)
+													)) || null;
+												}
+
+												view = `avatar`;
+											} catch (e) {
+												console.log(e);
+											}
+										}
+									}}
+								/>
+
+								<!-- panel -> main -> row (4) -> [card] user -->
+								<div
+									class="container  grow--  stretch--  col--  text  text-mint-light--  card  mint--  p-card  p-ma__user"
+									on:click|stopPropagation={() => {
+										try {
+											overlay_user = utils.clone(user);
+										} catch (e) {
+											console.log(e);
+										}
+									}}
+								>
+									<!-- panel -> main -> row (4) -> user -> [actions] -->
+									<div class="container  row--  row-right--  p-ca__actions">
+										<!-- panel -> main -> row (4) -> user -> [action] (edit) -->
 										<div
-											class="container  stretch--  row--  row-centre--  text  text-white--  card  yellow--  p-ca__action  p-ma__pr-edit"
+											class="container  stretch--  row--  row-centre--  text  text-white---  card  yellow-  p-ca__action  p-ma__us-edit"
 											on:click|stopPropagation={() => {
 												try {
-													// tba: goto project settings
+													// tba: goto account settings
 												} catch (e) {
 													console.log(e);
 												}
 											}}
 										>
-											<div>Staff</div>
+											<div>Me</div>
 											<div>Edit</div>
 										</div>
-									{/if}
+									</div>
 
-									<!-- panel -> main -> row (1) -> project -> [action] (bookmark) -->
+									<!-- panel -> main -> row (4) -> user -> label -->
+									<div class="p-ma__us-label">
+										Logged in as
+									</div>
+
+									<!-- panel -> main -> row (4) -> user -> name -->
+									<div class="text  text-white--  p-ma__us-name">
+										{user.name || `n/a`}
+									</div>
+
+									<!-- panel -> main -> row (4) -> user -> [notes] -->
+									<div class="container  stretch--  row--  row-left--  p-ca__notes">
+										<!-- panel -> main -> row (4) -> user -> [note] (xp) -->
+										<div class="container  row--  row-left--  p-ca__note  p-faded--">
+											<img
+												src={ICONS.xp}
+												alt=""
+												class="svg  svg-mint-light--"
+											/>
+
+											<div>
+												--
+												<!-- todo: user xp -->
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- panel -> main -> [row] (5) -->
+							<div class="container  stretch--  row--  row-left--  p-row">
+								<!-- panel -> main -> row (5) -> button (settings) -->
+								<div
+									class="container  stretch--  row--  row-centre--  text  text-white--  card  white--  p-ma__button  p-settings--"
+									on:click|stopPropagation={() => {
+										try {
+											// tba: goto lounge settings
+										} catch (e) {
+											console.log(e);
+										}
+									}}
+								>
+									<div>Lounge</div>
+									<div>settings</div>
+								</div>
+
+								<!-- panel -> main -> row (5) -> button (projects) -->
+								<div
+									class="container  stretch--  row--  row-centre--  text  text-purple-light--  card  purple--  p-ma__button  p-projects--"
+									on:click|stopPropagation={() => {
+										try {
+											// tba: goto user projects
+										} catch (e) {
+											console.log(e);
+										}
+									}}
+								>
+									<div>My</div>
+									<div>Projects</div>
+								</div>
+							</div>
+						</div>
+					{:else if view === `avatar`}
+						<!-- panel -> avatar -->
+						<div class="container  stretch--  col--  p-avatar">
+							<!-- panel -> avatar -> [heading] -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> avatar -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> avatar -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Your avatar
+									</div>
+
+									<!-- panel -> avatar -> heading -> row -> button (save) -->
 									<div
-										class="container  stretch--  row--  row-centre--  card  yellow--  p-ca__action  p-ma__pr-bookmark"
-										class:disabled={[`bookmark_project_${project.id}`].some(j => jobs.includes(j))}
-										on:click|stopPropagation={async () => {
+										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+										class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
+										on:click={() => {
 											try {
-												let job_code = `bookmark_project_${utils.clone(project.id)}`;
-												let other_job_codes = [];
-												
+												let job_code = `edit_user_avatars`;
+												let other_job_codes = [`del_user_project_avatar`, `edit_user`];
+													
 												if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
 													jobs.push(job_code);
 													jobs = jobs;
 
-													// tba: push/pull project bookmark
+													// tba: edit user avatar
 
 													jobs = jobs.filter(j => j !== job_code);
 												}
@@ -1496,663 +1879,388 @@
 										}}
 									>
 										<div>
-											{#if jobs.includes(`bookmark_project_${project.id}`)}
-												<Loader/>
+											{#if jobs.includes(`edit_user_avatars`)}
+												<Loader />
 											{:else}
-												<img
-													src={ICONS.bookmark}
-													alt=""
-													class="svg  svg-yellow--"
-												/>
+												Save
 											{/if}
 										</div>
 									</div>
 								</div>
-
-								<!-- panel -> main -> row (1) -> project -> label -->
-								<div class="p-ma__pr-label">
-									This is
-								</div>
-
-								<!-- panel -> main -> row (1) -> project -> name -->
-								<div class="text  text-white--  p-ma__pr-name">
-									{project.name || `n/a`}
-								</div>
-
-								<!-- panel -> main -> row (1) -> project -> [notes] -->
-								<div class="container  stretch--  row--  row-left--  p-ca__notes">
-									<!-- panel -> main -> row (1) -> project -> [note] (verified) -->
-									<!-- todo: project verification -->
-
-									<!-- panel -> main -> row (1) -> project -> [note] (xp) -->
-									<div class="container  row--  row-left--  p-ca__note  p-faded--">
-										<img
-											src={ICONS.xp}
-											alt=""
-											class="svg  svg-cream--"
-										/>
-
-										<div>
-											--
-											<!-- todo: project xp -->
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<!-- panel -> main -> [row] (2) -->
-						<div class="container  stretch--  row--  row-left--  p-row">
-							<!-- panel -> main -> row (2) -> [stat] users -->
-							<div
-								class="container  grow--  stretch--  row--  row-centre--  text  text-lime-light--  card  lime--  p-stat  p-ma__users"
-								on:click|stopPropagation={() => {
-									try {
-										// tba: goto project users
-									} catch (e) {
-										console.log(e);
-									}
-								}}
-							>
-								<span class="text  text-white--">
-									{(overlay_project.rooms || []).reduce((total_user_count, room) =>
-										total_user_count += (room.user_instances || []).length,
-										0
-									) || 0}
-								</span>
-
-								<img
-									src={ICONS.users}
-									alt=""
-									class="svg  svg-lime-light--"
-								/>
-
-								<span>online</span>
 							</div>
 
-							<!-- panel -> main -> row (2) -> [stat] friends -->
-							<div
-								class="container  grow--  stretch--  row--  row-centre--  text  text-yellow--  card  yellow--  p-stat  p-ma__friends"
-								on:click|stopPropagation={() => {
-									try {
-										// tba: goto friends
-									} catch (e) {
-										console.log(e);
-									}
-								}}
-							>
-								<span class="text  text-white--">
-									{(overlay_project.rooms || []).reduce((total_user_count, room) =>
-										total_user_count += (room.user_instances || []).filter(ru =>
-											(user.retationships || []).some(ur =>
-												(ur.users || []).some(uru =>
-													uru.id === ru.id
-												)
-											)
-										).length,
-										0
-									) || 0}
-								</span>
-
-								<img
-									src={ICONS.friends}
-									alt=""
-									class="svg  svg-yellow--"
-								/>
-
-								<span>friends</span>
-							</div>
-						</div>
-
-						<!-- panel -> main -> [row] (3) -->
-						<div class="container  stretch--  row--  row-left--  p-row">
-							<!-- panel -> main -> row (3) -> [card] room -->
-							<div
-								class="container grow--  stretch--  col--  text  text-blue-light--  card  blue--  p-card  p-ma__room"
-								on:click|stopPropagation={() => {
-									try {
-										// tba: goto project rooms
-									} catch (e) {
-										console.log(e);
-									}
-								}}	
-							>
-								<!-- panel -> main -> row (3) -> room -> top -->
-								<div class="p-ma__ro-top">
-									<div>Inside</div>
-									<div>Click to view list</div>
-								</div>
-
-								<!-- panel -> main -> row (3) -> room -> name -->
-								<div class="text  text-white--  p-ma__ro-name">
-									<img
-										src={ICONS.hashtag}
-										alt=""
-										class="svg  svg-white--"
-									/>
-									<div>
-										{((project.rooms || []).find(r =>
-											r.id === room_id
-										) || {}).name || `n/a`}
-									</div>
-								</div>
-
-								<!-- panel -> main -> row (3) -> room -> [notes] -->
-								<div class="container  stretch--  row--  row-left--  p-ca__notes">
-									<!-- panel -> main -> row (3) -> room -> [note] (users) -->
-									<div class="container  row--  row-left--  p-ca__note">
-										<img
-											src={ICONS.users}
-											alt=""
-											class="svg  svg-blue-light--"
-										/>
-										<div>
-											{(((project.rooms || []).find(r =>
-												r.id === room_id
-											) || {}).user_instances || []).length || 0}
-										</div>
-										<div>online</div>
-									</div>
-
-									<!-- panel -> main -> row (3) -> room -> [note] (friends) -->
-									<div class="container  row--  row-left--  p-ca__note  p-faded--">
-										<img
-											src={ICONS.users}
-											alt=""
-											class="svg  svg-blue-light--"
-										/>
-										<div>
-											{(((project.rooms || []).find(r =>
-												r.id === room_id
-											) || {}).user_instances || []).filter(ru =>
-												(user.relationships || []).some(ur =>
-													(ur.users || []).some(uru =>
-														uru.id == ru.id
-													)
-												)
-											).length || 0}
-										</div>
-										<div>online</div>
-									</div>
-								</div>
-							</div>
-
-							<!-- panel -> main -> row (3) -> preview -->
-							<div
-								class="container  stretch--  col--  card  white--  p-ma__ro-preview"
-								style="
-									background-image: url('{((project.rooms || []).find(r =>
-										r.id === room_id
-									) || {}).background_image_url || ``}');
-								"
-							/>
-						</div>
-
-						<!-- panel -> main -> [row] (4) -->
-						<div class="container  stretch--  row--  row-left--  p-row">
-							<!-- panel -> main -> row (4) -> [avatar] -->
-							<Avatar
-								display="icon"
-								body={overlay_user.project_avatar.parts.find(p => p.type === `body`) || null}
-								pet={overlay_user.project_avatar.parts.find(p => p.type === `pet`) || null}
-								size_em={5.4}
-								events={{
-									click: () => {
-										try {
-											if (![`del_user_project_avatar`, `edit_user_avatars`].some(j => jobs.includes(j))) {
-												user_avatar_inputs.default = utils.clone((user.avatars || []).find(ua =>
-													ua.type === `default`
-												)) || null;
-
-												user_avatar_inputs.project = utils.clone((user.avatars || []).find(ua =>
-													(ua.type === `project`) &&
-													ua.project_id &&
-													((project || {}).id === ua.project_id)
-												)) || null;
-											}
-
-											view = `avatar`;
-										} catch (e) {
-											console.log(e);
-										}
-									}
-								}}
-							/>
-
-							<!-- panel -> main -> row (4) -> [card] user -->
-							<div
-								class="container  grow--  stretch--  col--  text  text-mint-light--  card  mint--  p-card  p-ma__user"
-								on:click|stopPropagation={() => {
-									try {
-										overlay_user = utils.clone(user);
-									} catch (e) {
-										console.log(e);
-									}
-								}}
-							>
-								<!-- panel -> main -> row (4) -> user -> [actions] -->
-								<div class="container  row--  row-right--  p-ca__actions">
-									<!-- panel -> main -> row (4) -> user -> [action] (edit) -->
+							<!-- panel -> avatar -> profiles -->
+							<div class="container  stretch--  row--  row-left--  p-av__profiles">
+								{#each AVATAR_PROFILE_TABS as TAB}
+									<!-- panel -> avatar -> profile -->
 									<div
-										class="container  stretch--  row--  row-centre--  text  text-white---  card  yellow-  p-ca__action  p-ma__us-edit"
-										on:click|stopPropagation={() => {
-											try {
-												// tba: goto account settings
-											} catch (e) {
-												console.log(e);
-											}
-										}}
-									>
-										<div>Me</div>
-										<div>Edit</div>
-									</div>
-								</div>
-
-								<!-- panel -> main -> row (4) -> user -> label -->
-								<div class="p-ma__us-label">
-									Logged in as
-								</div>
-
-								<!-- panel -> main -> row (4) -> user -> name -->
-								<div class="text  text-white--  p-ma__us-name">
-									{user.name || `n/a`}
-								</div>
-
-								<!-- panel -> main -> row (4) -> user -> [notes] -->
-								<div class="container  stretch--  row--  row-left--  p-ca__notes">
-									<!-- panel -> main -> row (4) -> user -> [note] (xp) -->
-									<div class="container  row--  row-left--  p-ca__note  p-faded--">
-										<img
-											src={ICONS.xp}
-											alt=""
-											class="svg  svg-mint-light--"
-										/>
-
-										<div>
-											--
-											<!-- todo: user xp -->
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<!-- panel -> main -> [row] (5) -->
-						<div class="container  stretch--  row--  row-left--  p-row">
-							<!-- panel -> main -> row (5) -> button (settings) -->
-							<div
-								class="container  stretch--  row--  row-centre--  text  text-white--  card  white--  p-ma__button  p-settings--"
-								on:click|stopPropagation={() => {
-									try {
-										// tba: goto lounge settings
-									} catch (e) {
-										console.log(e);
-									}
-								}}
-							>
-								<div>Lounge</div>
-								<div>settings</div>
-							</div>
-
-							<!-- panel -> main -> row (5) -> button (projects) -->
-							<div
-								class="container  stretch--  row--  row-centre--  text  text-purple-light--  card  purple--  p-ma__button  p-projects--"
-								on:click|stopPropagation={() => {
-									try {
-										// tba: goto user projects
-									} catch (e) {
-										console.log(e);
-									}
-								}}
-							>
-								<div>My</div>
-								<div>Projects</div>
-							</div>
-						</div>
-					</div>
-				{:else if view === `avatar`}
-					<!-- panel -> avatar -->
-					<div class="container  stretch--  col--  p-avatar">
-						<!-- panel -> avatar -> [heading] -->
-						<div class="container  stretch--  col--  p-heading">
-							<!-- panel -> avatar -> heading -> row -->
-							<div class="container  stretch--  row--  row-left--  p-he__row">
-								<!-- panel -> avatar -> heading -> row -> heading -->
-								<div class="p-he__ro-heading">
-									Your avatar
-								</div>
-
-								<!-- panel -> avatar -> heading -> row -> button (save) -->
-								<div
-									class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
-									class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-									on:click={() => {
-										try {
-											let job_code = `edit_user_avatars`;
-											let other_job_codes = [`del_user_project_avatar`, `edit_user`];
-												
-											if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
-												jobs.push(job_code);
-												jobs = jobs;
-
-												// tba: edit user avatar
-
-												jobs = jobs.filter(j => j !== job_code);
-											}
-										} catch (e) {
-											console.log(e);
-										}
-									}}
-								>
-									<div>
-										{#if jobs.includes(`edit_user_avatars`)}
-											<Loader />
-										{:else}
-											Save
-										{/if}
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<!-- panel -> avatar -> profiles -->
-						<div class="container  stretch--  row--  row-left--  p-av__profiles">
-							{#each AVATAR_PROFILE_TABS as TAB}
-								<!-- panel -> avatar -> profile -->
-								<div
-									class="container  stretch--  row--  row-left--  text  card  p-av__profile"
-									class:text-lime-light--={avatar_profile_tab === TAB.code}
-									class:lime--={avatar_profile_tab === TAB.code}
-									class:text-white--={avatar_profile_tab !== TAB.code}
-									class:white--={avatar_profile_tab !== TAB.code}
-									on:click={() => {
-										try {
-											if (avatar_profile_tab !== TAB.code) {
-												avatar_profile_tab = utils.clone(TAB.code) || ``;
-											}
-										} catch (e) {
-											console.log(e);
-										}
-									}}
-								>
-									{#if
-										user_avatar_inputs[TAB.code] &&
-										(
-											(TAB.code === `default`) ||
-											(
-												(TAB.code === `project`) &&
-												user_avatar_inputs[TAB.code].project_id &&
-												(user_avatar_inputs[TAB.code].project_id === (project || {}).id)
-											)
-										)
-									}
-										<!-- profile -> avatar -->
-										<Avatar
-											display="icon"
-											body={(user_avatar_inputs[TAB.code].parts || []).find(uap =>
-												uap.part_type === `body`
-											) || null}
-											pet={(user_avatar_inputs[TAB.code].parts || []).find(uap =>
-												uap.part_type === `pet`
-											) || null}
-											size_em={1.6}
-										/>
-									{:else}
-										<!-- profile -> image -->
-										<img
-											src={FALLBACK_USER_IMAGE}
-											alt=""
-											class="p-av__pr-image"
-										/>
-									{/if}
-
-									<!-- profile -> text -->
-									<div class="container  grow--  col--  p-av__pr-text">
-										<div>
-											{#if TAB.code === `project`}
-												{(project || {}).name || `n/a`}
-											{:else if TAB.code === `default`}
-												Default
-											{:else}
-												n/a
-											{/if}
-										</div>
-										<div>{TAB.label || ``}</div>
-									</div>
-								</div>
-							{/each}
-						</div>
-
-						{#if
-							user_avatar_inputs[avatar_profile_tab] &&
-							(
-								(avatar_profile_tab === `default`) ||
-								(
-									(avatar_profile_tab === `project`) &&
-									user_avatar_inputs[avatar_profile_tab].project_id &&
-									(user_avatar_inputs[avatar_profile_tab].project_id === (project || {}).id)
-								)
-							)
-						}
-							<!-- panel -> avatar -> [tabs] -->
-							<div class="container  stretch--  row--  row-left--  p-tabs">
-								{#each AVATAR_PART_TABS as TAB}
-									<!-- [tab] -->
-									<div
-										class="container  stretch--  row--  row-centre--  text  card  p-tab"
+										class="container  stretch--  row--  row-left--  text  card  p-av__profile"
+										class:text-lime-light--={avatar_profile_tab === TAB.code}
+										class:lime--={avatar_profile_tab === TAB.code}
+										class:text-white--={avatar_profile_tab !== TAB.code}
+										class:white--={avatar_profile_tab !== TAB.code}
 										on:click={() => {
 											try {
-												if (avatar_part_tab !== TAB.code) {
-													avatar_part_tab = utils.clone(TAB.code) || ``;
+												if (avatar_profile_tab !== TAB.code) {
+													avatar_profile_tab = utils.clone(TAB.code) || ``;
 												}
 											} catch (e) {
 												console.log(e);
 											}
 										}}
 									>
-										<div>{TAB.name || `n/a`}</div>
+										{#if
+											user_avatar_inputs[TAB.code] &&
+											(
+												(TAB.code === `default`) ||
+												(
+													(TAB.code === `project`) &&
+													user_avatar_inputs[TAB.code].project_id &&
+													(user_avatar_inputs[TAB.code].project_id === (project || {}).id)
+												)
+											)
+										}
+											<!-- profile -> avatar -->
+											<Avatar
+												display="icon"
+												body={(user_avatar_inputs[TAB.code].parts || []).find(uap =>
+													uap.part_type === `body`
+												) || null}
+												pet={(user_avatar_inputs[TAB.code].parts || []).find(uap =>
+													uap.part_type === `pet`
+												) || null}
+												size_em={1.6}
+											/>
+										{:else}
+											<!-- profile -> image -->
+											<img
+												src={FALLBACK_USER_IMAGE}
+												alt=""
+												class="p-av__pr-image"
+											/>
+										{/if}
+
+										<!-- profile -> text -->
+										<div class="container  grow--  col--  p-av__pr-text">
+											<div>
+												{#if TAB.code === `project`}
+													{(project || {}).name || `n/a`}
+												{:else if TAB.code === `default`}
+													Default
+												{:else}
+													n/a
+												{/if}
+											</div>
+											<div>{TAB.label || ``}</div>
+										</div>
 									</div>
 								{/each}
 							</div>
 
-							{#if avatar_part_tab === `preview`}
-								<!-- panel -> avatar -> preview -->
-								<div class="container  stretch--  col--  col-centre--  p-av__preview">
-									<!-- panel -> avatar -> preview -> [avatar] -->
-									<Avatar
-										display="icon"
-										body={(user_avatar_inputs[avatar_profile_tab].parts || []).find(uap =>
-											uap.part_type === `body`
-										) || null}
-										pet={(user_avatar_inputs[avatar_profile_tab].parts || []).find(uap =>
-											uap.part_type === `pet`
-										) || null}
-										size_em={10}
-									/>
-									
-									<!-- panel -> avatar -> preview -> use -->
-									<div
-										class="p-av__pr-use"
-										class:p-active--={(
-											user_instance &&
-											user_instance.id &&
-											user_instance.user_avatar &&
-											(JSON.stringify(user_instance.user_avatar) === JSON.stringify(user_avatar_inputs[avatar_profile_tab]))
-										)}
-									>
-										{#if (
-											user_instance &&
-											user_instance.id &&
-											user_instance.user_avatar &&
-											(JSON.stringify(user_instance.user_avatar) === JSON.stringify(user_avatar_inputs[avatar_profile_tab]))
-										)}
-											This avatar configuration is currently in use!
-										{:else}
-											This avatar configuration is not in use yet, please save your changes.
+							{#if
+								user_avatar_inputs[avatar_profile_tab] &&
+								(
+									(avatar_profile_tab === `default`) ||
+									(
+										(avatar_profile_tab === `project`) &&
+										user_avatar_inputs[avatar_profile_tab].project_id &&
+										(user_avatar_inputs[avatar_profile_tab].project_id === (project || {}).id)
+									)
+								)
+							}
+								<!-- panel -> avatar -> [tabs] -->
+								<div class="container  stretch--  row--  row-left--  p-tabs">
+									{#each AVATAR_PART_TABS as TAB}
+										<!-- [tab] -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  card  p-tab"
+											on:click={() => {
+												try {
+													if (avatar_part_tab !== TAB.code) {
+														avatar_part_tab = utils.clone(TAB.code) || ``;
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>{TAB.name || `n/a`}</div>
+										</div>
+									{/each}
+								</div>
+
+								{#if avatar_part_tab === `preview`}
+									<!-- panel -> avatar -> preview -->
+									<div class="container  stretch--  col--  col-centre--  p-av__preview">
+										<!-- panel -> avatar -> preview -> [avatar] -->
+										<Avatar
+											display="icon"
+											body={(user_avatar_inputs[avatar_profile_tab].parts || []).find(uap =>
+												uap.part_type === `body`
+											) || null}
+											pet={(user_avatar_inputs[avatar_profile_tab].parts || []).find(uap =>
+												uap.part_type === `pet`
+											) || null}
+											size_em={10}
+										/>
+										
+										<!-- panel -> avatar -> preview -> use -->
+										<div
+											class="p-av__pr-use"
+											class:p-active--={(
+												user_instance &&
+												user_instance.id &&
+												user_instance.user_avatar &&
+												(JSON.stringify(user_instance.user_avatar) === JSON.stringify(user_avatar_inputs[avatar_profile_tab]))
+											)}
+										>
+											{#if (
+												user_instance &&
+												user_instance.id &&
+												user_instance.user_avatar &&
+												(JSON.stringify(user_instance.user_avatar) === JSON.stringify(user_avatar_inputs[avatar_profile_tab]))
+											)}
+												This avatar configuration is currently in use!
+											{:else}
+												This avatar configuration is not in use yet, please save your changes.
+											{/if}
+										</div>
+
+										{#if avatar_profile_tab === `project`}
+											<!-- panel -> avatar -> preview (project) -> delete -->
+											<div class="container  stretch--  co--  p-av__pr-delete">
+												<!-- panel -> avatar -> preview (project) -> delete -> text -->
+												<div class="p-av__pr-de-text">
+													This avatar profile is only applied inside {(project || {}).name || `n/a`}.
+												</div>
+
+												<!-- panel -> avatar -> preview (project) -> delete -> button -->
+												<div
+													class="container  row--  row-centre--  text  text-red-light--  card  red--  p-av__pr-de-button"
+													class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
+													on:click={() => {
+														try {
+															let job_code = `del_user_project_avatar`;
+															let other_job_codes = [`edit_user`, `edit_user_avatars`];
+															
+															if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																jobs.push(job_code);
+																jobs = jobs;
+
+																// tba: del user's project avatar
+
+																jobs = jobs.filter(j => j !== job_code);
+															}
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<div>
+														{#if jobs.includes(`del_user_project_avatar`)}
+															<Loader />
+														{:else}
+															Delete
+														{/if}
+													</div>
+												</div>
+											</div>
 										{/if}
 									</div>
+								{:else if [`body`, `pet`].includes(avatar_part_tab)}
+									<!-- panel -> avatar -> part (body/pet) -->
+									<div class="container  stretch--  col--  p-av__part">
+										<!-- panel -> avatar -> part (body/pet) -> selected -->
+										<div class="container  stretch--  row--  row-left--  p-av__pa-selected">
+											<!-- panel -> avatar -> part (body/pet) -> selected -> [avatar] -->
+											<Avatar
+												display="preview"
+												body={(avatar_part_tab === `body`) ? (user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === `body`) || null) : null}
+												pet={(avatar_part_tab === `pet`) ? (user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === `pet`) || null) : null}
+												size_em={2.7}
+											/>
 
-									{#if avatar_profile_tab === `project`}
-										<!-- panel -> avatar -> preview (project) -> delete -->
-										<div class="container  stretch--  co--  p-av__pr-delete">
-											<!-- panel -> avatar -> preview (project) -> delete -> text -->
-											<div class="p-av__pr-de-text">
-												This avatar profile is only applied inside {(project || {}).name || `n/a`}.
-											</div>
-
-											<!-- panel -> avatar -> preview (project) -> delete -> button -->
-											<div
-												class="container  row--  row-centre--  text  text-red-light--  card  red--  p-av__pr-de-button"
-												class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-												on:click={() => {
-													try {
-														let job_code = `del_user_project_avatar`;
-														let other_job_codes = [`edit_user`, `edit_user_avatars`];
-														
-														if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
-															jobs.push(job_code);
-															jobs = jobs;
-
-															// tba: del user's project avatar
-
-															jobs = jobs.filter(j => j !== job_code);
-														}
-													} catch (e) {
-														console.log(e);
-													}
-												}}
-											>
+											<!-- panel -> avatar -> part (body/pet) -> selected -> text -->
+											<div class="container  grow--  p-av__pa-se-text">
+												<div>Selected body</div>
 												<div>
-													{#if jobs.includes(`del_user_project_avatar`)}
-														<Loader />
+													{#if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab)}
+														{#if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`}
+															{((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft || {}).name || `Unknown NFT`}
+														{:else if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`}
+															{(LOUNGE_AVATAR_SKINS.find(S =>
+																S.code === ((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft || {}).skin_code
+															) || {}).name || `Unknown skin`}
+														{:else}
+															Unknown
+														{/if}
 													{:else}
-														Delete
+														Unselected
 													{/if}
 												</div>
 											</div>
 										</div>
-									{/if}
-								</div>
-							{:else if [`body`, `pet`].includes(avatar_part_tab)}
-								<!-- panel -> avatar -> part (body/pet) -->
-								<div class="container  stretch--  col--  p-av__part">
-									<!-- panel -> avatar -> part (body/pet) -> selected -->
-									<div class="container  stretch--  row--  row-left--  p-av__pa-selected">
-										<!-- panel -> avatar -> part (body/pet) -> selected -> [avatar] -->
-										<Avatar
-											display="preview"
-											body={(avatar_part_tab === `body`) ? (user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === `body`) || null) : null}
-											pet={(avatar_part_tab === `pet`) ? (user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === `pet`) || null) : null}
-											size_em={2.7}
-										/>
 
-										<!-- panel -> avatar -> part (body/pet) -> selected -> text -->
-										<div class="container  grow--  p-av__pa-se-text">
-											<div>Selected body</div>
-											<div>
-												{#if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab)}
-													{#if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`}
-														{((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft || {}).name || `Unknown NFT`}
-													{:else if user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`}
-														{(LOUNGE_AVATAR_SKINS.find(S =>
-															S.code === ((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft || {}).skin_code
-														) || {}).name || `Unknown skin`}
-													{:else}
-														Unknown
-													{/if}
-												{:else}
-													Unselected
-												{/if}
-											</div>
-										</div>
-									</div>
-
-									<!-- panel -> avatar -> part (body/pet) -> sections -->
-									<div
-										class="container  stretch--  col--  p-av__pa-sections"
-										class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}	
-									>
-										{#each AVATAR_PART_DATA_TYPES.filter(T =>
-											(T.part_tabs || []).includes(avatar_part_tab)
-										) as TYPE}
-											<!-- section -->
-											<div
-												class="container  stretch--  col--  text  card  p-av__pa-section"
-												class:text-yellow-light--={TYPE.code === avatar_part_data_type_tab}
-												class:yellow--={TYPE.code === avatar_part_data_type_tab}
-												class:text-white--={TYPE.code !== avatar_part_data_type_tab}
-												class:white--={TYPE.code !== avatar_part_data_type_tab}
-												on:click={() => {
-													try {
-														if (TYPE.code !== avatar_part_data_type_tab) {
-															avatar_part_data_type_tab = utils.clone(TYPE.code) || ``;
+										<!-- panel -> avatar -> part (body/pet) -> sections -->
+										<div
+											class="container  stretch--  col--  p-av__pa-sections"
+											class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}	
+										>
+											{#each AVATAR_PART_DATA_TYPES.filter(T =>
+												(T.part_tabs || []).includes(avatar_part_tab)
+											) as TYPE}
+												<!-- section -->
+												<div
+													class="container  stretch--  col--  text  card  p-av__pa-section"
+													class:text-yellow-light--={TYPE.code === avatar_part_data_type_tab}
+													class:yellow--={TYPE.code === avatar_part_data_type_tab}
+													class:text-white--={TYPE.code !== avatar_part_data_type_tab}
+													class:white--={TYPE.code !== avatar_part_data_type_tab}
+													on:click={() => {
+														try {
+															if (TYPE.code !== avatar_part_data_type_tab) {
+																avatar_part_data_type_tab = utils.clone(TYPE.code) || ``;
+															}
+														} catch (e) {
+															console.log(e);
 														}
-													} catch (e) {
-														console.log(e);
-													}
-												}}
-											>
-												<!-- section -> row -->
-												<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-row">
-													{#if TYPE.code === `nft`}
-														<div class="text  text-yellow--">
-															{(user.nft_cxs || []).reduce((total_nft_count, nft_cx) =>
-																total_nft_count += (nft_cx.nfts || []).length,
-																0
-															) || 0}
-														</div>
-														<div class="container  grow--  row--  row-left--">
-															Your NFTs
-														</div>
-														<a
-															href={NFT_CXS_LINK_URL}
-															target="_blank"
-															rel="noreferrer"
-														>
-															Supported collections →
-														</a>
-													{:else if TYPE.code === `skin`}
-														<div>
-															{LOUNGE_AVATAR_SKINS.length || 0}
-														</div>
-														<div>Default skins</div>
-													{:else}
-														<div>--</div>
-														<div>Unknown</div>
-													{/if}
-												</div>
-
-												{#if TYPE.code === avatar_part_data_type_tab}
-													<!-- section -> list -->
-													<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-list">
+													}}
+												>
+													<!-- section -> row -->
+													<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-row">
 														{#if TYPE.code === `nft`}
-															{#each (user.nft_cxs || []).sort((a, b) =>
-																(b.nfts || []).length - (a.nfts || []).length
-															).slice() as nft_cx}
-																{#each (nft_cx.nfts || []).slice() as nft}
-																	<!-- item (nft) -->
+															<div class="text  text-yellow--">
+																{(user.nft_cxs || []).reduce((total_nft_count, nft_cx) =>
+																	total_nft_count += (nft_cx.nfts || []).length,
+																	0
+																) || 0}
+															</div>
+															<div class="container  grow--  row--  row-left--">
+																Your NFTs
+															</div>
+															<a
+																href={NFT_CXS_LINK_URL}
+																target="_blank"
+																rel="noreferrer"
+															>
+																Supported collections →
+															</a>
+														{:else if TYPE.code === `skin`}
+															<div>
+																{LOUNGE_AVATAR_SKINS.length || 0}
+															</div>
+															<div>Default skins</div>
+														{:else}
+															<div>--</div>
+															<div>Unknown</div>
+														{/if}
+													</div>
+
+													{#if TYPE.code === avatar_part_data_type_tab}
+														<!-- section -> list -->
+														<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-list">
+															{#if TYPE.code === `nft`}
+																{#each (user.nft_cxs || []).sort((a, b) =>
+																	(b.nfts || []).length - (a.nfts || []).length
+																).slice() as nft_cx}
+																	{#each (nft_cx.nfts || []).slice() as nft}
+																		<!-- item (nft) -->
+																		<div
+																			class="container  stretch--  col--  col-centre--  p-av__pa-se-li-item"
+																			class:p-selected--={
+																				user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
+																				(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`) &&
+																				((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_cx_id === nft_cx.id) &&
+																				((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_addy === nft.addy)
+																			}
+																			on:click={() => {
+																				try {
+																					if (!(	
+																						user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
+																						(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`) &&
+																						((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_cx_id === nft_cx.id) &&
+																						((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_addy === nft.addy)
+																					)) {
+																						let part_obj = {
+																							part_type: utils.clone(avatar_part_tab) || ``,
+																							data_type: utils.clone(avatar_part_data_type_tab) || ``,
+																							data: {
+																								nft_cx_id: utils.clone(nft_cx.id) || ``,
+																								nft_addy: utils.clone(nft.addy) || ``
+																							}
+																						}
+
+																						let part_index = user_avatar_inputs[avatar_profile_tab].parts.findIndex(p => p.type === avatar_part_tab);
+
+																						if (part_index >= 0) {
+																							user_avatar_inputs[avatar_profile_tab].parts[part_index] = part_obj;
+																						} else {
+																							user_avatar_inputs[avatar_profile_tab].parts.push(part_obj);
+																							
+																							user_avatar_inputs[avatar_profile_tab].parts = user_avatar_inputs[avatar_profile_tab].parts;
+																						}
+																					}
+																				} catch (e) {
+																					console.log(e);
+																				}
+																			}}
+																		>
+																			<!-- item (nft) -> label -->
+																			<div class="container  row--  row-centre--  text  text-white--  card  black--  p-av__pa-se-li-it-label">
+																				<div>
+																					{utils.shortenString({
+																						string: utils.clone(nft.name) || ``,
+																						length: 25
+																					}) || `n/a`}
+																				</div>
+																			</div>
+
+																			<!-- item (nft) -> avatar -->								
+																			<Avatar
+																				display="preview"
+																				body={(avatar_part_tab === `body`) ? {
+																					part_type: `body`,
+																					data_type: `nft`,
+																					data: {
+																						nft_cx_id: nft_cx.id || ``,
+																						nft_addy: nft.addy || ``
+																					}
+																				} : null}
+																				pet={(avatar_part_tab === `pet`) ? {
+																					part_type: `pet`,
+																					data_type: `nft`,
+																					data: {
+																						nft_cx_id: nft_cx.id || ``,
+																						nft_addy: nft.addy || ``
+																					}
+																				} : null}
+																				size_em={2.2}
+																			/>
+																		</div>
+																	{/each}
+																{/each}
+															{:else if TYPE.code === `skin`}
+																{#each LOUNGE_AVATAR_SKINS as SKIN}
+																	<!-- item (skin) -->
 																	<div
 																		class="container  stretch--  col--  col-centre--  p-av__pa-se-li-item"
 																		class:p-selected--={
 																			user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
-																			(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`) &&
-																			((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_cx_id === nft_cx.id) &&
-																			((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_addy === nft.addy)
+																			(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`) &&
+																			((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).skin_code === SKIN.code)
 																		}
 																		on:click={() => {
 																			try {
 																				if (!(	
 																					user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
-																					(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `nft`) &&
-																					((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_cx_id === nft_cx.id) &&
-																					((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_addy === nft.addy)
+																					(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`) &&
+																					((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).skin_code === SKIN.code)
 																				)) {
 																					let part_obj = {
 																						part_type: utils.clone(avatar_part_tab) || ``,
 																						data_type: utils.clone(avatar_part_data_type_tab) || ``,
 																						data: {
-																							nft_cx_id: utils.clone(nft_cx.id) || ``,
-																							nft_addy: utils.clone(nft.addy) || ``
+																							skin_code: utils.clone(SKIN.code) || ``
 																						}
 																					}
 
@@ -2171,189 +2279,55 @@
 																			}
 																		}}
 																	>
-																		<!-- item (nft) -> label -->
+																		<!-- item (skin) -> label -->
 																		<div class="container  row--  row-centre--  text  text-white--  card  black--  p-av__pa-se-li-it-label">
 																			<div>
 																				{utils.shortenString({
-																					string: utils.clone(nft.name) || ``,
+																					string: utils.clone(SKIN.name) || ``,
 																					length: 25
 																				}) || `n/a`}
 																			</div>
 																		</div>
 
-																		<!-- item (nft) -> avatar -->								
+																		<!-- item (skin) -> avatar -->
+																		<!-- note: data_type `skin` can't be used as a pet, only as a body, so avatar.pet below will always be null -->
 																		<Avatar
 																			display="preview"
 																			body={(avatar_part_tab === `body`) ? {
 																				part_type: `body`,
-																				data_type: `nft`,
+																				data_type: `skin`,
 																				data: {
-																					nft_cx_id: nft_cx.id || ``,
-																					nft_addy: nft.addy || ``
+																					skin_code: SKIN.code || ``
 																				}
 																			} : null}
-																			pet={(avatar_part_tab === `pet`) ? {
-																				part_type: `pet`,
-																				data_type: `nft`,
-																				data: {
-																					nft_cx_id: nft_cx.id || ``,
-																					nft_addy: nft.addy || ``
-																				}
-																			} : null}
+																			pet={null}
 																			size_em={2.2}
 																		/>
 																	</div>
 																{/each}
-															{/each}
-														{:else if TYPE.code === `skin`}
-															{#each LOUNGE_AVATAR_SKINS as SKIN}
-																<!-- item (skin) -->
-																<div
-																	class="container  stretch--  col--  col-centre--  p-av__pa-se-li-item"
-																	class:p-selected--={
-																		user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
-																		(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`) &&
-																		((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).skin_code === SKIN.code)
-																	}
-																	on:click={() => {
-																		try {
-																			if (!(	
-																				user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
-																				(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`) &&
-																				((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).skin_code === SKIN.code)
-																			)) {
-																				let part_obj = {
-																					part_type: utils.clone(avatar_part_tab) || ``,
-																					data_type: utils.clone(avatar_part_data_type_tab) || ``,
-																					data: {
-																						skin_code: utils.clone(SKIN.code) || ``
-																					}
-																				}
-
-																				let part_index = user_avatar_inputs[avatar_profile_tab].parts.findIndex(p => p.type === avatar_part_tab);
-
-																				if (part_index >= 0) {
-																					user_avatar_inputs[avatar_profile_tab].parts[part_index] = part_obj;
-																				} else {
-																					user_avatar_inputs[avatar_profile_tab].parts.push(part_obj);
-																					
-																					user_avatar_inputs[avatar_profile_tab].parts = user_avatar_inputs[avatar_profile_tab].parts;
-																				}
-																			}
-																		} catch (e) {
-																			console.log(e);
-																		}
-																	}}
-																>
-																	<!-- item (skin) -> label -->
-																	<div class="container  row--  row-centre--  text  text-white--  card  black--  p-av__pa-se-li-it-label">
-																		<div>
-																			{utils.shortenString({
-																				string: utils.clone(SKIN.name) || ``,
-																				length: 25
-																			}) || `n/a`}
-																		</div>
-																	</div>
-
-																	<!-- item (skin) -> avatar -->
-																	<!-- note: data_type `skin` can't be used as a pet, only as a body, so avatar.pet below will always be null -->
-																	<Avatar
-																		display="preview"
-																		body={(avatar_part_tab === `body`) ? {
-																			part_type: `body`,
-																			data_type: `skin`,
-																			data: {
-																				skin_code: SKIN.code || ``
-																			}
-																		} : null}
-																		pet={null}
-																		size_em={2.2}
-																	/>
-																</div>
-															{/each}
-														{/if}
-													</div>
-												{/if}
-											</div>
-										{/each}
+															{/if}
+														</div>
+													{/if}
+												</div>
+											{/each}
+										</div>
 									</div>
-								</div>
-							{/if}
-						{:else}
-							<!-- panel -> avatar -> preview -> create -->
-							<div
-								class="container  stretch--  row--  row-left--  text  text-green--  card  green--  p-av__pr-create"
-								class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-								on:click={async () => {
-									try {
-										let job_code = `edit_user_avatars`;
-										let other_job_codes = [`del_user_project_avatar`, `edit_user`];
-										
-										if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
-											jobs.push(job_code);
-											jobs = jobs;
-
-											// tba: add new user.avatar associated with this project, with default settings; override if matchnhig user.avatar has been added for this project eg. another tab
-
-											jobs = jobs.filter(j => j !== job_code);
-										}
-									} catch (e) {
-										console.log(e);
-									}
-								}}
-							>
-								<!-- panel -> avatar -> preview -> create -> text -->
-								<div class="container  grow--  col--  p-av__pr-cr-text">
-									<div>
-										{#if jobs.includes(`edit_user_avatars`)}
-											Creating new avatar profile...
-										{:else}
-											Create new avatar profile
-										{/if}
-									</div>
-									<div>for this Project</div>
-								</div>
-
-								{#if jobs.includes(`edit_user_avatars`)}
-									<!-- panel -> avatar -> preview -> create -> [loader] -->
-									<Loader />
-								{:else}
-									<!-- panel -> avatar -> preview -> create -> icon -->
-									<img
-										src={ICONS.add}
-										alt=""
-										class="p-av__pr-cr-icon"
-									/>
 								{/if}
-							</div>
-						{/if}
-					</div>
-				{:else if view === `account`}
-					<!-- panel -> account -->
-					<div class="container  stretch--  col--  p-account">
-						<!-- panel -> account -> [heading] -->
-						<div class="container  stretch--  col--  p-heading">
-							<!-- panel -> account -> heading -> row -->
-							<div class="container  stretch--  row--  row-left--  p-he__row">
-								<!-- panel -> account -> heading -> row -> heading -->
-								<div class="p-he__ro-heading">
-									Your account
-								</div>
-
-								<!-- panel -> account -> heading -> row -> button (save) -->
+							{:else}
+								<!-- panel -> avatar -> preview -> create -->
 								<div
-									class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+									class="container  stretch--  row--  row-left--  text  text-green--  card  green--  p-av__pr-create"
 									class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-									on:click={() => {
+									on:click={async () => {
 										try {
-											let job_code = `edit_user`;
-											let other_job_codes = [`del_user_project_avatar`, `edit_user_avatars`];
-												
+											let job_code = `edit_user_avatars`;
+											let other_job_codes = [`del_user_project_avatar`, `edit_user`];
+											
 											if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
 												jobs.push(job_code);
 												jobs = jobs;
 
-												// tba: edit user
+												// tba: add new user.avatar associated with this project, with default settings; override if matchnhig user.avatar has been added for this project eg. another tab
 
 												jobs = jobs.filter(j => j !== job_code);
 											}
@@ -2362,182 +2336,243 @@
 										}
 									}}
 								>
-									<div>
-										{#if jobs.includes(`edit_user`)}
-											<Loader />
-										{:else}
-											Save
-										{/if}
+									<!-- panel -> avatar -> preview -> create -> text -->
+									<div class="container  grow--  col--  p-av__pr-cr-text">
+										<div>
+											{#if jobs.includes(`edit_user_avatars`)}
+												Creating new avatar profile...
+											{:else}
+												Create new avatar profile
+											{/if}
+										</div>
+										<div>for this Project</div>
+									</div>
+
+									{#if jobs.includes(`edit_user_avatars`)}
+										<!-- panel -> avatar -> preview -> create -> [loader] -->
+										<Loader />
+									{:else}
+										<!-- panel -> avatar -> preview -> create -> icon -->
+										<img
+											src={ICONS.add}
+											alt=""
+											class="p-av__pr-cr-icon"
+										/>
+									{/if}
+								</div>
+							{/if}
+						</div>
+					{:else if view === `account`}
+						<!-- panel -> account -->
+						<div class="container  stretch--  col--  p-account">
+							<!-- panel -> account -> [heading] -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> account -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> account -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Your account
+									</div>
+
+									<!-- panel -> account -> heading -> row -> button (save) -->
+									<div
+										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+										class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
+										on:click={() => {
+											try {
+												let job_code = `edit_user`;
+												let other_job_codes = [`del_user_project_avatar`, `edit_user_avatars`];
+													
+												if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+													jobs.push(job_code);
+													jobs = jobs;
+
+													// tba: edit user
+
+													jobs = jobs.filter(j => j !== job_code);
+												}
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>
+											{#if jobs.includes(`edit_user`)}
+												<Loader />
+											{:else}
+												Save
+											{/if}
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
 
-						<!-- panel -> account -> inputs -->
-						<div class="container  stretch--  col--  p-ac__inputs">
-							<!-- panel -> account -> inputs -> [input] (name) -->
-							<!-- tba -->
-
-							<!-- panel -> account -> inputs -> [input] (code) -->
-							<!-- tba -->
-
-							<!-- panel -> account -> inputs -> [input] (link url) -->
-							<!-- todo -->
-
-							<!-- panel -> account -> inputs -> connection (google) -->
-							<!-- tba -->
-
-							<!-- panel -> account -> inputs -> connection (discord) -->
-							<!-- tba -->
-
-							<!-- panel -> account -> inputs -> connection (solana) -->
-							<!-- tba -->
-						</div>
-					</div>
-				{:else if view === `projects`}
-					<!-- panel -> projects -->
-					<div class="container  stretch--  col--  p-projects">
-						<!-- panel -> projects -> [heading] -->
-						<!-- tba -->
-
-						<!-- panel -> projects -> [tabs] -->
-						<!-- tba -->
-
-						<!-- panel -> projects -> add -->
-						<!-- tba -->
-
-						<!-- panel -> projects -> list -->
-						<!-- tba -->
-					</div>
-				{:else if view === `users`}
-					<!-- panel -> users -->
-					<div class="container  stretch--  col--  p-users">
-						<!-- panel -> users -> [heading] -->
-						<!-- tba -->
-
-						<!-- panel -> users -> sections -->
-						<!-- tba -->
-					</div>
-				{:else if view === `friends`}
-					<!-- panel -> friends -->
-					<div class="container  stretch--  col--  p-friends">
-						<!-- panel -> friends -> [heading] -->
-						<!-- tba -->
-
-						<!-- panel -> friends -> tabs -->
-						<!-- tba -->
-
-						<!-- panel -> friends -> sections -->
-						<!-- tba -->
-					</div>
-				{:else if view === `rooms`}
-					<!-- panel -> rooms -->
-					<div class="container  stretch--  col--  p-rooms">
-						<!-- panel -> rooms -> [heading] -->
-						<!-- tba -->
-
-						{#if editing_room && editing_room.id}
-							<!-- panel -> rooms -> inputs -->
-							<div class="container  stretch--  col--  p-ro__inputs">
-								<!-- panel -> rooms -> inputs -> [input] name -->
+							<!-- panel -> account -> inputs -->
+							<div class="container  stretch--  col--  p-ac__inputs">
+								<!-- panel -> account -> inputs -> [input] (name) -->
 								<!-- tba -->
 
-								<!-- panel -> rooms -> inputs -> [input] desc -->
+								<!-- panel -> account -> inputs -> [input] (code) -->
 								<!-- tba -->
 
-								<!-- panel -> rooms -> inputs -> [input] nft -->
+								<!-- panel -> account -> inputs -> [input] (link url) -->
+								<!-- todo -->
+
+								<!-- panel -> account -> inputs -> connection (google) -->
 								<!-- tba -->
 
-								<!-- panel -> rooms -> inputs -> bar -->
+								<!-- panel -> account -> inputs -> connection (discord) -->
 								<!-- tba -->
 
-								<!-- panel -> rooms -> inputs -> edit -->
+								<!-- panel -> account -> inputs -> connection (solana) -->
 								<!-- tba -->
 							</div>
-						{:else}
-							{#if false}
-								<!-- panel -> rooms -> add -->
-								<!-- tba -->
-							{/if}
-
-							<!-- panel -> rooms -> list -->
-							<!-- tba -->
-						{/if}
-					</div>
-				{:else if view === `project_settings`}
-					<!-- panel -> psettings -->
-					<div class="container  stretch--  col--  p-psettings">
-						<!-- panel -> psettings -> [heading] -->
-						<!-- tba -->
-
-						<!-- panel -> psettings -> tabs -->
-						<!-- tba -->
-
-						<!-- panel -> psettings -> inputs -->
-						<div class="container  stretch--  col--  p-ps__main">
-							<!-- panel -> psettings -> inputs -> [input] (name) -->
+						</div>
+					{:else if view === `projects`}
+						<!-- panel -> projects -->
+						<div class="container  stretch--  col--  p-projects">
+							<!-- panel -> projects -> [heading] -->
 							<!-- tba -->
 
-							<!-- panel -> psettings -> inputs -> [input] (code) -->
+							<!-- panel -> projects -> [tabs] -->
 							<!-- tba -->
 
-							<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
+							<!-- panel -> projects -> add -->
 							<!-- tba -->
 
-							<!-- panel -> psettings -> inputs -> [input] (description) -->
-							<!-- tba -->
-
-							<!-- panel -> psettings -> inputs -> rooms -->
-							<!-- tba -->
-
-							<!-- panel -> psettings -> inputs -> status -->
+							<!-- panel -> projects -> list -->
 							<!-- tba -->
 						</div>
-					</div>
-				{:else if view === `shop`}
-					<!-- panel -> shop -->
-					<div class="container  stretch--  col--  p-shop">
-						<!-- panel -> shop -> [heading] -->
-						<!-- tba -->
+					{:else if view === `users`}
+						<!-- panel -> users -->
+						<div class="container  stretch--  col--  p-users">
+							<!-- panel -> users -> [heading] -->
+							<!-- tba -->
 
-						<!-- panel -> shop -> note (checkout email) -->
-						<!-- tba -->
+							<!-- panel -> users -> sections -->
+							<!-- tba -->
+						</div>
+					{:else if view === `friends`}
+						<!-- panel -> friends -->
+						<div class="container  stretch--  col--  p-friends">
+							<!-- panel -> friends -> [heading] -->
+							<!-- tba -->
 
-						<!-- panel -> shop -> list (checkout) -->
-						<!-- tba -->
+							<!-- panel -> friends -> tabs -->
+							<!-- tba -->
 
-						<!-- panel -> shop -> note (stripe redirect) -->
-						<!-- tba -->
+							<!-- panel -> friends -> sections -->
+							<!-- tba -->
+						</div>
+					{:else if view === `rooms`}
+						<!-- panel -> rooms -->
+						<div class="container  stretch--  col--  p-rooms">
+							<!-- panel -> rooms -> [heading] -->
+							<!-- tba -->
 
-						<!-- panel -> shop -> list (nft) -->
-						<!-- tba -->
+							{#if editing_room && editing_room.id}
+								<!-- panel -> rooms -> inputs -->
+								<div class="container  stretch--  col--  p-ro__inputs">
+									<!-- panel -> rooms -> inputs -> [input] name -->
+									<!-- tba -->
 
-						<!-- panel -> shop -> note (tensor redirect) -->
-						<!-- tba -->
-					</div>
-				{:else if view === `help`}
-					<!-- panel -> help -->
-					<div class="container  stretch--  col--  p-help">
-						<!-- panel -> help -> [heading] -->
-						<!-- tba -->
+									<!-- panel -> rooms -> inputs -> [input] desc -->
+									<!-- tba -->
 
-						<!-- panel -> help -> list -->
-						<!-- tba -->
-					</div>
-				{:else if view === `lounge_settings`}
-					<!-- panel -> lsettings -->
-					<div class="container  stretch--  col--  p-lsettings">
-						<!-- panel -> lsettings -> [heading] -->
-						<!-- tba -->
+									<!-- panel -> rooms -> inputs -> [input] nft -->
+									<!-- tba -->
 
-						<!-- panel -> lsettings -> section (display) -->
-						<!-- tba -->
-						
-						<!-- panel -> lsettings -> section (audio) -->
-						<!-- tba -->
-					</div>
-				{/if}
-			</div>
+									<!-- panel -> rooms -> inputs -> bar -->
+									<!-- tba -->
+
+									<!-- panel -> rooms -> inputs -> edit -->
+									<!-- tba -->
+								</div>
+							{:else}
+								{#if false}
+									<!-- panel -> rooms -> add -->
+									<!-- tba -->
+								{/if}
+
+								<!-- panel -> rooms -> list -->
+								<!-- tba -->
+							{/if}
+						</div>
+					{:else if view === `project_settings`}
+						<!-- panel -> psettings -->
+						<div class="container  stretch--  col--  p-psettings">
+							<!-- panel -> psettings -> [heading] -->
+							<!-- tba -->
+
+							<!-- panel -> psettings -> tabs -->
+							<!-- tba -->
+
+							<!-- panel -> psettings -> inputs -->
+							<div class="container  stretch--  col--  p-ps__main">
+								<!-- panel -> psettings -> inputs -> [input] (name) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [input] (code) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [input] (description) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> rooms -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> status -->
+								<!-- tba -->
+							</div>
+						</div>
+					{:else if view === `shop`}
+						<!-- panel -> shop -->
+						<div class="container  stretch--  col--  p-shop">
+							<!-- panel -> shop -> [heading] -->
+							<!-- tba -->
+
+							<!-- panel -> shop -> note (checkout email) -->
+							<!-- tba -->
+
+							<!-- panel -> shop -> list (checkout) -->
+							<!-- tba -->
+
+							<!-- panel -> shop -> note (stripe redirect) -->
+							<!-- tba -->
+
+							<!-- panel -> shop -> list (nft) -->
+							<!-- tba -->
+
+							<!-- panel -> shop -> note (tensor redirect) -->
+							<!-- tba -->
+						</div>
+					{:else if view === `help`}
+						<!-- panel -> help -->
+						<div class="container  stretch--  col--  p-help">
+							<!-- panel -> help -> [heading] -->
+							<!-- tba -->
+
+							<!-- panel -> help -> list -->
+							<!-- tba -->
+						</div>
+					{:else if view === `lounge_settings`}
+						<!-- panel -> lsettings -->
+						<div class="container  stretch--  col--  p-lsettings">
+							<!-- panel -> lsettings -> [heading] -->
+							<!-- tba -->
+
+							<!-- panel -> lsettings -> section (display) -->
+							<!-- tba -->
+							
+							<!-- panel -> lsettings -> section (audio) -->
+							<!-- tba -->
+						</div>
+					{/if}
+				</div>
+			{/if}
 		{/if}
 	</div>
 {/if}
