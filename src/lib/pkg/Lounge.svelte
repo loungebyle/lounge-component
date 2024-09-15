@@ -2337,7 +2337,7 @@
 								Your account
 							</div>
 
-							<!-- panel -> avatar -> heading -> row -> button (save) -->
+							<!-- panel -> account -> heading -> row -> button (save) -->
 							<div
 								class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
 								class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
