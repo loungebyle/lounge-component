@@ -7,6 +7,7 @@
   import Avatar from '../components/Avatar.svelte';
   import Loader from '../components/Loader.svelte';
 	import { FALLBACK_USER_IMAGE } from '../assets/js/vars';
+	import _ from 'lodash';
 
 	// icon imports
 
@@ -856,6 +857,64 @@
 					pr.id === room_id
 				)
 			) {
+				// note: fill x_perc and y_per with that of active user instance of it exists, otherwise get random valid position within project room's polygons
+				
+				let x_perc;
+				let y_perc;
+
+				if (
+					user_instance &&
+					user_instance.id &&
+					_.isNumber(user_instance.x_perc) &&
+					_.isNumber(user_instance.y_perc)
+				) {
+					x_perc = user_instance.x_perc || 0;
+					y_perc = user_instance.y_perc || 0;
+				} else if (
+					project &&
+					project.id &&
+					room_id &&
+					(project.rooms || []).some(pr =>
+						pr.id === room_id
+					)
+				) {
+					let matching_room = (project.rooms || []).slice().find(pr =>
+						pr.id === room_id
+					) || null;
+
+					if (matching_room && matching_room.id) {
+						let valid_polygons = (matching_room.polygons || []).filter(rp =>
+							rp.a &&
+							_.isNumber(rp.a.x_perc) &&
+							_.isNumber(rp.a.y_perc) &&
+							rp.b &&
+							_.isNumber(rp.b.x_perc) &&
+							_.isNumber(rp.b.y_perc)
+						).slice() || [];
+
+						if (valid_polygons.length >= 1) {
+							let random_valid_polygon = valid_polygons[
+								utils.getRandomNumber(
+									0,
+									(valid_polygons.length - 1)
+								)
+							] || null;
+
+							if (random_valid_polygon) {
+								x_perc = utils.getRandomNumber(
+									random_valid_polygon.a.x_perc,
+									random_valid_polygon.b.x_perc
+								) || 0;
+
+								y_perc = utils.getRandomNumber(
+									random_valid_polygon.a.y_perc,
+									random_valid_polygon.b.y_perc
+								) || 0;
+							}
+						}
+					}
+				}
+  
 				socket.emit(
 					`load`,
 					{
@@ -865,8 +924,8 @@
 							room_id: utils.clone(room_id) || ``,
 							user_id: utils.clone(user.id) || ``,
 							user_avatar: utils.clone(user.project_avatar || user.default_avatar) || null,
-							x_perc: 0, // tba: get random valid position within project room's polygons to fill initial x_perc and y_perc
-							y_perc: 0	
+							x_perc: x_perc || 0,
+							y_perc: y_perc || 0	
 						}
 					},
 					(r) => {
