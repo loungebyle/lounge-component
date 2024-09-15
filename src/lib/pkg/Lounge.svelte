@@ -2329,7 +2329,46 @@
 				<!-- panel -> account -->
 				<div class="container  stretch--  col--  p-account">
 					<!-- panel -> account -> [heading] -->
-					<!-- tba -->
+					<div class="container  stretch--  col--  p-heading">
+						<!-- panel -> account -> heading -> row -->
+						<div class="container  stretch--  row--  row-left--  p-he__row">
+							<!-- panel -> account -> heading -> row -> heading -->
+							<div class="p-he__ro-heading">
+								Your account
+							</div>
+
+							<!-- panel -> avatar -> heading -> row -> button (save) -->
+							<div
+								class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+								class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
+								on:click={() => {
+									try {
+										let job_code = `edit_user`;
+										let other_job_codes = [`del_user_project_avatar`, `edit_user_avatars`];
+											
+										if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+											jobs.push(job_code);
+											jobs = jobs;
+
+											// tba: edit user
+
+											jobs = jobs.filter(j => j !== job_code);
+										}
+									} catch (e) {
+										console.log(e);
+									}
+								}}
+							>
+								<div>
+									{#if jobs.includes(`edit_user`)}
+										<Loader />
+									{:else}
+										Save
+									{/if}
+								</div>
+							</div>
+						</div>
+					</div>
 
 					<!-- panel -> account -> inputs -->
 					<div class="container  stretch--  col--  p-ac__inputs">
