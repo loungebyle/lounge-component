@@ -522,6 +522,8 @@
 								// edit user obj from here if the updated user isn't the logged-in user
 								
 								if (
+									project &&
+									project.id &&
 									!(
 										user &&
 										user.id &&
@@ -569,13 +571,57 @@
 								
 								// check vars
 								
-								if (!(updated_user_instance && updated_user_instance.id)) break;
+								if (!(
+									updated_user_instance &&
+									updated_user_instance.id &&
+									updated_user_instance.user &&
+									updated_user_instance.user.id
+								)) break;
+
+								let updated_user_instance_c = utils.clone(updated_user_instance);
 								
 								// if updated user instance is associated with logged-in user, update `user_instance` var
-								// tba: use object.keys technique when updating the user instance obj itself
+								if (
+									user &&
+									user.id &&
+									(user.id === updated_user_instance.user.id)
+								) {
+									let client_user_instance_c = utils.clone(updated_user_instance); // note: clone separately becuse `updated_user_instance_c` is used below
+
+									delete client_user_instance_c.user; // note: delete user obj in user_instance here since it's not required; that data is stored in `user` var instead
+								}
 
 								// update any matching user instances across all project rooms
-								// tba: use object.keys technique when updating the user instance obj itself
+
+								for (let ri = 0; (project.rooms || []); ri++) {
+									let room_matching_user_instances = (project.rooms[ri].user_instances || []).filter(rui =>
+										rui.user &&
+										rui.user.id &&
+										(rui.user.id === updated_user_instance_c.user.id)
+									) || [];
+										
+									if (room_matching_user_instances.length >= 1) {
+										let room_matching_user_instance_indexes = room_matching_user_instances.slice().map(mui =>
+											(project.rooms[ri].user_instances || []).findIndex(rui =>
+												rui.id === mui.id
+											)
+										).filter(mui =>
+											mui >= 0
+										) || [];
+									
+										for (let uii of room_matching_user_instance_indexes) {
+											for (let key of Object.keys(updated_user_instance_c)) {
+												try {
+													if (JSON.parse(project.rooms[ri].user_instances[uii][key]) !== JSON.parse(updated_user_instance_c[key])) {
+														project.rooms[ri].user_instances[uii][key] = updated_user_instance_c[key];
+													}
+												} catch (ie) {
+													console.log(ie);
+												}
+											}
+										}
+									}
+								}
 
 								break;
 							}
