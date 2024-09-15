@@ -40,6 +40,8 @@
 		users: users_icon
 	}
 
+	const NFT_CXS_LINK_URL = ``; // tba
+
 	// consts (freezed during runtime)
 
 	let LOUNGE_AVATAR_SKINS = [];
@@ -2063,7 +2065,6 @@
 								</div>
 
 								<!-- panel -> avatar -> part (body/pet) -> sections -->
-								<!-- tba: use AVATAR_PART_DATA_TYPES and avatar_part_data_type_tab -->
 								<div
 									class="container  stretch--  col--  p-av__pa-sections"
 									class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}	
@@ -2089,7 +2090,34 @@
 											}}
 										>
 											<!-- section -> row -->
-											<!-- tba -->
+											<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-row">
+												{#if TYPE.code === `nft`}
+													<div class="text  text-yellow--">
+														{(user.nft_cxs || []).reduce((total_nft_count, nft_cx) =>
+															total_nft_count += (nft_cx.nfts || []).length,
+															0
+														) || 0}
+													</div>
+													<div class="container  grow--  row--  row-left--">
+														Your NFTs
+													</div>
+													<a
+														href={NFT_CXS_LINK_URL}
+														target="_blank"
+														rel="noreferrer"
+													>
+														Supported collections →
+													</a>
+												{:else if TYPE.code === `skin`}
+													<div>
+														{LOUNGE_AVATAR_SKINS.length || 0}
+													</div>
+													<div>Default skins</div>
+												{:else}
+													<div>--</div>
+													<div>Unknown</div>
+												{/if}
+											</div>
 
 											{#if TYPE.code === avatar_part_data_type_tab}
 												<!-- section -> list -->
