@@ -580,6 +580,24 @@
 								break;
 							}
 
+							case `relationship_confirm`: {
+								// tba
+								
+								break;
+							}
+
+							case `relationship_push`: {
+								// tba
+								
+								break;
+							}
+
+							case `relationship_pull`: {
+								// tba
+								
+								break;
+							}
+
 							case `room_add`: {
 								let new_room = data.room || null;
 
@@ -1241,11 +1259,11 @@
 													) &&
 													(r.status === `pending`)
 												)}
-												class:p-accepted--={(user.relationships || []).some(r =>
+												class:p-active--={(user.relationships || []).some(r =>
 													(r.users || []).some(ru =>
 														ru.id === overlay_user.id
 													) &&
-													(r.status === `accepted`)
+													(r.status === `active`)
 												)}
 												on:click|stopPropagation={() => {
 													try {
@@ -1266,7 +1284,7 @@
 														(r.users || []).some(ru =>
 															ru.id === overlay_user.id
 														) &&
-														(r.status === `accepted`)
+														(r.status === `active`)
 													)}
 														Added as a
 													{:else if (user.relationships || []).some(r =>
@@ -3494,13 +3512,297 @@
 										</div>
 									{/if}
 								{:else if friends_tab === `requests`}
-									<!-- panel -> friends (requests) -> sections (inbound) -->
-									<!-- note: partly use `p-us__section` styles -->
-									<!-- tba -->
+									<!-- panel -> friends (requests) -> section (inbound) -->
+									<!-- note: use `p-us__section` styles -->
+									<div class="container  stretch--  col--  p-us__section">
+										<!-- panel -> friends (requests) -> section (inbound) -> label -->
+										<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
+											<div>
+												{(user.relationships || []).filter(ur =>
+													(ur.status === `pending`) &&
+													(ur.users || []).some(uru =>
+														(uru.id !== user.id) &&
+														uru.is_initiator
+													)
+												).length || 0}
+											</div>
+											<div>Incoming requests</div>
+										</div>
 
-									<!-- panel -> friends (requests) -> sections (outbound) -->
-									<!-- note: partly use `p-us__section` styles -->
-									<!-- tba -->
+										<!-- panel -> friends (requests) -> section (inbound) -> items -->
+										<div class="container  stretch--  col--  p-us__se-items">
+											{#if !(user.relationships || []).some(ur =>
+												(ur.status === `pending`) &&
+												(ur.users || []).some(uru =>
+													(uru.id !== user.id) &&
+													uru.is_initiator
+												)
+											)}
+												<!-- panel -> friends (requests) -> section (inbound) -> items -> message (none) -->
+												<div class="p-us__se-items-message">
+													No incoming friend requests to display.
+												</div>
+											{/if}
+
+											{#each (user.relationships || []).filter(ur =>
+												(ur.status === `pending`) &&
+												(ur.users || []).some(uru =>
+													(uru.id !== user.id) &&
+													uru.is_initiator
+												)
+											) as user_relationship}
+												<!-- item -->
+												<div
+													class="container  stretch--  row--  row-left--  p-us__item"
+													on:click|stopPropagation={() => {
+														try {
+															overlay_user = utils.clone(
+																user_relationship.users.find(uru =>
+																	(uru.id !== user.id)
+																)
+															);
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<!-- item -> avatar -->
+													<Avatar
+														display="icon"
+														body={(user_relationship.users.find(uru =>
+															(uru.id !== user.id)
+														).default_avatar || {}).parts.find(p => p.type === `body`) || null}
+														pet={(user_relationship.users.find(uru =>
+															(uru.id !== user.id)
+														).default_avatar || {}).parts.find(p => p.type === `pet`) || null}
+														size_em={2.1}
+													/>
+
+													<!-- item -> text -->
+													<div class="container  grow--  col--  p-us__it-text">
+														<!-- item -> text -> name -->
+														<div class="p-us__it-te-name">
+															{user_relationship.users.find(uru =>
+																(uru.id !== user.id)
+															).name || `n/a`}
+														</div>
+
+														<!-- item -> text -> row -->
+														<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+															<!-- item -> text -> row -> code -->
+															<div class="p-us__it-te-ro-code">
+																@{user_relationship.users.find(uru =>
+																	(uru.id !== user.id)
+																).code || `n/a`}
+															</div>
+
+															<!-- item -> text -> row -> status -->
+															<!-- todo: user status -->
+														</div>
+													</div>
+
+													<!-- item -> actions -->
+													<div class="container  row--  row-right--  p-us__it-actions">
+														<!-- item -> action (accept) -->
+														<div
+															class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-us__it-action"
+															class:disabled={[`accept_user_relationship_${user_relationship.id}`, `reject_user_relationship_${user_relationship.id}`]}
+															on:click|stopPropagation={async () => {
+																try {
+																	let job_code = `accept_user_relationship_${utils.clone(user_relationship.id)}`;
+																	let other_job_codes = [`reject_user_relationship_${utils.clone(user_relationship.id)}`];
+
+																	if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																		jobs.push(job_code);
+																		jobs = jobs;
+
+																		// tba: accept user relationship
+
+																		jobs = jobs.filter(j => j !== job_code);
+																	}
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															{#if jobs.includes(`accept_user_relationship_${user_relationship.id}`)}
+																<Loader />
+															{:else}
+																<div>Accept</div>
+																<img
+																	src={ICONS.add}
+																	alt=""
+																	class="svg  svg-green--"
+																/>
+															{/if}
+														</div>
+
+														<!-- item -> action (reject) -->
+														<div
+															class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-us__it-action"
+															class:disabled={[`accept_user_relationship_${user_relationship.id}`, `reject_user_relationship_${user_relationship.id}`]}
+															on:click|stopPropagation={async () => {
+																try {
+																	let job_code = `reject_user_relationship_${utils.clone(user_relationship.id)}`;
+																	let other_job_codes = [`accept_user_relationship_${utils.clone(user_relationship.id)}`];
+
+																	if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																		jobs.push(job_code);
+																		jobs = jobs;
+
+																		// tba: reject user relationship
+
+																		jobs = jobs.filter(j => j !== job_code);
+																	}
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															{#if jobs.includes(`reject_user_relationship_${user_relationship.id}`)}
+																<Loader />
+															{:else}
+																<img
+																	src={ICONS.close}
+																	alt=""
+																	class="svg  svg-red--"
+																/>
+															{/if}
+														</div>
+													</div>
+												</div>
+											{/each}
+										</div>
+									</div>
+
+									<!-- panel -> friends (requests) -> section (outbound) -->
+									<!-- note: use `p-us__section` styles -->
+									<div class="container  stretch--  col--  p-us__section">
+										<!-- panel -> friends (requests) -> section (outbound) -> label -->
+										<div class="container  row--  row-centre--  text  text-cream-light--  card  cream--  p-us__se-label">
+											<div>
+												{(user.relationships || []).filter(ur =>
+													(ur.status === `pending`) &&
+													(ur.users || []).some(uru =>
+														(uru.id === user.id) &&
+														uru.is_initiator
+													)
+												).length || 0}
+											</div>
+											<div>Outgoing requests</div>
+										</div>
+
+										<!-- panel -> friends (requests) -> section (outbound) -> items -->
+										<div class="container  stretch--  col--  p-us__se-items">
+											{#if !(user.relationships || []).some(ur =>
+												(ur.status === `pending`) &&
+												(ur.users || []).some(uru =>
+													(uru.id === user.id) &&
+													uru.is_initiator
+												)
+											)}
+												<!-- panel -> friends (requests) -> section (outbound) -> items -> message (none) -->
+												<div class="p-us__se-items-message">
+													No outgoing friend requests to display.
+												</div>
+											{/if}
+
+											{#each (user.relationships || []).filter(ur =>
+												(ur.status === `pending`) &&
+												(ur.users || []).some(uru =>
+													(uru.id === user.id) &&
+													uru.is_initiator
+												)
+											) as user_relationship}
+												<!-- item -->
+												<div
+													class="container  stretch--  row--  row-left--  p-us__item"
+													on:click|stopPropagation={() => {
+														try {
+															overlay_user = utils.clone(
+																user_relationship.users.find(uru =>
+																	(uru.id !== user.id)
+																)
+															);
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<!-- item -> avatar -->
+													<Avatar
+														display="icon"
+														body={(user_relationship.users.find(uru =>
+															(uru.id !== user.id)
+														).default_avatar || {}).parts.find(p => p.type === `body`) || null}
+														pet={(user_relationship.users.find(uru =>
+															(uru.id !== user.id)
+														).default_avatar || {}).parts.find(p => p.type === `pet`) || null}
+														size_em={2.1}
+													/>
+
+													<!-- item -> text -->
+													<div class="container  grow--  col--  p-us__it-text">
+														<!-- item -> text -> name -->
+														<div class="p-us__it-te-name">
+															{user_relationship.users.find(uru =>
+																(uru.id !== user.id)
+															).name || `n/a`}
+														</div>
+
+														<!-- item -> text -> row -->
+														<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+															<!-- item -> text -> row -> code -->
+															<div class="p-us__it-te-ro-code">
+																@{user_relationship.users.find(uru =>
+																	(uru.id !== user.id)
+																).code || `n/a`}
+															</div>
+
+															<!-- item -> text -> row -> status -->
+															<!-- todo: user status -->
+														</div>
+													</div>
+
+													<!-- item -> actions -->
+													<div class="container  row--  row-right--  p-us__it-actions">
+														<!-- item -> action (cancel) -->
+														<div
+															class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-us__it-action"
+															class:disabled={[`cancel_user_relationship_${user_relationship.id}`]}
+															on:click|stopPropagation={async () => {
+																try {
+																	let job_code = `cancel_user_relationship_${utils.clone(user_relationship.id)}`;
+																	let other_job_codes = [];
+
+																	if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																		jobs.push(job_code);
+																		jobs = jobs;
+
+																		// tba: cancel user relationship
+
+																		jobs = jobs.filter(j => j !== job_code);
+																	}
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															{#if jobs.includes(`cancel_user_relationship_${user_relationship.id}`)}
+																<Loader />
+															{:else}
+																<img
+																	src={ICONS.close}
+																	alt=""
+																	class="svg  svg-red--"
+																/>
+															{/if}
+														</div>
+													</div>
+												</div>
+											{/each}
+										</div>
+									</div>
 								{/if}
 							</div>
 						</div>
