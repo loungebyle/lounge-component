@@ -3342,7 +3342,9 @@
 									<!-- tba -->
 								</div>
 							{:else}
-								{#if false}
+								{#if (project.staff_users || []).find(su =>
+									su.id === user.id
+								)}
 									<!-- panel -> rooms -> add -->
 									<!-- tba -->
 								{/if}
