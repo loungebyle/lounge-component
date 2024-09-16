@@ -231,7 +231,27 @@
 	let users_search_input = ``;
 
 	// vars (friends)
-	// todo
+
+	const FRIENDS_TABS = [
+		{
+			code: `room`,
+			name: `` // note: using name of current room
+		},
+		{
+			code: `all`,
+			name: `All`
+		},
+		{
+			code: `requests`,
+			name: `Requests`
+		}
+	];
+
+	let friends_search_input = ``;
+
+	let friends_tab = (FRIENDS_TABS.find(T =>
+		T.code === `all`
+	) || {}).code || (FRIENDS_TABS[0] || {}).code || ``;
 
 	// vars (rooms)
 
@@ -2082,6 +2102,11 @@
 										<!-- [tab] -->
 										<div
 											class="container  stretch--  row--  row-centre--  text  card  p-tab"
+											class:grow--={TAB.code === avatar_part_tab}
+											class:text-cream-light--={TAB.code === avatar_part_tab}
+											class:cream--={TAB.code === avatar_part_tab}
+											class:text-white--={TAB.code !== avatar_part_tab}
+											class:white--={TAB.code !== avatar_part_tab}
 											on:click|stopPropagation={() => {
 												try {
 													if (avatar_part_tab !== TAB.code) {
@@ -2796,6 +2821,11 @@
 									<!-- [tab] -->
 									<div
 										class="container  stretch--  row--  row-centre--  text  card  p-tab"
+										class:grow--={TAB.code === project_tab}
+										class:text-cream-light--={TAB.code === project_tab}
+										class:cream--={TAB.code === project_tab}
+										class:text-white--={TAB.code !== project_tab}
+										class:white--={TAB.code !== project_tab}
 										on:click|stopPropagation={() => {
 											try {
 												if (project_tab !== TAB.code) {
@@ -3199,13 +3229,93 @@
 						<!-- panel -> friends -->
 						<div class="container  stretch--  col--  p-friends">
 							<!-- panel -> friends -> [heading] -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> friends -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> friends -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Friends
+									</div>
+								</div>
 
-							<!-- panel -> friends -> tabs -->
-							<!-- tba -->
+								<!-- panel -> friends -> heading -> search -->
+								<input
+									bind:value={friends_search_input}
+									placeholder="Search friends..."
+									class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
+								/>
+							</div>
+
+							<!-- panel -> friends -> [tabs] -->
+							<div class="container  stretch--  row--  row-left--  p-tabs">
+								{#each FRIENDS_TABS as TAB}
+									<!-- [tab] -->
+									<div
+										class="container  stretch--  row--  row-centre--  text  card  p-tab"
+										class:grow--={TAB.code === friends_tab}
+										class:text-cream-light--={TAB.code === friends_tab}
+										class:cream--={TAB.code === friends_tab}
+										class:text-white--={TAB.code !== friends_tab}
+										class:white--={TAB.code !== friends_tab}
+										on:click|stopPropagation={() => {
+											try {
+												if (friends_tab !== TAB.code) {
+													friends_tab = utils.clone(TAB.code) || ``;
+												}
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>
+											{#if TAB.code === `room`}
+												<img
+													src={ICONS.hashtag}
+													alt=""
+													class="svg"
+													class:svg-cream-light--={friends_tab === TAB.code}
+													class:svg-white--={friends_tab !== TAB.code}
+												/>
+
+												{utils.shortenString({
+													string: (((project || {}).rooms || []).find(r =>
+														r.id === room_id
+													) || {}).name || ``,
+													length: 15
+												}) || `room`}
+											{:else}
+												{TAB.name || `n/a`}
+											{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
 
 							<!-- panel -> friends -> sections -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-us__sections">
+
+							</div>
+							<!-- note: use `p-us__sections` styles -->
+							{#if friends_tab === `room`}
+								<!-- panel -> friends (room) -> section (online) -->
+								<!-- note: use `p-us__section` styles -->
+								<!-- tba -->
+							{:else if friends_tab === `all`}
+								<!-- panel -> friends (all) -> sections (online) -->
+								<!-- tba -->
+
+								<!-- panel -> friends (all) -> sections (offline) -->
+								<!-- note: use `p-us__section` styles -->
+								<!-- tba -->
+							{:else if friends_tab === `requests`}
+								<!-- panel -> friennds (requests) -> sections (inbound) -->
+								<!-- note: partly use `p-us__section` styles -->
+								<!-- tba -->
+
+								<!-- panel -> friends (requests) -> sections (outbound) -->
+								<!-- note: partly use `p-us__section` styles -->
+								<!-- tba -->
+							{/if}
 						</div>
 					{:else if view === `rooms`}
 						<!-- panel -> rooms -->
