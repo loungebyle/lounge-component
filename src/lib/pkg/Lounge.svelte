@@ -5,6 +5,7 @@
   import * as api from '../assets/js/api';
   import * as utils from '../assets/js/utils';
   import Avatar from '../components/Avatar.svelte';
+  import Input from '../components/Input.svelte';
   import Loader from '../components/Loader.svelte';
 	import { FALLBACK_USER_IMAGE } from '../assets/js/vars';
 	import _ from 'lodash';
@@ -14,9 +15,13 @@
 	import add_icon from '../assets/images/icons/add.svg';
 	import bookmark_icon from '../assets/images/icons/bookmark.svg';
   import close_icon from '../assets/images/icons/close.svg';
+	import discord_icon from '../assets/images/icons/discord.svg';
   import friends_icon from '../assets/images/icons/friend.svg';
+	import google_icon from '../assets/images/icons/google.svg';
 	import hashtag_icon from '../assets/images/icons/hashtag.svg';
+	import right_icon from '../assets/images/icons/right.svg';
 	import rooms_icon from '../assets/images/icons/rooms.svg';
+	import solana_icon from '../assets/images/icons/solana.svg';
   import xp_icon from '../assets/images/icons/xp.svg';
 	import users_icon from '../assets/images/icons/users.svg';
 
@@ -33,14 +38,20 @@
 		add: add_icon,
 		bookmark: bookmark_icon,
 		close: close_icon,
+		discord: discord_icon,
 		friends: friends_icon,
+		google: google_icon,
 		hashtag: hashtag_icon,
+		right: right_icon,
 		rooms: rooms_icon,
+		solana: solana_icon,
 		xp: xp_icon,
 		users: users_icon
 	}
 
 	const NFT_CXS_LINK_URL = `https://lounge.so/nfts`; // tba
+
+	const STRIPE_BUY_LINK_URL = ``; // tba
 
 	// consts (freezed during runtime)
 
@@ -106,7 +117,7 @@
 		}
 	];
 
-	const AVATAR_PART_DATA_TYPES = [
+	const AVATAR_PART_DATA_TABS = [
 		{
 			code: `nft`,
 			name: `Your NFTs`,
@@ -127,9 +138,9 @@
 		T.code === `preview`
 	) || {}).code || (AVATAR_PART_TABS[0] ||{}).code || ``; // based on AVATAR_PART_TABS
 
-	let avatar_part_data_type_tab = (AVATAR_PART_DATA_TYPES.find(T =>
+	let avatar_part_data_type_tab = (AVATAR_PART_DATA_TABS.find(T =>
 		T.code === `nft`
-	) || {}).code || (AVATAR_PART_DATA_TYPES[0] ||{}).code || ``; // based on AVATAR_PART_DATA_TYPES
+	) || {}).code || (AVATAR_PART_DATA_TABS[0] ||{}).code || ``; // based on AVATAR_PART_DATA_TABS
 
 	let user_avatar_inputs = {
 		default: null,
@@ -137,10 +148,51 @@
 	}
 
 	// vars (account)
-	// todo
+	
+	let account_input = {
+		name: ``,
+		code: ``,
+		// link_url: ``,
+		connections: []
+	}
 
 	// vars (projects)
-	// todo
+
+	const PROJECT_TABS = [
+		{
+			code: `owned`,
+			name: `Owned`
+		},
+		{
+			code: `bookmarked`,
+			name: `Bookmarked`
+		},
+		{
+			code: `explorable`,
+			name: `Explorable`
+		}
+	];
+
+	const PROJECT_NFTS_OPTIONS = [
+		{
+			code: `suaveseals`,
+			name: `Suave Seal`,
+			project_count_per_nft: 5
+		},
+		{
+			code: `bullishtsuyoneko`,
+			name: `Bullish Tsuyoneko`,
+			project_count_per_nft: 1
+		},
+	];
+
+	let project_tab = (PROJECT_TABS.find(T =>
+		T.code === `owned`
+	) || {}).code || (PROJECT_TABS[0] ||{}).code || ``; // based on PROJECT_TABS
+	
+	let projects_search_input = ``;
+
+	let add_project_error = ``;
 
 	// vars (users)
 	// todo
@@ -149,6 +201,7 @@
 	// todo
 
 	// vars (rooms)
+
 	let editing_room;
 
 	// vars (project_settings)
@@ -285,7 +338,7 @@
 			view = `main`;
 
 			switch (previous_view) {
-				// todo: other view types if required
+				// todo: any view types as required
 			}
 		} catch (e) {
 			console.log(e);
@@ -1771,7 +1824,21 @@
 											class="container  stretch--  row--  row-centre--  text  text-white---  card  yellow-  p-ca__action  p-ma__us-edit"
 											on:click|stopPropagation={() => {
 												try {
-													// tba: goto account settings
+													if (
+														![`edit_user`].some(j => jobs.includes(j)) &&
+														user &&
+														user.id
+													) {
+														let user_c = utils.clone(user);
+
+														account_input = {
+															name: user_c.name || ``,
+															code: user_c.code || ``,
+															connections: user_c.connections || []
+														}
+													}
+
+													view = `account`;
 												} catch (e) {
 													console.log(e);
 												}
@@ -1833,7 +1900,11 @@
 									class="container  stretch--  row--  row-centre--  text  text-purple-light--  card  purple--  p-ma__button  p-projects--"
 									on:click|stopPropagation={() => {
 										try {
-											// tba: goto user projects
+											if (![`add_pro_project`].some(j => jobs.includes(j))) {
+												add_project_error = ``;
+											}
+											
+											view = `projects`;
 										} catch (e) {
 											console.log(e);
 										}
@@ -2106,20 +2177,20 @@
 											class="container  stretch--  col--  p-av__pa-sections"
 											class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}	
 										>
-											{#each AVATAR_PART_DATA_TYPES.filter(T =>
+											{#each AVATAR_PART_DATA_TABS.filter(T =>
 												(T.part_tabs || []).includes(avatar_part_tab)
-											) as TYPE}
+											) as TAB}
 												<!-- section -->
 												<div
 													class="container  stretch--  col--  text  card  p-av__pa-section"
-													class:text-yellow-light--={TYPE.code === avatar_part_data_type_tab}
-													class:yellow--={TYPE.code === avatar_part_data_type_tab}
-													class:text-white--={TYPE.code !== avatar_part_data_type_tab}
-													class:white--={TYPE.code !== avatar_part_data_type_tab}
+													class:text-yellow-light--={TAB.code === avatar_part_data_type_tab}
+													class:yellow--={TAB.code === avatar_part_data_type_tab}
+													class:text-white--={TAB.code !== avatar_part_data_type_tab}
+													class:white--={TAB.code !== avatar_part_data_type_tab}
 													on:click={() => {
 														try {
-															if (TYPE.code !== avatar_part_data_type_tab) {
-																avatar_part_data_type_tab = utils.clone(TYPE.code) || ``;
+															if (TAB.code !== avatar_part_data_type_tab) {
+																avatar_part_data_type_tab = utils.clone(TAB.code) || ``;
 															}
 														} catch (e) {
 															console.log(e);
@@ -2128,7 +2199,7 @@
 												>
 													<!-- section -> row -->
 													<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-row">
-														{#if TYPE.code === `nft`}
+														{#if TAB.code === `nft`}
 															<div class="text  text-yellow--">
 																{(user.nft_cxs || []).reduce((total_nft_count, nft_cx) =>
 																	total_nft_count += (nft_cx.nfts || []).length,
@@ -2145,7 +2216,7 @@
 															>
 																Supported collections →
 															</a>
-														{:else if TYPE.code === `skin`}
+														{:else if TAB.code === `skin`}
 															<div>
 																{LOUNGE_AVATAR_SKINS.length || 0}
 															</div>
@@ -2156,10 +2227,10 @@
 														{/if}
 													</div>
 
-													{#if TYPE.code === avatar_part_data_type_tab}
+													{#if TAB.code === avatar_part_data_type_tab}
 														<!-- section -> list -->
 														<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-list">
-															{#if TYPE.code === `nft`}
+															{#if TAB.code === `nft`}
 																{#each (user.nft_cxs || []).sort((a, b) =>
 																	(b.nfts || []).length - (a.nfts || []).length
 																).slice() as nft_cx}
@@ -2239,7 +2310,7 @@
 																		</div>
 																	{/each}
 																{/each}
-															{:else if TYPE.code === `skin`}
+															{:else if TAB.code === `skin`}
 																{#each LOUNGE_AVATAR_SKINS as SKIN}
 																	<!-- item (skin) -->
 																	<div
@@ -2410,38 +2481,431 @@
 							<!-- panel -> account -> inputs -->
 							<div class="container  stretch--  col--  p-ac__inputs">
 								<!-- panel -> account -> inputs -> [input] (name) -->
-								<!-- tba -->
+								<Input
+									bind:value={account_input.name}
+									type="text"
+									label="Name"
+									placeholder="eg. Le Frost"
+									events={{}}
+								/>
 
 								<!-- panel -> account -> inputs -> [input] (code) -->
-								<!-- tba -->
+								<Input
+									bind:value={account_input.code}
+									type="text"
+									label="@Handle"
+									placeholder="eg. lefrost"
+									events={{}}
+								/>
 
 								<!-- panel -> account -> inputs -> [input] (link url) -->
 								<!-- todo -->
 
 								<!-- panel -> account -> inputs -> connection (google) -->
-								<!-- tba -->
+								<div class="container  stretch--  col--  text  text-mint-light--  card  mint--  p-ac__in-connection">
+									<!-- pannel -> account -> inputs -> connection (google) -> top -->
+									<div class="container  stretch--  row--  row-left--  p-ac__in-co-top">
+										<!-- panel -> account -> inputs -> connection (google) -> top -> image -->
+										<img
+											src={ICONS.google}
+											alt=""
+											class="svg  svg-mint-light--"
+										/>
+
+										<!-- panel -> account -> inputs -> connection (google) -> top -> text -->
+										<div class="container  grow--  col--  p-ac__in-co-to-text">
+											<div>Google</div>
+											<div class="text  text-white--">
+												Min/max 1 connection
+											</div>
+										</div>
+									</div>
+
+									<!-- panel -> account -> inputs -> connection (google) -> list -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-ac__in-co-list">
+										<!-- panel -> account -> inputs -> connection (google) -> list -> add -->
+										<a
+											href="https://lounge.so/account"
+											target="_blank"
+											rel="noreferrer"
+											class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-ac__in-co-li-add"
+										>
+											<div>Change in Lounge.so</div>
+											<img
+												src={ICONS.right}
+												alt=""
+												class="svg  svg-green--"
+											/>
+										</a>
+
+										{#if (account_input.connections || []).some(uc =>
+											uc.type === `google`
+										)}
+											<!-- panel -> account -> inputs -> connection (google) -> list -> message -->
+											<div class="p-ac__in-co-li-message">
+												None connected.
+											</div>
+										{/if}
+
+										{#each (account_input.connections || []).filter(uc =>
+											uc.type === `google`
+										).slice() as connection}
+											<!-- panel -> account -> inputs -> connection (google) -> list -> item -->
+											<div class="container  stretch--  row--  row-centre--  text  text-mint-light--  card  mint--  p-ac__in-co-li-item">
+												<!-- panel -> account -> inputs -> connection (google) -> list -> item -> text -->
+												<div class="p-ac__in-co-li-it-text">
+													{connection.name || connection.code || `n/a`}
+												</div>
+											</div>
+										{/each}
+									</div>
+								</div>
 
 								<!-- panel -> account -> inputs -> connection (discord) -->
-								<!-- tba -->
+								<div class="container  stretch--  col--  text  text-blue-light--  card  blue--  p-ac__in-connection">
+									<!-- pannel -> account -> inputs -> connection (discord) -> top -->
+									<div class="container  stretch--  row--  row-left--  p-ac__in-co-top">
+										<!-- panel -> account -> inputs -> connection (discord) -> top -> image -->
+										<img
+											src={ICONS.discord}
+											alt=""
+											class="svg  svg-blue-light--"
+										/>
+
+										<!-- panel -> account -> inputs -> connection (discord) -> top -> text -->
+										<div class="container  grow--  col--  p-ac__in-co-to-text">
+											<div>Discord</div>
+											<div class="text  text-white--">
+												{(account_input.connections || []).filter(uc =>
+													uc.type === `discord`
+												).length || 0}
+											</div>
+										</div>
+									</div>
+
+									<!-- panel -> account -> inputs -> connection (discord) -> list -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-ac__in-co-list">
+										<!-- panel -> account -> inputs -> connection (discord) -> list -> add -->
+										<a
+											href="https://lounge.so/account"
+											target="_blank"
+											rel="noreferrer"
+											class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-ac__in-co-li-add"
+										>
+											<div>Add another in Lounge.so</div>
+											<img
+												src={ICONS.add}
+												alt=""
+												class="svg  svg-green--"
+											/>
+										</a>
+
+										{#if (account_input.connections || []).some(uc =>
+											uc.type === `discord`
+										)}
+											<!-- panel -> account -> inputs -> connection (discord) -> list -> message -->
+											<div class="p-ac__in-co-li-message">
+												None connected.
+											</div>
+										{/if}
+
+										{#each (account_input.connections || []).filter(uc =>
+											uc.type === `discord`
+										).slice() as connection}
+											<!-- panel -> account -> inputs -> connection (discord) -> list -> item -->
+											<div class="container  stretch--  row--  row-centre--  text  text-blue-light--  card  blue--  p-ac__in-co-li-item">	
+												<!-- panel -> account -> inputs -> connection (discord) -> list -> item -> text -->
+												<div class="p-ac__in-co-li-it-text">
+													{connection.name || connection.code || `n/a`}
+												</div>
+
+												<!-- panel -> account -> inputs -> connection (discord) -> list -> item -> del -->
+												<div
+													class="p-ac__in-co-li-it-del"
+													on:click={() => {
+														try {
+															account_input.connections = account_input.connections.filter(uc =>
+																!(
+																	(uc.type === `discord`) &&
+																	(uc.code === connection.code)
+																)
+															)	
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<img
+														src={ICONS.close}
+														alt=""
+														class="svg  svg-white--"
+													/>
+												</div>
+											</div>
+										{/each}
+									</div>
+								</div>
 
 								<!-- panel -> account -> inputs -> connection (solana) -->
-								<!-- tba -->
+								<div class="container  stretch--  col--  text  text-purple-light--  card  purple--  p-ac__in-connection">
+									<!-- pannel -> account -> inputs -> connection (solana) -> top -->
+									<div class="container  stretch--  row--  row-left--  p-ac__in-co-top">
+										<!-- panel -> account -> inputs -> connection (solana) -> top -> image -->
+										<img
+											src={ICONS.solana}
+											alt=""
+											class="svg  svg-purple--"
+										/>
+
+										<!-- panel -> account -> inputs -> connection (solana) -> top -> text -->
+										<div class="container  grow--  col--  p-ac__in-co-to-text">
+											<div>Solana</div>
+											<div class="text  text-white--">
+												{(account_input.connections || []).filter(uc =>
+													uc.type === `solana`
+												).length || 0}
+											</div>
+										</div>
+									</div>
+
+									<!-- panel -> account -> inputs -> connection (solana) -> list -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-ac__in-co-list">
+										<!-- panel -> account -> inputs -> connection (solana) -> list -> add -->
+										<a
+											href="https://lounge.so/account"
+											target="_blank"
+											rel="noreferrer"
+											class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-ac__in-co-li-add"
+										>
+											<div>Add another in Lounge.so</div>
+											<img
+												src={ICONS.add}
+												alt=""
+												class="svg  svg-green--"
+											/>
+										</a>
+
+										{#if (account_input.connections || []).some(uc =>
+											uc.type === `solana`
+										)}
+											<!-- panel -> account -> inputs -> connection (solana) -> list -> message -->
+											<div class="p-ac__in-co-li-message">
+												None connected.
+											</div>
+										{/if}
+
+										{#each (account_input.connections || []).filter(uc =>
+											uc.type === `solana`
+										).slice() as connection}
+											<!-- panel -> account -> inputs -> connection (solana) -> list -> item -->
+											<div class="container  stretch--  row--  row-centre--  text  text-purple-light--  card  purple--  p-ac__in-co-li-item">	
+												<!-- panel -> account -> inputs -> connection (solana) -> list -> item -> text -->
+												<div class="p-ac__in-co-li-it-text">
+													{connection.name || utils.formatAddress(connection.code) || `n/a`}
+												</div>
+
+												<!-- panel -> account -> inputs -> connection (solana) -> list -> item -> del -->
+												<div
+													class="p-ac__in-co-li-it-del"
+													on:click={() => {
+														try {
+															account_input.connections = account_input.connections.filter(uc =>
+																!(
+																	(uc.type === `solana`) &&
+																	(uc.code === connection.code)
+																)
+															)	
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<img
+														src={ICONS.close}
+														alt=""
+														class="svg  svg-white--"
+													/>
+												</div>
+											</div>
+										{/each}
+									</div>
+								</div>
 							</div>
 						</div>
 					{:else if view === `projects`}
 						<!-- panel -> projects -->
 						<div class="container  stretch--  col--  p-projects">
 							<!-- panel -> projects -> [heading] -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> account -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> account -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										My Projects
+									</div>
+								</div>
+
+								<!-- panel -> account -> heading -> search -->
+								<input
+									bind:value={projects_search_input}
+									placeholder="Search Projects..."
+									class="container  stretch--  row--  row-left--  p-he__search"
+								/>
+							</div>
 
 							<!-- panel -> projects -> [tabs] -->
-							<!-- tba -->
+							<div class="container  stretch--  row--  row-left--  p-tabs">
+								{#each PROJECT_TABS as TAB}
+									<!-- [tab] -->
+									<div
+										class="container  stretch--  row--  row-centre--  text  card  p-tab"
+										on:click={() => {
+											try {
+												if (project_tab !== TAB.code) {
+													project_tab = utils.clone(TAB.code) || ``;
+												}
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>{TAB.name || `n/a`}</div>
+									</div>
+								{/each}
+							</div>
 
-							<!-- panel -> projects -> add -->
-							<!-- tba -->
+							{#if project_tab === `owned`}
+								<!-- panel -> projects -> add -->
+								<div class="container  stretch--  col--  p-pr__add">
+									<!-- panel -> projects -> add -> row -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-pr__ad-row">
+										<!-- panel -> projects -> add -> row -> option (buy) -->
+										<a
+											href={STRIPE_BUY_LINK_URL}
+											target="_blank"
+											rel="noreferrer"
+											class="container  grow--  stretch--  row--  row-centre--  text  text-green--  card  green--  p-pr__ad-ro-option"
+										>
+											<div>Buy Project</div>
+										</a>
+
+										<!-- panel -> projects -> add -> row -> option (add) -->
+										<div
+											class="container  grow--  stretch--  row--  row-centre--  text  text-green--  card  green--  p-pr__ad-ro-option"
+											class:disabled={[`add_pro_project`].some(j => jobs.includes(j))}
+											on:click={async () => {
+												try {
+													let job_code = `add_pro_project`;
+													let other_job_codes = [];
+														
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: add pro project, fill add_project_error if error detected
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<span>Pro</span>
+											<div>
+												{#if jobs.includes(`add_pro_project`)}
+													<Loader />
+												{:else}
+													Add a Project
+												{/if}
+											</div>
+										</div>
+									</div>
+
+									{#if (user.nft_cxs || []).some(uc =>
+										PROJECT_NFTS_OPTIONS.map(O => O.code).includes(uc.id) &&
+										((uc.nfts || []).length >= 1)
+									)}
+										<!-- panel -> projects -> add -> nfts -->
+										<div class="container  stretch--  col--  p-pr__ad-nfts">
+											{#each PROJECT_NFTS_OPTIONS as OPTION}
+												{#if user.nft_cxs.some(uc =>
+													(uc.type === OPTION.code) &&
+													((uc.nfts || []).length >= 1)
+												)}
+													<!-- panel -> projects -> add -> nfts -> option -->
+													<div
+														class="container  stretch--  row--  row-left--  text  text-blue-light--  card  blue--  p-pr__ad-nf-option"
+														class:disabled={[`add_${OPTION.code}_project`].some(j => jobs.includes(j))}
+														on:click={async () => {
+															try {
+																let job_code = `add_${OPTION.code}_project`;
+																let other_job_codes = [];
+																	
+																if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																	jobs.push(job_code);
+																	jobs = jobs;
+			
+																	// tba: add OPTION.code (ie. suaveseals, bullishtsuyoneko) project, fill add_project_error if error detected
+			
+																	jobs = jobs.filter(j => j !== job_code);
+																}
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														<div>
+															{OPTION.name || `n/a`}
+														</div>
+
+														<div>
+															{staffed_projects.filter(p =>
+																(p.type === OPTION.code) &&
+																(p.staff_users || []).some(psu =>
+																	psu.id === user.id
+																)
+															).length || 0}/{
+																(user.nft_cxs.find(uc =>
+																	(uc.type === OPTION.code) &&
+																	((uc.nfts || []).length >= 1)
+																).nfts || []).length * (OPTION.project_count_per_nft || 0)
+															}
+														</div>
+														
+														<!-- panel -> projects -> add -> nfts -> option -> label -->
+														<div class="container  grow--  row--  row-right--  p-pr__ad-nf-op-label">
+															{#if jobs.includes(`add_${OPTION.code}_project`)}
+																<Loader />
+															{:else}
+																Add a Project
+															{/if}
+														</div>
+													</div>
+												{/if}
+											{/each}
+										</div>
+									{/if}
+
+									{#if add_project_error}
+										<!-- panel -> projects -> add -> error -->
+										<div class="text  text-red--  p-pr__ad-error">
+											{add_project_error || `Unknown error`}
+										</div>
+									{/if}
+								</div>
+							{/if}
 
 							<!-- panel -> projects -> list -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-pr__list">
+								{#if project_tab == `owned`}
+									<!-- tba -->
+								{:else if project_tab === `bookmarked`}
+									<!-- tba -->
+								{:else if project_tab === `explorable`}
+									<!-- tba -->
+								{/if}
+							</div>
 						</div>
 					{:else if view === `users`}
 						<!-- panel -> users -->
