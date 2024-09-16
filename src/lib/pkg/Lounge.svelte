@@ -1831,7 +1831,7 @@
 												) || {}).user_instances || []).filter(ru =>
 													(user.relationships || []).some(ur =>
 														(ur.users || []).some(uru =>
-															uru.id == ru.id
+															uru.id === ru.id
 														)
 													)
 												).length || 0}
@@ -3311,34 +3311,58 @@
 								{/each}
 							</div>
 
-							<!-- panel -> friends -> sections -->
-							<div class="container  stretch--  col--  p-us__sections">
-								<!-- note: use `p-us__sections` styles -->
-								{#if friends_tab === `room`}
-									{#if !(((project.rooms || []).find(r =>
-										r.id === room_id
-									) || {}).user_instances || []).some(rui =>
-										rui.user &&
-										rui.user.id &&
-										(user.id !== rui.user.id) &&
-										(user.relationships || []).find(ur =>
-											(ur.users || []).some(uru =>
-												uru.id === rui.user.id
+							{#if (user.relationships || []).length === 0}
+								<!-- panel -> friends -> message (none) -->
+								<div class="p-fr__message">
+									No friends to display. Start adding some of your fellow Lounge users!
+								</div>
+							{:else}
+								<!-- panel -> friends -> sections -->
+								<div class="container  stretch--  col--  p-us__sections">
+									<!-- note: use `p-us__sections` styles -->
+									{#if friends_tab === `room`}
+										{#if !(((project.rooms || []).find(r =>
+											r.id === room_id
+										) || {}).user_instances || []).some(rui =>
+											rui.user &&
+											rui.user.id &&
+											(user.id !== rui.user.id) &&
+											(user.relationships || []).find(ur =>
+												(ur.users || []).some(uru =>
+													uru.id === rui.user.id
+												)
 											)
-										)
-									)}
-										<!-- panel -> friends (room) -> message (none) -->
-										<div class="p-us__sections-message">
-											No friends in this room to display.
-										</div>
-									{:else}
-										<!-- panel -> friends (room) -> section (online) -->
-										<!-- note: use `p-us__section` styles -->
-										<div class="container  stretch--  col--  p-us__section">
-											<!-- panel -> friends (room) -> section (online) -> label -->
-											<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
-												<div>
-													{(((project.rooms || []).find(r =>
+										)}
+											<!-- panel -> friends (room) -> message (none) -->
+											<div class="p-us__sections-message">
+												No friends in this room to display.
+											</div>
+										{:else}
+											<!-- panel -> friends (room) -> section (online) -->
+											<!-- note: use `p-us__section` styles -->
+											<div class="container  stretch--  col--  p-us__section">
+												<!-- panel -> friends (room) -> section (online) -> label -->
+												<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
+													<div>
+														{(((project.rooms || []).find(r =>
+															r.id === room_id
+														) || {}).user_instances || []).filter(rui =>
+															rui.user &&
+															rui.user.id &&
+															(user.id !== rui.user.id) &&
+															(user.relationships || []).find(ur =>
+																(ur.users || []).some(uru =>
+																	uru.id === rui.user.id
+																)
+															)
+														).length || 0}
+													</div>
+													<div>Online</div>
+												</div>
+
+												<!-- panel -> friends (room) -> section (online) -> items -->
+												<div class="container  stretch--  p-us__se-items">
+													{#each (((project.rooms || []).find(r =>
 														r.id === room_id
 													) || {}).user_instances || []).filter(rui =>
 														rui.user &&
@@ -3349,462 +3373,622 @@
 																uru.id === rui.user.id
 															)
 														)
-													).length || 0}
-												</div>
-												<div>Online</div>
-											</div>
-
-											<!-- panel -> friends (room) -> section (online) -> items -->
-											<div class="container  stretch--  p-us__se-items">
-												{#each (((project.rooms || []).find(r =>
-													r.id === room_id
-												) || {}).user_instances || []).filter(rui =>
-													rui.user &&
-													rui.user.id &&
-													(user.id !== rui.user.id) &&
-													(user.relationships || []).find(ur =>
-														(ur.users || []).some(uru =>
-															uru.id === rui.user.id
-														)
-													)
-												) as user_instance}
-													<!-- item -->
-													<div
-														class="container  stretch--  row--  row-left--  p-us__item"
-														on:click|stopPropagation={() => {
-															try {
-																if (
-																	user_instance.user &&
-																	user_instance.user.id
-																) {
-																	overlay_user = utils.clone(user_instance.user);
+													) as user_instance}
+														<!-- item -->
+														<div
+															class="container  stretch--  row--  row-left--  p-us__item"
+															on:click|stopPropagation={() => {
+																try {
+																	if (
+																		user_instance.user &&
+																		user_instance.user.id
+																	) {
+																		overlay_user = utils.clone(user_instance.user);
+																	}
+																} catch (e) {
+																	console.log(e);
 																}
-															} catch (e) {
-																console.log(e);
-															}
-														}}
-													>
-														<!-- item -> avatar -->
-														<Avatar
-															display="icon"
-															body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
-															pet={(user_instance.user_avatar || {}).parts.find(p => p.type === `pet`) || null}
-															size_em={2.1}
-														/>
+															}}
+														>
+															<!-- item -> avatar -->
+															<Avatar
+																display="icon"
+																body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
+																pet={(user_instance.user_avatar || {}).parts.find(p => p.type === `pet`) || null}
+																size_em={2.1}
+															/>
 
-														<!-- item -> text -->
-														<div class="container  grow--  col--  p-us__it-text">
-															<!-- item -> text -> name -->
-															<div class="p-us__it-te-name">
-																{(user_instance.user || {}).name || `n/a`}
-															</div>
-
-															<!-- item -> text -> row -->
-															<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
-																<!-- item -> text -> row -> code -->
-																<div class="p-us__it-te-ro-code">
-																	@{(user_instance.user || {}).code || `n/a`}
+															<!-- item -> text -->
+															<div class="container  grow--  col--  p-us__it-text">
+																<!-- item -> text -> name -->
+																<div class="p-us__it-te-name">
+																	{(user_instance.user || {}).name || `n/a`}
 																</div>
 
-																<!-- item -> text -> row -> status -->
-																<!-- todo: user status -->
+																<!-- item -> text -> row -->
+																<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																	<!-- item -> text -> row -> code -->
+																	<div class="p-us__it-te-ro-code">
+																		@{(user_instance.user || {}).code || `n/a`}
+																	</div>
+
+																	<!-- item -> text -> row -> status -->
+																	<!-- todo: user status -->
+																</div>
 															</div>
 														</div>
-													</div>
-												{/each}
+													{/each}
+												</div>
 											</div>
-										</div>
-									{/if}
-								{:else if friends_tab === `all`}
-									<!-- panel -> friends (all) -> sections (online) -->
-									<!-- tba -->
-
-									{#if (user.relationships || []).some(ur =>
-										ur.user &&
-										ur.user.id &&
-										(ur.users || []).some(uru =>
-											!friends_user_instances.some(fui =>
-												fui.user_id &&
-												(fui.user.id === uru.id)
+										{/if}
+									{:else if friends_tab === `all`}
+										{#if friends_user_instances.filter(fui =>
+											fui.user_id &&
+											(user.relationships || []).some(ur =>
+												(ur.users || []).some(uru =>
+													(uru.id !== user.id) &&
+													uru.user &&
+													uru.user.id &&
+													(fui.user_id === uru.id)
+												)
 											)
-										)
-									)}
-										<!-- panel -> friends (all) -> sections (offline) -->
+										)}
+											<!-- panel -> friends (all) -> online -->
+											<div class="container  stretch--  p-fr__online">
+												<!-- panel -> friends (all) -> online -> label -->
+												<!-- note: use `p-us__se-label` styles -->
+												<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
+													<div>
+														{friends_user_instances.filter(fui =>
+															fui.user_id &&
+															(user.relationships || []).some(ur =>
+																(ur.users || []).some(uru =>
+																	(uru.id !== user.id) &&
+																	uru.user &&
+																	uru.user.id &&
+																	(fui.user_id === uru.id)
+																)
+															)
+														).length || 0}
+													</div>
+													<div>Online</div>
+												</div>
+
+												<!-- panel -> friends (all) -> online -> sections -->
+												<div class="container  stretch--  col--  p-fr__on-sections">
+													{#each friends_user_instances.filter(fui =>
+														fui.user_id &&
+														(user.relationships || []).some(ur =>
+															(ur.users || []).some(uru =>
+																(uru.id !== user.id) &&
+																uru.user &&
+																uru.user.id &&
+																(fui.user_id === uru.id)
+															)
+														)
+													).map(fui =>
+														fui.project
+													).filter(p =>
+														p &&
+														p.id
+													) as project}
+														{#each (project.rooms || []).filter(pr =>
+															friends_user_instances.some(fui =>
+																fui.user_id &&
+																(user.relationships || []).some(ur =>
+																	(ur.users || []).some(uru =>
+																		(uru.id !== user.id) &&
+																		uru.user &&
+																		uru.user.id &&
+																		(fui.user_id === uru.id)
+																	)
+																) &&
+																fui.project_id &&
+																(fui.project_id === project.id) &&
+																fui.room_id &&
+																(fui.room_id === pr.id)
+															)
+														) as room, ri}
+															<!-- section -->
+															<div class="container  stretch--  col--  text  text-green--  p-fr__on-section">
+																<!-- section -> top -->
+																<div class="container  stretch--  row--  row-left--  row-wrap--  p-fr__on-se-top">
+																	{#if ri === 0}
+																		<!-- section -> top -> project -->
+																		<div class="container  row--  row-left--  p-fr__on-se-to-project">
+																			<img
+																				src={project.icon_image_url || FALLBACK_USER_IMAGE}
+																				alt=""
+																			/>
+																			<div>
+																				{utils.shortenString({
+																					string: project.name || ``,
+																					length: 15
+																				}) || `n/a`}
+																			</div>
+																		</div>
+																	{/if}
+
+																	<!-- section -> top -> room -->
+																	<div class="container  row--  row-left--  p-fr__on-se-to-room">
+																		<img
+																			src={ICONS.hashtag}
+																			alt=""
+																		/>
+																		<div>
+																			{utils.shortenString({
+																				string: room.name || `n/a`,
+																				length: 25
+																			}) || `n/a`}
+																		</div>
+																	</div>
+																</div>
+
+																<!-- section -> main -->
+																<div class="container  stretch--  col--  text  text-white--  card  green--  p-fr__on-se-main">
+																	<!-- section -> main -> bar -->
+																	<div class="card  green--  p-fr__on-se-ma-bar" />
+
+																	<!-- section -> main -> items -->
+																	<!-- note: use `p-us__se-items` styles -->
+																	<div class="container  stretch--  col--  p-us__se-items">
+																		{#each friends_user_instances.filter(fui =>
+																			fui.user_id &&
+																			(user.relationships || []).some(ur =>
+																				(ur.users || []).some(uru =>
+																					(uru.id !== user.id) &&
+																					uru.user &&
+																					uru.user.id &&
+																					(fui.user_id === uru.id)
+																				)
+																			) &&
+																			fui.project_id &&
+																			(fui.project_id === project.id) &&
+																			fui.room_id &&
+																			(fui.room_id === room.id)
+																		) as user_instance}
+																			<!-- item -->
+																			<div
+																				class="container  stretch--  row--  row-left--  p-us__item"
+																				on:click|stopPropagation={() => {
+																					try {
+																						if (
+																							user_instance.user &&
+																							user_instance.user.id
+																						) {
+																							overlay_user = utils.clone(user_instance.user);
+																						}
+																					} catch (e) {
+																						console.log(e);
+																					}
+																				}}
+																			>
+																				<!-- item -> avatar -->
+																				<Avatar
+																					display="icon"
+																					body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
+																					pet={(user_instance.user_avatar || {}).parts.find(p => p.type === `pet`) || null}
+																					size_em={2.1}
+																				/>
+
+																				<!-- item -> text -->
+																				<div class="container  grow--  col--  p-us__it-text">
+																					<!-- item -> text -> name -->
+																					<div class="p-us__it-te-name">
+																						{(user_instance.user || {}).name || `n/a`}
+																					</div>
+
+																					<!-- item -> text -> row -->
+																					<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																						<!-- item -> text -> row -> code -->
+																						<div class="p-us__it-te-ro-code">
+																							@{(user_instance.user || {}).code || `n/a`}
+																						</div>
+
+																						<!-- item -> text -> row -> status -->
+																						<!-- todo: user status -->
+																					</div>
+																				</div>
+																			</div>
+																		{/each}
+																	</div>
+																</div>
+															</div>
+														{/each}
+													{/each}
+												</div>
+											</div>
+										{/if}
+
+										{#if (user.relationships || []).some(ur =>
+											(ur.users || []).some(uru =>
+												(uru.id !== user.id) &&
+												uru.user &&
+												uru.user.id &&
+												!friends_user_instances.some(fui =>
+													fui.user_id &&
+													(fui.user_id === uru.id)
+												)
+											)
+										)}
+											<!-- panel -> friends (all) -> section (offline) -->
+											<!-- note: use `p-us__section` styles -->
+											<div class="container  stretch--  col--  p-us__section">
+												<!-- panel -> friends (all) -> section (offline) -> label -->
+												<div class="container  row--  row-centre--  text  text-white--  card  white--  p-us__se-label">
+													<div>
+														{(user.relationships || []).filter(ur =>
+															(ur.users || []).some(uru =>
+																(uru.id !== user.id) &&
+																uru.user &&
+																uru.user.id &&
+																!friends_user_instances.some(fui =>
+																	fui.user_id &&
+																	(fui.user_id === uru.id)
+																)
+															)
+														).length || 0}
+													</div>
+													<div>Offline</div>
+												</div>
+
+												<!-- panel -> friends (all) -> section (offline) -> items -->
+												<div class="container  stretch--  p-us__se-items">
+													{#each (user.relationships || []).filter(ur =>
+														(ur.users || []).some(uru =>
+															(uru.id !== user.id) &&
+															uru.user &&
+															uru.user.id &&
+															!friends_user_instances.some(fui =>
+																fui.user_id &&
+																(fui.user_id === uru.id)
+															)
+														)
+													).map(ur =>
+														((ur.users || []).find(uru =>
+															uru.id !== user.id
+														) || {}).user || null
+													).filter(u =>
+														u &&
+														u.id
+													) as friend_user}
+														<!-- item -->
+														<div
+															class="container  stretch--  row--  row-left--  p-us__item"
+															on:click|stopPropagation={() => {
+																try {
+																	overlay_user = utils.clone(friend_user);
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															<!-- item -> avatar -->
+															<Avatar
+																display="icon"
+																body={(friend_user.default_avatar || {}).parts.find(p => p.type === `body`) || null}
+																pet={(friend_user.default_avatar || {}).parts.find(p => p.type === `pet`) || null}
+																size_em={2.1}
+															/>
+
+															<!-- item -> text -->
+															<div class="container  grow--  col--  p-us__it-text">
+																<!-- item -> text -> name -->
+																<div class="p-us__it-te-name">
+																	{friend_user.name || `n/a`}
+																</div>
+
+																<!-- item -> text -> row -->
+																<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																	<!-- item -> text -> row -> code -->
+																	<div class="p-us__it-te-ro-code">
+																		@{friend_user.code || `n/a`}
+																	</div>
+
+																	<!-- item -> text -> row -> status -->
+																	<!-- todo: user status -->
+																</div>
+															</div>
+														</div>
+													{/each}
+												</div>
+											</div>
+										{/if}
+									{:else if friends_tab === `requests`}
+										<!-- panel -> friends (requests) -> section (inbound) -->
 										<!-- note: use `p-us__section` styles -->
 										<div class="container  stretch--  col--  p-us__section">
-											<!-- panel -> friends (all) -> section (offline) -> label -->
+											<!-- panel -> friends (requests) -> section (inbound) -> label -->
 											<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
 												<div>
 													{(user.relationships || []).filter(ur =>
-														ur.user &&
-														ur.user.id &&
+														(ur.status === `pending`) &&
 														(ur.users || []).some(uru =>
-															!friends_user_instances.some(fui =>
-																fui.user_id &&
-																(fui.user.id === uru.id)
-															)
+															(uru.id !== user.id) &&
+															uru.is_initiator
 														)
 													).length || 0}
 												</div>
-												<div>Offline</div>
+												<div>Incoming requests</div>
 											</div>
 
-											<!-- panel -> friends (all) -> section (offline) -> items -->
-											<div class="container  stretch--  p-us__se-items">
-												{#each (user.relationships || []).filter(ur =>
-													ur.user &&
-													ur.user.id &&
-													(ur.users || []).some(uru =>
-														!friends_user_instances.some(fui =>
-															fui.user_id &&
-															(fui.user.id === uru.id)
-														)
-													)
-												).map(ur =>
-													(ur.users || []).find(uru =>
-														uru.id !== user.id
-													)
-												).filter(ur =>
-													ur &&
-													ur.user &&
-													ur.user.id
-												) as friend_user}
-													<!-- item -->
-													<div
-														class="container  stretch--  row--  row-left--  p-us__item"
-														on:click|stopPropagation={() => {
-															try {
-																overlay_user = utils.clone(friend_user);
-															} catch (e) {
-																console.log(e);
-															}
-														}}
-													>
-														<!-- item -> avatar -->
-														<Avatar
-															display="icon"
-															body={(friend_user.default_avatar || {}).parts.find(p => p.type === `body`) || null}
-															pet={(friend_user.default_avatar || {}).parts.find(p => p.type === `pet`) || null}
-															size_em={2.1}
-														/>
-
-														<!-- item -> text -->
-														<div class="container  grow--  col--  p-us__it-text">
-															<!-- item -> text -> name -->
-															<div class="p-us__it-te-name">
-																{friend_user.name || `n/a`}
-															</div>
-
-															<!-- item -> text -> row -->
-															<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
-																<!-- item -> text -> row -> code -->
-																<div class="p-us__it-te-ro-code">
-																	@{friend_user.code || `n/a`}
-																</div>
-
-																<!-- item -> text -> row -> status -->
-																<!-- todo: user status -->
-															</div>
-														</div>
-													</div>
-												{/each}
-											</div>
-										</div>
-									{/if}
-								{:else if friends_tab === `requests`}
-									<!-- panel -> friends (requests) -> section (inbound) -->
-									<!-- note: use `p-us__section` styles -->
-									<div class="container  stretch--  col--  p-us__section">
-										<!-- panel -> friends (requests) -> section (inbound) -> label -->
-										<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
-											<div>
-												{(user.relationships || []).filter(ur =>
+											<!-- panel -> friends (requests) -> section (inbound) -> items -->
+											<div class="container  stretch--  col--  p-us__se-items">
+												{#if !(user.relationships || []).some(ur =>
 													(ur.status === `pending`) &&
 													(ur.users || []).some(uru =>
 														(uru.id !== user.id) &&
 														uru.is_initiator
 													)
-												).length || 0}
-											</div>
-											<div>Incoming requests</div>
-										</div>
+												)}
+													<!-- panel -> friends (requests) -> section (inbound) -> items -> message (none) -->
+													<div class="p-us__se-items-message">
+														No incoming friend requests to display.
+													</div>
+												{/if}
 
-										<!-- panel -> friends (requests) -> section (inbound) -> items -->
-										<div class="container  stretch--  col--  p-us__se-items">
-											{#if !(user.relationships || []).some(ur =>
-												(ur.status === `pending`) &&
-												(ur.users || []).some(uru =>
-													(uru.id !== user.id) &&
-													uru.is_initiator
-												)
-											)}
-												<!-- panel -> friends (requests) -> section (inbound) -> items -> message (none) -->
-												<div class="p-us__se-items-message">
-													No incoming friend requests to display.
-												</div>
-											{/if}
-
-											{#each (user.relationships || []).filter(ur =>
-												(ur.status === `pending`) &&
-												(ur.users || []).some(uru =>
-													(uru.id !== user.id) &&
-													uru.is_initiator
-												)
-											) as user_relationship}
-												<!-- item -->
-												<div
-													class="container  stretch--  row--  row-left--  p-us__item"
-													on:click|stopPropagation={() => {
-														try {
-															overlay_user = utils.clone(
-																user_relationship.users.find(uru =>
-																	(uru.id !== user.id)
-																)
-															);
-														} catch (e) {
-															console.log(e);
-														}
-													}}
-												>
-													<!-- item -> avatar -->
-													<Avatar
-														display="icon"
-														body={(user_relationship.users.find(uru =>
-															(uru.id !== user.id)
-														).default_avatar || {}).parts.find(p => p.type === `body`) || null}
-														pet={(user_relationship.users.find(uru =>
-															(uru.id !== user.id)
-														).default_avatar || {}).parts.find(p => p.type === `pet`) || null}
-														size_em={2.1}
-													/>
-
-													<!-- item -> text -->
-													<div class="container  grow--  col--  p-us__it-text">
-														<!-- item -> text -> name -->
-														<div class="p-us__it-te-name">
-															{user_relationship.users.find(uru =>
+												{#each (user.relationships || []).filter(ur =>
+													(ur.status === `pending`) &&
+													(ur.users || []).some(uru =>
+														(uru.id !== user.id) &&
+														uru.is_initiator
+													)
+												) as user_relationship}
+													<!-- item -->
+													<div
+														class="container  stretch--  row--  row-left--  p-us__item"
+														on:click|stopPropagation={() => {
+															try {
+																overlay_user = utils.clone(
+																	user_relationship.users.find(uru =>
+																		(uru.id !== user.id)
+																	)
+																);
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														<!-- item -> avatar -->
+														<Avatar
+															display="icon"
+															body={(user_relationship.users.find(uru =>
 																(uru.id !== user.id)
-															).name || `n/a`}
-														</div>
+															).default_avatar || {}).parts.find(p => p.type === `body`) || null}
+															pet={(user_relationship.users.find(uru =>
+																(uru.id !== user.id)
+															).default_avatar || {}).parts.find(p => p.type === `pet`) || null}
+															size_em={2.1}
+														/>
 
-														<!-- item -> text -> row -->
-														<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
-															<!-- item -> text -> row -> code -->
-															<div class="p-us__it-te-ro-code">
-																@{user_relationship.users.find(uru =>
+														<!-- item -> text -->
+														<div class="container  grow--  col--  p-us__it-text">
+															<!-- item -> text -> name -->
+															<div class="p-us__it-te-name">
+																{user_relationship.users.find(uru =>
 																	(uru.id !== user.id)
-																).code || `n/a`}
+																).name || `n/a`}
 															</div>
 
-															<!-- item -> text -> row -> status -->
-															<!-- todo: user status -->
+															<!-- item -> text -> row -->
+															<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																<!-- item -> text -> row -> code -->
+																<div class="p-us__it-te-ro-code">
+																	@{user_relationship.users.find(uru =>
+																		(uru.id !== user.id)
+																	).code || `n/a`}
+																</div>
+
+																<!-- item -> text -> row -> status -->
+																<!-- todo: user status -->
+															</div>
+														</div>
+
+														<!-- item -> actions -->
+														<div class="container  row--  row-right--  p-us__it-actions">
+															<!-- item -> action (accept) -->
+															<div
+																class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-us__it-action"
+																class:disabled={[`accept_user_relationship_${user_relationship.id}`, `reject_user_relationship_${user_relationship.id}`]}
+																on:click|stopPropagation={async () => {
+																	try {
+																		let job_code = `accept_user_relationship_${utils.clone(user_relationship.id)}`;
+																		let other_job_codes = [`reject_user_relationship_${utils.clone(user_relationship.id)}`];
+
+																		if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																			jobs.push(job_code);
+																			jobs = jobs;
+
+																			// tba: accept user relationship
+
+																			jobs = jobs.filter(j => j !== job_code);
+																		}
+																	} catch (e) {
+																		console.log(e);
+																	}
+																}}
+															>
+																{#if jobs.includes(`accept_user_relationship_${user_relationship.id}`)}
+																	<Loader />
+																{:else}
+																	<div>Accept</div>
+																	<img
+																		src={ICONS.add}
+																		alt=""
+																		class="svg  svg-green--"
+																	/>
+																{/if}
+															</div>
+
+															<!-- item -> action (reject) -->
+															<div
+																class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-us__it-action"
+																class:disabled={[`accept_user_relationship_${user_relationship.id}`, `reject_user_relationship_${user_relationship.id}`]}
+																on:click|stopPropagation={async () => {
+																	try {
+																		let job_code = `reject_user_relationship_${utils.clone(user_relationship.id)}`;
+																		let other_job_codes = [`accept_user_relationship_${utils.clone(user_relationship.id)}`];
+
+																		if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																			jobs.push(job_code);
+																			jobs = jobs;
+
+																			// tba: reject user relationship
+
+																			jobs = jobs.filter(j => j !== job_code);
+																		}
+																	} catch (e) {
+																		console.log(e);
+																	}
+																}}
+															>
+																{#if jobs.includes(`reject_user_relationship_${user_relationship.id}`)}
+																	<Loader />
+																{:else}
+																	<img
+																		src={ICONS.close}
+																		alt=""
+																		class="svg  svg-red--"
+																	/>
+																{/if}
+															</div>
 														</div>
 													</div>
-
-													<!-- item -> actions -->
-													<div class="container  row--  row-right--  p-us__it-actions">
-														<!-- item -> action (accept) -->
-														<div
-															class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-us__it-action"
-															class:disabled={[`accept_user_relationship_${user_relationship.id}`, `reject_user_relationship_${user_relationship.id}`]}
-															on:click|stopPropagation={async () => {
-																try {
-																	let job_code = `accept_user_relationship_${utils.clone(user_relationship.id)}`;
-																	let other_job_codes = [`reject_user_relationship_${utils.clone(user_relationship.id)}`];
-
-																	if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
-																		jobs.push(job_code);
-																		jobs = jobs;
-
-																		// tba: accept user relationship
-
-																		jobs = jobs.filter(j => j !== job_code);
-																	}
-																} catch (e) {
-																	console.log(e);
-																}
-															}}
-														>
-															{#if jobs.includes(`accept_user_relationship_${user_relationship.id}`)}
-																<Loader />
-															{:else}
-																<div>Accept</div>
-																<img
-																	src={ICONS.add}
-																	alt=""
-																	class="svg  svg-green--"
-																/>
-															{/if}
-														</div>
-
-														<!-- item -> action (reject) -->
-														<div
-															class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-us__it-action"
-															class:disabled={[`accept_user_relationship_${user_relationship.id}`, `reject_user_relationship_${user_relationship.id}`]}
-															on:click|stopPropagation={async () => {
-																try {
-																	let job_code = `reject_user_relationship_${utils.clone(user_relationship.id)}`;
-																	let other_job_codes = [`accept_user_relationship_${utils.clone(user_relationship.id)}`];
-
-																	if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
-																		jobs.push(job_code);
-																		jobs = jobs;
-
-																		// tba: reject user relationship
-
-																		jobs = jobs.filter(j => j !== job_code);
-																	}
-																} catch (e) {
-																	console.log(e);
-																}
-															}}
-														>
-															{#if jobs.includes(`reject_user_relationship_${user_relationship.id}`)}
-																<Loader />
-															{:else}
-																<img
-																	src={ICONS.close}
-																	alt=""
-																	class="svg  svg-red--"
-																/>
-															{/if}
-														</div>
-													</div>
-												</div>
-											{/each}
+												{/each}
+											</div>
 										</div>
-									</div>
 
-									<!-- panel -> friends (requests) -> section (outbound) -->
-									<!-- note: use `p-us__section` styles -->
-									<div class="container  stretch--  col--  p-us__section">
-										<!-- panel -> friends (requests) -> section (outbound) -> label -->
-										<div class="container  row--  row-centre--  text  text-cream-light--  card  cream--  p-us__se-label">
-											<div>
-												{(user.relationships || []).filter(ur =>
+										<!-- panel -> friends (requests) -> section (outbound) -->
+										<!-- note: use `p-us__section` styles -->
+										<div class="container  stretch--  col--  p-us__section">
+											<!-- panel -> friends (requests) -> section (outbound) -> label -->
+											<div class="container  row--  row-centre--  text  text-cream-light--  card  cream--  p-us__se-label">
+												<div>
+													{(user.relationships || []).filter(ur =>
+														(ur.status === `pending`) &&
+														(ur.users || []).some(uru =>
+															(uru.id === user.id) &&
+															uru.is_initiator
+														)
+													).length || 0}
+												</div>
+												<div>Outgoing requests</div>
+											</div>
+
+											<!-- panel -> friends (requests) -> section (outbound) -> items -->
+											<div class="container  stretch--  col--  p-us__se-items">
+												{#if !(user.relationships || []).some(ur =>
 													(ur.status === `pending`) &&
 													(ur.users || []).some(uru =>
 														(uru.id === user.id) &&
 														uru.is_initiator
 													)
-												).length || 0}
-											</div>
-											<div>Outgoing requests</div>
-										</div>
+												)}
+													<!-- panel -> friends (requests) -> section (outbound) -> items -> message (none) -->
+													<div class="p-us__se-items-message">
+														No outgoing friend requests to display.
+													</div>
+												{/if}
 
-										<!-- panel -> friends (requests) -> section (outbound) -> items -->
-										<div class="container  stretch--  col--  p-us__se-items">
-											{#if !(user.relationships || []).some(ur =>
-												(ur.status === `pending`) &&
-												(ur.users || []).some(uru =>
-													(uru.id === user.id) &&
-													uru.is_initiator
-												)
-											)}
-												<!-- panel -> friends (requests) -> section (outbound) -> items -> message (none) -->
-												<div class="p-us__se-items-message">
-													No outgoing friend requests to display.
-												</div>
-											{/if}
-
-											{#each (user.relationships || []).filter(ur =>
-												(ur.status === `pending`) &&
-												(ur.users || []).some(uru =>
-													(uru.id === user.id) &&
-													uru.is_initiator
-												)
-											) as user_relationship}
-												<!-- item -->
-												<div
-													class="container  stretch--  row--  row-left--  p-us__item"
-													on:click|stopPropagation={() => {
-														try {
-															overlay_user = utils.clone(
-																user_relationship.users.find(uru =>
-																	(uru.id !== user.id)
-																)
-															);
-														} catch (e) {
-															console.log(e);
-														}
-													}}
-												>
-													<!-- item -> avatar -->
-													<Avatar
-														display="icon"
-														body={(user_relationship.users.find(uru =>
-															(uru.id !== user.id)
-														).default_avatar || {}).parts.find(p => p.type === `body`) || null}
-														pet={(user_relationship.users.find(uru =>
-															(uru.id !== user.id)
-														).default_avatar || {}).parts.find(p => p.type === `pet`) || null}
-														size_em={2.1}
-													/>
-
-													<!-- item -> text -->
-													<div class="container  grow--  col--  p-us__it-text">
-														<!-- item -> text -> name -->
-														<div class="p-us__it-te-name">
-															{user_relationship.users.find(uru =>
+												{#each (user.relationships || []).filter(ur =>
+													(ur.status === `pending`) &&
+													(ur.users || []).some(uru =>
+														(uru.id === user.id) &&
+														uru.is_initiator
+													)
+												) as user_relationship}
+													<!-- item -->
+													<div
+														class="container  stretch--  row--  row-left--  p-us__item"
+														on:click|stopPropagation={() => {
+															try {
+																overlay_user = utils.clone(
+																	user_relationship.users.find(uru =>
+																		(uru.id !== user.id)
+																	)
+																);
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														<!-- item -> avatar -->
+														<Avatar
+															display="icon"
+															body={(user_relationship.users.find(uru =>
 																(uru.id !== user.id)
-															).name || `n/a`}
-														</div>
+															).default_avatar || {}).parts.find(p => p.type === `body`) || null}
+															pet={(user_relationship.users.find(uru =>
+																(uru.id !== user.id)
+															).default_avatar || {}).parts.find(p => p.type === `pet`) || null}
+															size_em={2.1}
+														/>
 
-														<!-- item -> text -> row -->
-														<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
-															<!-- item -> text -> row -> code -->
-															<div class="p-us__it-te-ro-code">
-																@{user_relationship.users.find(uru =>
+														<!-- item -> text -->
+														<div class="container  grow--  col--  p-us__it-text">
+															<!-- item -> text -> name -->
+															<div class="p-us__it-te-name">
+																{user_relationship.users.find(uru =>
 																	(uru.id !== user.id)
-																).code || `n/a`}
+																).name || `n/a`}
 															</div>
 
-															<!-- item -> text -> row -> status -->
-															<!-- todo: user status -->
+															<!-- item -> text -> row -->
+															<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																<!-- item -> text -> row -> code -->
+																<div class="p-us__it-te-ro-code">
+																	@{user_relationship.users.find(uru =>
+																		(uru.id !== user.id)
+																	).code || `n/a`}
+																</div>
+
+																<!-- item -> text -> row -> status -->
+																<!-- todo: user status -->
+															</div>
 														</div>
-													</div>
 
-													<!-- item -> actions -->
-													<div class="container  row--  row-right--  p-us__it-actions">
-														<!-- item -> action (cancel) -->
-														<div
-															class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-us__it-action"
-															class:disabled={[`cancel_user_relationship_${user_relationship.id}`]}
-															on:click|stopPropagation={async () => {
-																try {
-																	let job_code = `cancel_user_relationship_${utils.clone(user_relationship.id)}`;
-																	let other_job_codes = [];
+														<!-- item -> actions -->
+														<div class="container  row--  row-right--  p-us__it-actions">
+															<!-- item -> action (cancel) -->
+															<div
+																class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-us__it-action"
+																class:disabled={[`cancel_user_relationship_${user_relationship.id}`]}
+																on:click|stopPropagation={async () => {
+																	try {
+																		let job_code = `cancel_user_relationship_${utils.clone(user_relationship.id)}`;
+																		let other_job_codes = [];
 
-																	if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
-																		jobs.push(job_code);
-																		jobs = jobs;
+																		if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																			jobs.push(job_code);
+																			jobs = jobs;
 
-																		// tba: cancel user relationship
+																			// tba: cancel user relationship
 
-																		jobs = jobs.filter(j => j !== job_code);
+																			jobs = jobs.filter(j => j !== job_code);
+																		}
+																	} catch (e) {
+																		console.log(e);
 																	}
-																} catch (e) {
-																	console.log(e);
-																}
-															}}
-														>
-															{#if jobs.includes(`cancel_user_relationship_${user_relationship.id}`)}
-																<Loader />
-															{:else}
-																<img
-																	src={ICONS.close}
-																	alt=""
-																	class="svg  svg-red--"
-																/>
-															{/if}
+																}}
+															>
+																{#if jobs.includes(`cancel_user_relationship_${user_relationship.id}`)}
+																	<Loader />
+																{:else}
+																	<img
+																		src={ICONS.close}
+																		alt=""
+																		class="svg  svg-red--"
+																	/>
+																{/if}
+															</div>
 														</div>
 													</div>
-												</div>
-											{/each}
+												{/each}
+											</div>
 										</div>
-									</div>
-								{/if}
-							</div>
+									{/if}
+								</div>
+							{/if}
 						</div>
 					{:else if view === `rooms`}
 						<!-- panel -> rooms -->
