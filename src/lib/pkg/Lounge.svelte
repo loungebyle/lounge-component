@@ -66,9 +66,11 @@
 	let project;
 	let room_id = ``;
 	let user_instance;
-	let staffed_projects = [];
-	let bookmarked_projects = [];
-	let explorable_projects = [];
+	let project_arrs = {
+		staffed: [],
+		bookmarked: [],
+		explorable: []
+	}
 
 	let is_component_toggled = ([`component`].includes(context)) ? false : true;
 
@@ -87,6 +89,7 @@
 	// todo
 
 	// vars (login)
+	
 	let access_token_string = ``;
 
 	// vars (avatar)
@@ -160,8 +163,8 @@
 
 	const PROJECT_TABS = [
 		{
-			code: `owned`,
-			name: `Owned`
+			code: `staffed`,
+			name: `Mine`,
 		},
 		{
 			code: `bookmarked`,
@@ -187,15 +190,45 @@
 	];
 
 	let project_tab = (PROJECT_TABS.find(T =>
-		T.code === `owned`
+		T.code === `staffed`
 	) || {}).code || (PROJECT_TABS[0] ||{}).code || ``; // based on PROJECT_TABS
-	
 	let projects_search_input = ``;
-
 	let add_project_error = ``;
 
 	// vars (users)
-	// todo
+
+	const PROJECT_ROLES = [ // note: sorted in desc importance order
+		{
+			code: `owner`,
+			name: `Owner`,
+			text_colour: `blue-light`,
+			colour: `blue`,
+			flags: [`staff`]
+		},
+		{
+			code: `admin`,
+			name: `Admin`,
+			text_colour: `yellow-light`,
+			colour: `yellow`,
+			flags: [`staff`]
+		},
+		{
+			code: `staff`,
+			name: `Staff`,
+			text_colour: `cream-light`,
+			colour: `cream`,
+			flags: [`staff`]
+		},
+		{
+			code: `online`,
+			name: `Online`,
+			text_colour: `white`,
+			colour: `white`,
+			flags: [`no_role`]
+		}
+	];
+	
+	let users_search_input = ``;
 
 	// vars (friends)
 	// todo
@@ -289,9 +322,9 @@
 					user = data.user || null;
 					project = data.project || null;
 					room_id = data.room_id || ``;
-					staffed_projects = data.staffed_projects || [];
-					bookmarked_projects = data.bookmarked_projects || [];
-					explorable_projects = data.explorable_projects || [];
+					project_arrs.staffed = data.staffed_projects || [];
+					project_arrs.bookmarked = data.bookmarked_projects || [];
+					project_arrs.explorable = data.explorable_projects || [];
 
 					LOUNGE_AVATAR_SKINS = data.LOUNGE_AVATAR_SKINS || [];
 					Object.freeze(LOUNGE_AVATAR_SKINS);
@@ -432,12 +465,12 @@
 
 								// edit project in staffed projects if found
 
-								let staffed_project_index = staffed_projects.findIndex(p =>
+								let staffed_project_index = project_arrs.staffed.findIndex(p =>
 									p.id === updated_project.id
 								);
 								
 								if (staffed_project_index >= 0) {
-									staffed_projects[staffed_project_index] = utils.clone(updated_project);
+									project_arrs.staffed[staffed_project_index] = utils.clone(updated_project);
 								}
 
 								// edit project in bookmarked projects if found
@@ -1100,7 +1133,7 @@
 		<!-- tba: toggleComponent on click, only does anything if context is `component` -->
 
 		{#if is_component_toggled}
-			<!-- background -->
+			<!-- canvas -->
 			<!-- tba -->
 
 			<!-- label (powered by) -->
@@ -1354,10 +1387,14 @@
 
 											<!-- overlay -> project -> row (1) -> profile -->
 											<!-- note: use `p-ov__us-profile` styles -->
-											<div class="container  grow--  stretch  col--  text  text-cream--  card  cream--  p-ov__us-profile">
+											<a
+												href="https://lounge.so/{overlay_project.code}"
+												target={[`component`, `frame`].includes(context) ? `_blank` : ``}
+												class="container  grow--  stretch  col--  text  text-cream--  card  cream--  p-ov__us-profile"
+											>
 												<div class="text  text-white--">{overlay_project.name || `n/a`}</div>
 												<div>@{overlay_project.code || `n/a`}</div>
-											</div>
+											</a>
 										</div>
 
 										<!-- overlay -> project -> [row] (2) -->
@@ -1620,7 +1657,7 @@
 											/>
 
 											<div>
-												--
+												-- XP
 												<!-- todo: project xp -->
 											</div>
 										</div>
@@ -1870,7 +1907,7 @@
 											/>
 
 											<div>
-												--
+												-- XP
 												<!-- todo: user xp -->
 											</div>
 										</div>
@@ -2737,19 +2774,19 @@
 						<div class="container  stretch--  col--  p-projects">
 							<!-- panel -> projects -> [heading] -->
 							<div class="container  stretch--  col--  p-heading">
-								<!-- panel -> account -> heading -> row -->
+								<!-- panel -> projects -> heading -> row -->
 								<div class="container  stretch--  row--  row-left--  p-he__row">
-									<!-- panel -> account -> heading -> row -> heading -->
+									<!-- panel -> projects -> heading -> row -> heading -->
 									<div class="p-he__ro-heading">
 										My Projects
 									</div>
 								</div>
 
-								<!-- panel -> account -> heading -> search -->
+								<!-- panel -> projects -> heading -> search -->
 								<input
 									bind:value={projects_search_input}
 									placeholder="Search Projects..."
-									class="container  stretch--  row--  row-left--  p-he__search"
+									class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
 								/>
 							</div>
 
@@ -2774,7 +2811,7 @@
 								{/each}
 							</div>
 
-							{#if project_tab === `owned`}
+							{#if project_tab === `staffed`}
 								<!-- panel -> projects -> add -->
 								<div class="container  stretch--  col--  p-pr__add">
 									<!-- panel -> projects -> add -> row -->
@@ -2860,7 +2897,7 @@
 														</div>
 
 														<div>
-															{staffed_projects.filter(p =>
+															{project_arrs.staffed.filter(p =>
 																(p.type === OPTION.code) &&
 																(p.staff_users || []).some(psu =>
 																	psu.id === user.id
@@ -2898,23 +2935,204 @@
 
 							<!-- panel -> projects -> list -->
 							<div class="container  stretch--  col--  p-pr__list">
-								{#if project_tab == `owned`}
-									<!-- tba -->
-								{:else if project_tab === `bookmarked`}
-									<!-- tba -->
-								{:else if project_tab === `explorable`}
-									<!-- tba -->
+								{#if (project_arrs[project_tab] || []).filter(p =>
+									(projects_search_input || ``).trim() ?
+										(
+											(utils.sanitiseString(p.code)).includes(utils.sanitiseString(projects_search_input)) ||
+											(utils.sanitiseString(p.name)).includes(utils.sanitiseString(projects_search_input))
+										) :
+										true
+								).length === 0}
+									<!-- panel -> projects -> list -> message (none) -->
+									<div class="p-pr__li-message">
+										{#if (projects_search_input || ``).trim()}
+											No matching Projects in this category to display.
+										{:else}
+											No Projects in this category to display.
+										{/if}
+									</div>
 								{/if}
+									
+								{#each (project_arrs[project_tab] || []).filter(p =>
+									(projects_search_input || ``).trim() ?
+										(
+											(utils.sanitiseString(p.code)).includes(utils.sanitiseString(projects_search_input)) ||
+											(utils.sanitiseString(p.name)).includes(utils.sanitiseString(projects_search_input))
+										) :
+										true
+								) as project}
+									<!-- [card] item -->
+									<div
+										class="container  stretch--  row--  row-left--  p-card  p-pr__li-item"
+										on:click={() => {
+											try {
+												overlay_project = utils.clone(project);
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<!-- item -> image -->
+										<img
+											src={project.icon_image_url || FALLBACK_USER_IMAGE}
+											alt=""
+											class="p-pr__li-it-image"
+										/>
+
+										<!-- item -> main -->
+										<div
+											class="container  grow--  stretch--  col--  text  card  p-pr__li-it-main"
+											class:text-cream-light--={project.status === `active`}
+											class:cream--={project.status === `active`}
+											class:text-red-light--={project.status === `inactive`}
+										>
+											{#if project_tab = `staffed`}
+												<!-- item -> main -> label -->
+												<div class="container  row--  row-centre--  text  text-white--  card  yellow--  p-pr__li-it-ma-label">
+													<div>
+														{((project.staff_users || []).some(psu =>
+															psu.id === user.id
+														) || {}).type || `n/a`}
+													</div>
+												</div>
+											{/if}
+
+											<!-- item -> main -> name -->
+											<div class="text  text-white--  p-pr__li-it-ma-name">
+												{project.name || `n/a`}
+											</div>
+
+											<!-- item -> main -> [notes] -->
+											<div class="container  stretch--  row--  row-left--  p-ca__notes">
+												<!-- item -> main -> [note] (verified) -->
+												<!-- todo: project verification -->
+												
+												<!-- item -> main -> [note] (xp) -->
+												<div class="container  row--  row-left--  p-ca__note  p-faded--">
+													<img
+														src={ICONS.xp}
+														alt=""
+														class="svg  svg-mint-light--"
+													/>
+		
+													<div>
+														-- XP
+														<!-- todo: project xp -->
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								{/each}
 							</div>
 						</div>
 					{:else if view === `users`}
 						<!-- panel -> users -->
 						<div class="container  stretch--  col--  p-users">
 							<!-- panel -> users -> [heading] -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> users -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> users -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Users
+									</div>
+
+									<!-- panel -> users -> heading -> row -> subheading -->
+									<div class="p-he__ro-subheading">
+										<img
+											src={ICONS.hashtag}
+											alt=""
+											class="svg  svg-svg-white--"
+										/>
+										{((project.rooms || []).find(r =>
+											r.id === room_id
+										) || {}).name || `n/a`}
+									</div>
+								</div>
+
+								<!-- panel -> users -> heading -> search -->
+								<input
+									bind:value={users_search_input}
+									placeholder="Search users..."
+									class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
+								/>
+							</div>
 
 							<!-- panel -> users -> sections -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-us__sections">
+								{#if (((project.rooms || []).find(r =>
+									r.id === room_id
+								) || {}).user_instances || []).length === 0}
+									<!-- panel -> users -> sections -> message (none) -->
+									<div class="p-us__sections-message">
+										No users in this room to display.
+									</div>
+								{/if}
+								
+								{#each PROJECT_ROLES as ROLE}
+									{#if (((project.rooms || []).find(r =>
+										r.id === room_id
+									) || {}).user_instances.filter(ui =>
+										(
+											(ROLE.flags || []).includes(`staff`) ?
+												(project.staff_users || []).some(su =>
+													(su.id === (ui.user || {}).id) &&
+													(su.type === ROLE.code)
+												) :
+												false
+										) ||
+										(
+											(ROLE.flags || []).includes(`no_role`) ?
+												!(project.staff_users || []).some(su =>
+													(su.id === (ui.user || {}).id) &&
+													(su.type === ROLE.code)
+												) :
+												false
+										)
+									) || []).length >= 1}
+										<!-- section -->
+										<div class="container  stretch--  col--  p-us__section">
+											<!-- section -> label -->
+											<div class="container  row--  row-centre--  text  text-{ROLE.text_colour}--  card  {ROLE.colour}--  p-us__se-label">
+												<div>
+													{(((project.rooms || []).find(r =>
+														r.id === room_id
+													) || {}).user_instances || []).length || 0}
+												</div>
+												<div>{ROLE.name || `n/a`}</div>
+											</div>
+
+											<!-- section -> items -->
+											<div class="container  stretch--  p-us__se-items">
+												{#each (((project.rooms || []).find(r =>
+													r.id === room_id
+												) || {}).user_instances.filter(ui =>
+													(
+														(ROLE.flags || []).includes(`staff`) ?
+															(project.staff_users || []).some(su =>
+																(su.id === (ui.user || {}).id) &&
+																(su.type === ROLE.code)
+															) :
+															false
+													) ||
+													(
+														(ROLE.flags || []).includes(`no_role`) ?
+															!(project.staff_users || []).some(su =>
+																(su.id === (ui.user || {}).id) &&
+																(su.type === ROLE.code)
+															) :
+															false
+													)
+												) || []) as user_instance}
+													<!-- item -->
+													<!-- tba -->
+												{/each}
+											</div>
+										</div>
+									{/if}
+								{/each}
+							</div>
 						</div>
 					{:else if view === `friends`}
 						<!-- panel -> friends -->
