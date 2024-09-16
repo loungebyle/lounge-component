@@ -1968,7 +1968,7 @@
 									<div
 										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
 										class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-										on:click={() => {
+										on:click|stopPropagation={() => {
 											try {
 												let job_code = `edit_user_avatars`;
 												let other_job_codes = [`del_user_project_avatar`, `edit_user`];
@@ -2007,7 +2007,7 @@
 										class:lime--={avatar_profile_tab === TAB.code}
 										class:text-white--={avatar_profile_tab !== TAB.code}
 										class:white--={avatar_profile_tab !== TAB.code}
-										on:click={() => {
+										on:click|stopPropagation={() => {
 											try {
 												if (avatar_profile_tab !== TAB.code) {
 													avatar_profile_tab = utils.clone(TAB.code) || ``;
@@ -2082,7 +2082,7 @@
 										<!-- [tab] -->
 										<div
 											class="container  stretch--  row--  row-centre--  text  card  p-tab"
-											on:click={() => {
+											on:click|stopPropagation={() => {
 												try {
 													if (avatar_part_tab !== TAB.code) {
 														avatar_part_tab = utils.clone(TAB.code) || ``;
@@ -2146,7 +2146,7 @@
 												<div
 													class="container  row--  row-centre--  text  text-red-light--  card  red--  p-av__pr-de-button"
 													class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-													on:click={() => {
+													on:click|stopPropagation={() => {
 														try {
 															let job_code = `del_user_project_avatar`;
 															let other_job_codes = [`edit_user`, `edit_user_avatars`];
@@ -2224,7 +2224,7 @@
 													class:yellow--={TAB.code === avatar_part_data_type_tab}
 													class:text-white--={TAB.code !== avatar_part_data_type_tab}
 													class:white--={TAB.code !== avatar_part_data_type_tab}
-													on:click={() => {
+													on:click|stopPropagation={() => {
 														try {
 															if (TAB.code !== avatar_part_data_type_tab) {
 																avatar_part_data_type_tab = utils.clone(TAB.code) || ``;
@@ -2281,7 +2281,7 @@
 																				((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_cx_id === nft_cx.id) &&
 																				((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).nft_addy === nft.addy)
 																			}
-																			on:click={() => {
+																			on:click|stopPropagation={() => {
 																				try {
 																					if (!(	
 																						user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
@@ -2357,7 +2357,7 @@
 																			(user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data_type === `skin`) &&
 																			((user_avatar_inputs[avatar_profile_tab].parts.find(p => p.type === avatar_part_tab).data || {}).skin_code === SKIN.code)
 																		}
-																		on:click={() => {
+																		on:click|stopPropagation={() => {
 																			try {
 																				if (!(	
 																					user_avatar_inputs[avatar_profile_tab].parts.some(p => p.type === avatar_part_tab) &&
@@ -2426,7 +2426,7 @@
 								<div
 									class="container  stretch--  row--  row-left--  text  text-green--  card  green--  p-av__pr-create"
 									class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-									on:click={async () => {
+									on:click|stopPropagation={async () => {
 										try {
 											let job_code = `edit_user_avatars`;
 											let other_job_codes = [`del_user_project_avatar`, `edit_user`];
@@ -2486,7 +2486,7 @@
 									<div
 										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
 										class:disabled={[`del_user_project_avatar`, `edit_user`, `edit_user_avatars`].some(j => jobs.includes(j))}
-										on:click={() => {
+										on:click|stopPropagation={() => {
 											try {
 												let job_code = `edit_user`;
 												let other_job_codes = [`del_user_project_avatar`, `edit_user_avatars`];
@@ -2659,7 +2659,7 @@
 												<!-- panel -> account -> inputs -> connection (discord) -> list -> item -> del -->
 												<div
 													class="p-ac__in-co-li-it-del"
-													on:click={() => {
+													on:click|stopPropagation={() => {
 														try {
 															account_input.connections = account_input.connections.filter(uc =>
 																!(
@@ -2744,7 +2744,7 @@
 												<!-- panel -> account -> inputs -> connection (solana) -> list -> item -> del -->
 												<div
 													class="p-ac__in-co-li-it-del"
-													on:click={() => {
+													on:click|stopPropagation={() => {
 														try {
 															account_input.connections = account_input.connections.filter(uc =>
 																!(
@@ -2796,7 +2796,7 @@
 									<!-- [tab] -->
 									<div
 										class="container  stretch--  row--  row-centre--  text  card  p-tab"
-										on:click={() => {
+										on:click|stopPropagation={() => {
 											try {
 												if (project_tab !== TAB.code) {
 													project_tab = utils.clone(TAB.code) || ``;
@@ -2830,7 +2830,7 @@
 										<div
 											class="container  grow--  stretch--  row--  row-centre--  text  text-green--  card  green--  p-pr__ad-ro-option"
 											class:disabled={[`add_pro_project`].some(j => jobs.includes(j))}
-											on:click={async () => {
+											on:click|stopPropagation={async () => {
 												try {
 													let job_code = `add_pro_project`;
 													let other_job_codes = [];
@@ -2874,7 +2874,7 @@
 													<div
 														class="container  stretch--  row--  row-left--  text  text-blue-light--  card  blue--  p-pr__ad-nf-option"
 														class:disabled={[`add_${OPTION.code}_project`].some(j => jobs.includes(j))}
-														on:click={async () => {
+														on:click|stopPropagation={async () => {
 															try {
 																let job_code = `add_${OPTION.code}_project`;
 																let other_job_codes = [];
@@ -2964,7 +2964,7 @@
 									<!-- [card] item -->
 									<div
 										class="container  stretch--  row--  row-left--  p-card  p-pr__li-item"
-										on:click={() => {
+										on:click|stopPropagation={() => {
 											try {
 												overlay_project = utils.clone(project);
 											} catch (e) {
@@ -3073,24 +3073,34 @@
 								{#each PROJECT_ROLES as ROLE}
 									{#if (((project.rooms || []).find(r =>
 										r.id === room_id
-									) || {}).user_instances.filter(ui =>
+									) || {}).user_instances || []).filter(ui =>
 										(
-											(ROLE.flags || []).includes(`staff`) ?
-												(project.staff_users || []).some(su =>
-													(su.id === (ui.user || {}).id) &&
-													(su.type === ROLE.code)
-												) :
-												false
-										) ||
+											(users_search_input || ``).trim() ?
+											(
+												(utils.sanitiseString((ui.user || {}).code)).includes(utils.sanitiseString(users_search_input)) ||
+												(utils.sanitiseString((ui.user || {}).name)).includes(utils.sanitiseString(users_search_input))
+											) :
+											true
+										) &&
 										(
-											(ROLE.flags || []).includes(`no_role`) ?
-												!(project.staff_users || []).some(su =>
-													(su.id === (ui.user || {}).id) &&
-													(su.type === ROLE.code)
-												) :
-												false
+											(
+												(ROLE.flags || []).includes(`staff`) ?
+													(project.staff_users || []).some(su =>
+														(su.id === (ui.user || {}).id) &&
+														(su.type === ROLE.code)
+													) :
+													false
+											) ||
+											(
+												(ROLE.flags || []).includes(`no_role`) ?
+													!(project.staff_users || []).some(su =>
+														(su.id === (ui.user || {}).id) &&
+														(su.type === ROLE.code)
+													) :
+													false
+											)
 										)
-									) || []).length >= 1}
+									).length >= 1}
 										<!-- section -->
 										<div class="container  stretch--  col--  p-us__section">
 											<!-- section -> label -->
@@ -3107,26 +3117,77 @@
 											<div class="container  stretch--  p-us__se-items">
 												{#each (((project.rooms || []).find(r =>
 													r.id === room_id
-												) || {}).user_instances.filter(ui =>
+												) || {}).user_instances || []).filter(ui =>
 													(
-														(ROLE.flags || []).includes(`staff`) ?
-															(project.staff_users || []).some(su =>
-																(su.id === (ui.user || {}).id) &&
-																(su.type === ROLE.code)
-															) :
-															false
-													) ||
+														(users_search_input || ``).trim() ?
+														(
+															(utils.sanitiseString((ui.user || {}).code)).includes(utils.sanitiseString(users_search_input)) ||
+															(utils.sanitiseString((ui.user || {}).name)).includes(utils.sanitiseString(users_search_input))
+														) :
+														true
+													) &&
 													(
-														(ROLE.flags || []).includes(`no_role`) ?
-															!(project.staff_users || []).some(su =>
-																(su.id === (ui.user || {}).id) &&
-																(su.type === ROLE.code)
-															) :
-															false
+														(
+															(ROLE.flags || []).includes(`staff`) ?
+																(project.staff_users || []).some(su =>
+																	(su.id === (ui.user || {}).id) &&
+																	(su.type === ROLE.code)
+																) :
+																false
+														) ||
+														(
+															(ROLE.flags || []).includes(`no_role`) ?
+																!(project.staff_users || []).some(su =>
+																	(su.id === (ui.user || {}).id) &&
+																	(su.type === ROLE.code)
+																) :
+																false
+														)
 													)
-												) || []) as user_instance}
+												) as user_instance}
 													<!-- item -->
-													<!-- tba -->
+													<div
+														class="container  stretch--  row--  row-left--  p-us__item"
+														on:click|stopPropagation={() => {
+															try {
+																if (
+																	user_instance.user &&
+																	user_instance.user.id
+																) {
+																	overlay_user = utils.clone(user_instance.user);
+																}
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														<!-- item -> avatar -->
+														<Avatar
+															display="icon"
+															body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
+															pet={(user_instance.user_avatar || {}).parts.find(p => p.type === `pet`) || null}
+															size_em={2.1}
+														/>
+
+														<!-- item -> text -->
+														<div class="container  grow--  col--  p-us__it-text">
+															<!-- item -> text -> name -->
+															<div class="p-us__it-te-name">
+																{(user_instance.user || {}).name || `n/a`}
+															</div>
+
+															<!-- item -> text -> row -->
+															<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																<!-- item -> text -> row -> code -->
+																<div class="p-us__it-te-ro-code">
+																	@{(user_instance.user || {}).code || `n/a`}
+																</div>
+
+																<!-- item -> text -> row -> status -->
+																<!-- todo: user status -->
+															</div>
+														</div>
+													</div>
 												{/each}
 											</div>
 										</div>
