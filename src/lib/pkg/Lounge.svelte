@@ -71,6 +71,7 @@
 		bookmarked: [],
 		explorable: []
 	}
+	let friends_user_instances = [];
 
 	let is_component_toggled = ([`component`].includes(context)) ? false : true;
 
@@ -345,6 +346,7 @@
 					project_arrs.staffed = data.staffed_projects || [];
 					project_arrs.bookmarked = data.bookmarked_projects || [];
 					project_arrs.explorable = data.explorable_projects || [];
+					friends_user_instances = data.friends_user_instances || [];
 
 					LOUNGE_AVATAR_SKINS = data.LOUNGE_AVATAR_SKINS || [];
 					Object.freeze(LOUNGE_AVATAR_SKINS);
@@ -495,22 +497,22 @@
 
 								// edit project in bookmarked projects if found
 
-								let bookmarked_project_index = bookmarked_projects.findIndex(p =>
+								let bookmarked_project_index = project_arrs.bookmarked.findIndex(p =>
 									p.id === updated_project.id
 								);
 
 								if (bookmarked_project_index >= 0) {
-									bookmarked_projects[bookmarked_project_index] = utils.clone(updated_project);
+									project_arrs.bookmarked[bookmarked_project_index] = utils.clone(updated_project);
 								}
 
 								// edit project in explorable projects if found
 
-								let explorable_project_index = explorable_projects.findIndex(p =>
+								let explorable_project_index = project_arrs.explorable.findIndex(p =>
 									p.id === updated_project.id
 								);
 
 								if (explorable_project_index >= 0) {
-									explorable_projects[explorable_project_index] = utils.clone(updated_project);
+									project_arrs.explorable[explorable_project_index] = utils.clone(updated_project);
 								}
 
 								break;
@@ -3293,29 +3295,214 @@
 
 							<!-- panel -> friends -> sections -->
 							<div class="container  stretch--  col--  p-us__sections">
+								<!-- note: use `p-us__sections` styles -->
+								{#if friends_tab === `room`}
+									{#if !(((project.rooms || []).find(r =>
+										r.id === room_id
+									) || {}).user_instances || []).some(rui =>
+										rui.user &&
+										rui.user.id &&
+										(user.id !== rui.user.id) &&
+										(user.relationships || []).find(ur =>
+											(ur.users || []).some(uru =>
+												uru.id === rui.user.id
+											)
+										)
+									)}
+										<!-- panel -> friends (room) -> message (none) -->
+										<div class="p-us__sections-message">
+											No friends in this room to display.
+										</div>
+									{:else}
+										<!-- panel -> friends (room) -> section (online) -->
+										<!-- note: use `p-us__section` styles -->
+										<div class="container  stretch--  col--  p-us__section">
+											<!-- panel -> friends (room) -> section (online) -> label -->
+											<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
+												<div>
+													{(((project.rooms || []).find(r =>
+														r.id === room_id
+													) || {}).user_instances || []).filter(rui =>
+														rui.user &&
+														rui.user.id &&
+														(user.id !== rui.user.id) &&
+														(user.relationships || []).find(ur =>
+															(ur.users || []).some(uru =>
+																uru.id === rui.user.id
+															)
+														)
+													).length || 0}
+												</div>
+												<div>Online</div>
+											</div>
 
+											<!-- panel -> friends (room) -> section (online) -> items -->
+											<div class="container  stretch--  p-us__se-items">
+												{#each (((project.rooms || []).find(r =>
+													r.id === room_id
+												) || {}).user_instances || []).filter(rui =>
+													rui.user &&
+													rui.user.id &&
+													(user.id !== rui.user.id) &&
+													(user.relationships || []).find(ur =>
+														(ur.users || []).some(uru =>
+															uru.id === rui.user.id
+														)
+													)
+												) as user_instance}
+													<!-- item -->
+													<div
+														class="container  stretch--  row--  row-left--  p-us__item"
+														on:click|stopPropagation={() => {
+															try {
+																if (
+																	user_instance.user &&
+																	user_instance.user.id
+																) {
+																	overlay_user = utils.clone(user_instance.user);
+																}
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														<!-- item -> avatar -->
+														<Avatar
+															display="icon"
+															body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
+															pet={(user_instance.user_avatar || {}).parts.find(p => p.type === `pet`) || null}
+															size_em={2.1}
+														/>
+
+														<!-- item -> text -->
+														<div class="container  grow--  col--  p-us__it-text">
+															<!-- item -> text -> name -->
+															<div class="p-us__it-te-name">
+																{(user_instance.user || {}).name || `n/a`}
+															</div>
+
+															<!-- item -> text -> row -->
+															<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																<!-- item -> text -> row -> code -->
+																<div class="p-us__it-te-ro-code">
+																	@{(user_instance.user || {}).code || `n/a`}
+																</div>
+
+																<!-- item -> text -> row -> status -->
+																<!-- todo: user status -->
+															</div>
+														</div>
+													</div>
+												{/each}
+											</div>
+										</div>
+									{/if}
+								{:else if friends_tab === `all`}
+									<!-- panel -> friends (all) -> sections (online) -->
+									<!-- tba -->
+
+									{#if (user.relationships || []).some(ur =>
+										ur.user &&
+										ur.user.id &&
+										(ur.users || []).some(uru =>
+											!friends_user_instances.some(fui =>
+												fui.user_id &&
+												(fui.user.id === uru.id)
+											)
+										)
+									)}
+										<!-- panel -> friends (all) -> sections (offline) -->
+										<!-- note: use `p-us__section` styles -->
+										<div class="container  stretch--  col--  p-us__section">
+											<!-- panel -> friends (all) -> section (offline) -> label -->
+											<div class="container  row--  row-centre--  text  text-green-light--  card  green--  p-us__se-label">
+												<div>
+													{(user.relationships || []).filter(ur =>
+														ur.user &&
+														ur.user.id &&
+														(ur.users || []).some(uru =>
+															!friends_user_instances.some(fui =>
+																fui.user_id &&
+																(fui.user.id === uru.id)
+															)
+														)
+													).length || 0}
+												</div>
+												<div>Offline</div>
+											</div>
+
+											<!-- panel -> friends (all) -> section (offline) -> items -->
+											<div class="container  stretch--  p-us__se-items">
+												{#each (user.relationships || []).filter(ur =>
+													ur.user &&
+													ur.user.id &&
+													(ur.users || []).some(uru =>
+														!friends_user_instances.some(fui =>
+															fui.user_id &&
+															(fui.user.id === uru.id)
+														)
+													)
+												).map(ur =>
+													(ur.users || []).find(uru =>
+														uru.id !== user.id
+													)
+												).filter(ur =>
+													ur &&
+													ur.user &&
+													ur.user.id
+												) as friend_user}
+													<!-- item -->
+													<div
+														class="container  stretch--  row--  row-left--  p-us__item"
+														on:click|stopPropagation={() => {
+															try {
+																overlay_user = utils.clone(friend_user);
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														<!-- item -> avatar -->
+														<Avatar
+															display="icon"
+															body={(friend_user.default_avatar || {}).parts.find(p => p.type === `body`) || null}
+															pet={(friend_user.default_avatar || {}).parts.find(p => p.type === `pet`) || null}
+															size_em={2.1}
+														/>
+
+														<!-- item -> text -->
+														<div class="container  grow--  col--  p-us__it-text">
+															<!-- item -> text -> name -->
+															<div class="p-us__it-te-name">
+																{friend_user.name || `n/a`}
+															</div>
+
+															<!-- item -> text -> row -->
+															<div class="container  stretch--  row--  row-left--  p-us__it-te-row">
+																<!-- item -> text -> row -> code -->
+																<div class="p-us__it-te-ro-code">
+																	@{friend_user.code || `n/a`}
+																</div>
+
+																<!-- item -> text -> row -> status -->
+																<!-- todo: user status -->
+															</div>
+														</div>
+													</div>
+												{/each}
+											</div>
+										</div>
+									{/if}
+								{:else if friends_tab === `requests`}
+									<!-- panel -> friends (requests) -> sections (inbound) -->
+									<!-- note: partly use `p-us__section` styles -->
+									<!-- tba -->
+
+									<!-- panel -> friends (requests) -> sections (outbound) -->
+									<!-- note: partly use `p-us__section` styles -->
+									<!-- tba -->
+								{/if}
 							</div>
-							<!-- note: use `p-us__sections` styles -->
-							{#if friends_tab === `room`}
-								<!-- panel -> friends (room) -> section (online) -->
-								<!-- note: use `p-us__section` styles -->
-								<!-- tba -->
-							{:else if friends_tab === `all`}
-								<!-- panel -> friends (all) -> sections (online) -->
-								<!-- tba -->
-
-								<!-- panel -> friends (all) -> sections (offline) -->
-								<!-- note: use `p-us__section` styles -->
-								<!-- tba -->
-							{:else if friends_tab === `requests`}
-								<!-- panel -> friennds (requests) -> sections (inbound) -->
-								<!-- note: partly use `p-us__section` styles -->
-								<!-- tba -->
-
-								<!-- panel -> friends (requests) -> sections (outbound) -->
-								<!-- note: partly use `p-us__section` styles -->
-								<!-- tba -->
-							{/if}
 						</div>
 					{:else if view === `rooms`}
 						<!-- panel -> rooms -->
@@ -3425,6 +3612,8 @@
 							<!-- panel -> lsettings -> section (audio) -->
 							<!-- tba -->
 						</div>
+					{:else if view === `nft_cxs`}
+						<!-- tba -->
 					{/if}
 				</div>
 			{/if}
