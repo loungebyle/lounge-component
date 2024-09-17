@@ -93,7 +93,7 @@
 	let is_chat_toggled = false;
 
 	let is_panel_toggled = false;
-	let view = `main`; // <`main`, `avatar`, `account`, `projects`, `users`, `friends`, `rooms`, `project_settings`, `shop`, `guide`, `lounge_settings`>
+	let view = `main`; // <`main`, `avatar`, `account`, `projects`, `users`, `friends`, `rooms`, `project_settings`, `shop`, `guide`, `lounge_settings`, `nft_cxs>
 	let overlay_user;
 	let overlay_project;
 
@@ -331,6 +331,8 @@
 		component_y_offset_px: 0,
 	}
 	let project_settings_merge_handle_input = ``;
+	let project_settings_staff_users_search_input = ``;
+	let project_settings_staff_admins_search_input = ``;
 
 	// vars (shop)
 	
@@ -1486,9 +1488,10 @@
 												<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
 													{#each utils.shuffleArray((overlay_user.nft_cxs || []).slice(0, 5) || []) as user_nft_cx}
 														<!-- item -->
-														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
+														<!-- note: use `p-ma__cx-item` styles -->
+														<div class="container  stretch--  col--  col-centre--  p-ma__cx-item">
 															<!-- item -> label -->
-															<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
+															<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ma__cx-it-label">
 																<div>
 																	{utils.shortenString({
 																		string: user_nft_cx.name || ``,
@@ -1501,19 +1504,20 @@
 															<img
 																src={user_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
 																alt=""
-																class="p-ov__us-cx-li-it-image"
+																class="p-ma__cx-it-image"
 															/>
 														</div>
 													{/each}
 
 													{#each Array(5 - Math.min((overlay_user.nft_cxs || []).length, 5)) as _}
 														<!-- item (placeholder) -->
-														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
+														<!-- note: use `p-ma__cx-item` styles -->
+														<div class="container  stretch--  col--  col-centre--  p-ma__cx-item  p-faded--">
 															<!-- item -> image -->
 															<img
 																src={FALLBACK_USER_IMAGE}
 																alt=""
-																class="p-ov__us-cx-li-it-image"
+																class="p-ma__cx-it-image"
 															/>
 														</div>
 													{/each}
@@ -1619,9 +1623,10 @@
 												<div class="container  stretch--  row--  row-left--  p-ov__us-cx-list">
 													{#each utils.shuffleArray((overlay_project.nft_cxs || []).slice(0, 5) || []) as project_nft_cx}
 														<!-- item -->
-														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item">
+														<!-- note: use `p-ma__cx-item` styles -->
+														<div class="container  stretch--  col--  col-centre--  p-ma__cx-item">
 															<!-- item -> label -->
-															<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ov__us-cx-li-it-label">
+															<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ma__cx-it-label">
 																<div>
 																	{utils.shortenString({
 																		string: project_nft_cx.name || ``,
@@ -1634,19 +1639,20 @@
 															<img
 																src={project_nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
 																alt=""
-																class="p-ov__us-cx-li-it-image"
+																class="p-ma__cx-it-image"
 															/>
 														</div>
 													{/each}
 
 													{#each Array(5 - Math.min((overlay_project.nft_cxs || []).length, 5)) as _}
 														<!-- item (placeholder) -->
-														<div class="container  stretch--  col--  col-centre--  p-ov__us-cx-li-item  p-faded--">
+														<!-- note: use `p-ma__cx-item` styles -->
+														<div class="container  stretch--  col--  col-centre--  p-ma__cx-item  p-faded--">
 															<!-- item -> image -->
 															<img
 																src={FALLBACK_USER_IMAGE}
 																alt=""
-																class="p-ov__us-cx-li-it-image"
+																class="p-ma__cx-it-image"
 															/>
 														</div>
 													{/each}
@@ -1896,7 +1902,63 @@
 							</div>
 
 							<!-- panel -> main -> cxs -->
-							<!-- tba -->
+							<div
+								class="container  stretch--  row--  row-left--  text  text-purple-light--  card  purple--  p-ma__cxs"
+								on:click={() => {
+									try {
+										view = `nft_cxs`;
+									} catch (e) {
+										console.log(e);
+									}
+								}}
+							>
+								<!-- panel -> main -> cxs -> text -->
+								<div class="container  col--  p-ma__cx-texts">
+									<div>
+										Has
+										<span>{(project.nft_cxs || []).length || 0}</span>
+									</div>
+									<div class="text  text-white--">
+										NFT collections
+									</div>
+								</div>
+
+								<!-- panel -> main -> cxs -> items -->
+								<div class="container  grow--  row---  row-right--  p-ma__cx-items">
+									{#each (project.nft_cxs || []) as nft_cx}
+										<!-- item -->
+										<div class="container  stretch--  col--  col-centre--  p-ma__cx-item">
+											<!-- item -> label -->
+											<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ma__cx-it-label">
+												<div>
+													{utils.shortenString({
+														string: nft_cx.name || ``,
+														length: 15
+													}) || `n/a`}
+												</div>
+											</div>
+
+											<!-- item -> image -->
+											<img
+												src={nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
+												alt=""
+												class="p-ma__cx-it-image"
+											/>
+										</div>
+									{/each}
+
+									{#each Array(5 - Math.min((project.nft_cxs || []).length, 5)) as _}
+										<div class="container  stretch--  col--  col-centre--  p-ma__cx-item  p-faded--">
+											<!-- item -> image -->
+											<img
+												src={FALLBACK_USER_IMAGE}
+												alt=""
+												class="p-ma__cx-it-image"
+											/>
+										</div>
+									{/each}
+								</div>
+							</div>
 
 							<!-- panel -> main -> [row] (3) -->
 							<div class="container  stretch--  row--  row-left--  p-row">
@@ -4621,18 +4683,236 @@
 									class="container  stretch--  col--  p-ps__staff"
 									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}	
 								>
-									<!-- panel -> psettings -> staff -> list -->
-									<div class="container  stretch--  col--  p-ps__st-list">
-										{#if (project_settings_input.staff_users || []).length === 0}
-											<!-- panel -> psettings -> staff -> list -> message (none) -->
-											<div class="p-ps__st-li-message">
-												No staff users to display.
-											</div>
-										{/if}
+									<!-- panel -> psettings -> staff -> section (users) -->
+									<div class="container  stretch--  text  text-white--  card  yellow--  p-ps__st-section">
+										<!-- panel -> psettings -> staff -> section (users) -> top -->
+										<div class="container  stretch--  row--  row-left--  p-ps__st-se-top">
+											<!-- panel -> psettings -> staff -> section (users) -> top -> input -->
+											<input
+												type="text"
+												bind:value={project_settings_staff_users_search_input}
+												class="container  grow--  row--  row-left--  text  text-white--  p-ps__st-se-to-input"
+											/>
 
-										{#each (project_settings_input.staff_users || []) as staff_user}
-											<!-- tba -->
-										{/each}
+											<!-- panel -> psettings -> staff -> section (users) -> top -> add -->
+											<div
+												class="container  row--  row-centre--  text  text-green--  card  green--  p-ps__st-se-to-add"
+												class:disabled={[`search_project_staff_users`].some(j => jobs.includes(j))}
+												on:click={async () => {
+													try {
+														let job_code = `search_project_staff_users`;
+														let other_job_codes = [];
+														
+														if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+															jobs.push(job_code);
+															jobs = jobs;
+
+															// tba: get matching user and if user found and hasn't already been added as staff user in this project, add as staff user
+
+															jobs = jobs.filter(j => j !== job_code);
+														}
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												{#if jobs.includes(`search_project_staff_users`)}
+													<Loader />
+												{:else}
+													<div>Add</div>
+													<img
+														src={ICONS.add}
+														alt=""
+													/>
+												{/if}
+											</div>
+
+											<!-- panel -> psettings -> staff -> section (users) -> top -> label -->
+											<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ps__st-se-to-label">
+												<div>Staff</div>
+											</div>
+										</div>
+
+										<!-- panel -> psettings -> staff -> section (users) -> items -->
+										<div class="container  stretch--  row--  row-left--  p-ps__st-se-items">
+											{#each (project_settings_input.staff_users || []).sort((a, b) =>
+												((b.user || {}).code || ``).localeCompare((a.user || {}).code || ``)
+											).sort((a, b) =>
+												([`owner`, `admin`].includes(b.type) ? 1 : -1) -
+												([`owner`, `admin`].includes(a.type) ? 1 : -1)
+											) as staff_user}
+												<!-- item -->
+												<div
+													class="container  stretch--  row--  row-left--  text  card  p-ps__st-se-item"
+													class:text-purple-light--={[`owner`, `admin`].includes(staff_user.type)}
+													class:purple--={[`owner`, `admin`].includes(staff_user.type)}
+													class:text-yellow--={![`owner`, `admin`].includes(staff_user.type)}
+													class:yellow--={![`owner`, `admin`].includes(staff_user.type)}
+												>
+													<!-- item -> label -->
+													<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ps__st-se-it-label">
+														<div>
+															{utils.shortenString({
+																string: (staff_user.user || {}).name || ``,
+																length: 15
+															}) || `n/a`}
+														</div>
+													</div>
+
+													<!-- item -> [avatar] -->
+													<Avatar
+														display="icon"
+														body={(((staff_user.user || {}).default_avatar || {}).parts || []).find(uap =>
+															uap.part_type === `body`
+														) || null}
+														pet={(((staff_user.user || {}).default_avatar || {}).parts || []).find(uap =>
+															uap.part_type === `pet`
+														) || null}
+														size_em={0.95}
+													/>
+
+													<!-- item -> code -->
+													<div class="p-ps__st-se-it-name">
+														@{(staff_user.user || {}).code || `n/a`}
+													</div>
+
+													{#if [`owner`, `admin`].includes(staff_user.type)}
+														<!-- item -> role -->
+														<div class="container  grow--  row--  row-right--  p-ps__st-se-it-role">
+															{staff_user.type || `n/a`}
+														</div>
+													{:else}
+														<!-- item -> del -->
+														<div
+															class="container  grow--  row--  row-right--  p-ps__st-se-it-del"
+															on:click={() => {
+																try {
+																	project_settings_input.staff_users = project_settings_input.staff_users.filter(su =>
+																		su.id !== staff_user.id
+																	);
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															<img
+																src={ICONS.close}
+																alt=""
+																class="svg  svg-red--"
+															/>
+														</div>
+													{/if}
+												</div>
+											{/each}
+										</div>
+									</div>
+
+									<!-- panel -> psettings -> staff -> section (admins) -->
+									<div class="container  stretch--  text  text-white--  card  yellow--  p-ps__st-section">
+										<!-- panel -> psettings -> staff -> section (admins) -> top -->
+										<div class="container  stretch--  row--  row-left--  p-ps__st-se-top">
+											<!-- panel -> psettings -> staff -> section (admins) -> top -> input -->
+											<input
+												type="text"
+												bind:value={project_settings_staff_admins_search_input}
+												class="container  grow--  row--  row-left--  text  text-white--  p-ps__st-se-to-input"
+											/>
+
+											<!-- panel -> psettings -> staff -> section (admins) -> top -> add -->
+											<div
+												class="container  row--  row-centre--  text  text-green--  card  green--  p-ps__st-se-to-add"
+												on:click={async () => {
+													try {
+														// tba: add non-staff matching staff user as admin
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<div>Add</div>
+												<img
+													src={ICONS.add}
+													alt=""
+												/>
+											</div>
+
+											<!-- panel -> psettings -> staff -> section (admins) -> top -> label -->
+											<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ps__st-se-to-label">
+												<div>Staff</div>
+											</div>
+										</div>
+
+										<!-- panel -> psettings -> staff -> section (admins) -> items -->
+										<div class="container  stretch--  row--  row-left--  p-ps__st-se-items">
+											{#each (project_settings_input.staff_users || []).filter(su =>
+												[`owner`, `admin`].includes(su.type)
+											).sort((a, b) =>
+												((b.user || {}).code || ``).localeCompare((a.user || {}).code || ``)
+											) as staff_user}
+												<!-- item -->
+												<div
+													class="container  stretch--  row--  row-left--  text  text-purple-light--  card  purple--  p-ps__st-se-item"
+												>
+													<!-- item -> label -->
+													<div class="container  row--  row-centre--  text  text-white--  card  black--  p-ps__st-se-it-label">
+														<div>
+															{utils.shortenString({
+																string: (staff_user.user || {}).name || ``,
+																length: 15
+															}) || `n/a`}
+														</div>
+													</div>
+
+													<!-- item -> [avatar] -->
+													<Avatar
+														display="icon"
+														body={(((staff_user.user || {}).default_avatar || {}).parts || []).find(uap =>
+															uap.part_type === `body`
+														) || null}
+														pet={(((staff_user.user || {}).default_avatar || {}).parts || []).find(uap =>
+															uap.part_type === `pet`
+														) || null}
+														size_em={0.95}
+													/>
+
+													<!-- item -> code -->
+													<div class="p-ps__st-se-it-name">
+														@{(staff_user.user || {}).code || `n/a`}
+													</div>
+
+													{#if [`owner`].includes(staff_user.type)}
+														<!-- item -> role -->
+														<div class="container  grow--  row--  row-right--  p-ps__st-se-it-role">
+															{staff_user.type || `n/a`}
+														</div>
+													{:else}
+														<!-- item -> del -->
+														<div
+															class="container  grow--  row--  row-right--  p-ps__st-se-it-del"
+															on:click={() => {
+																try {
+																	let staff_user_index = (project_settings_input.staff_users || []).findIndex(su =>
+																		su.id === staff_user.id
+																	);
+
+																	if (staff_user_index >= 0) {
+																		project_settings_input.staff_users[staff_user_index].type = `staff`;
+																	}
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															<img
+																src={ICONS.close}
+																alt=""
+																class="svg  svg-red--"
+															/>
+														</div>
+													{/if}
+												</div>
+											{/each}
+										</div>
 									</div>
 								</div>
 							{:else if project_settings_tab === `component`}
