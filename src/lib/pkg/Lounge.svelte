@@ -321,7 +321,22 @@
 	let guide_search_input = ``;
 
 	// vars (lounge_settings)
-	// todo
+
+	const LOUNGE_CONFIG_GRAPHICS_QUALITY_TYPES = [
+		{
+			code: `low`,
+			name: `Low`
+		},
+		{
+			code: `high`,
+			name: `High`
+		}
+	];
+	
+	let lounge_settings_input = {
+		graphics_quality: `low`, // note: based on LOUNGE_CONFIG_GRAPHICS_QUALITY_TYPES
+		audio_volume: 20, // note: 0-100
+	}
 
 	// dynamics
 	
@@ -394,6 +409,9 @@
 
 				if (data) {
 					user = data.user || null;
+
+					// tba: parse lounge_settings_input from user.settings
+					
 					project = data.project || null;
 					room_id = data.room_id || ``;
 					project_arrs.staffed = data.staffed_projects || [];
@@ -4206,13 +4224,84 @@
 						<!-- panel -> lsettings -->
 						<div class="container  stretch--  col--  p-lsettings">
 							<!-- panel -> lsettings -> [heading] -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> lsettings -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> lsettings -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Settings
+									</div>
+
+									<!-- panel -> lsettings -> heading -> row -> button (save) -->
+									<div
+										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+										class:disabled={[`edit_user_settings`, `edit_user`].some(j => jobs.includes(j))}
+										on:click|stopPropagation={() => {
+											try {
+												let job_code = `edit_user_settings`;
+												let other_job_codes = [`edit_user`];
+													
+												if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+													jobs.push(job_code);
+													jobs = jobs;
+
+													// tba: edit user settings (which controls lounge preferences)
+
+													jobs = jobs.filter(j => j !== job_code);
+												}
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>
+											{#if jobs.includes(`edit_user`)}
+												<Loader />
+											{:else}
+												Save
+											{/if}
+										</div>
+									</div>
+								</div>
+							</div>
 
 							<!-- panel -> lsettings -> section (display) -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-ls__section  p-ls__display">
+								<!-- panel -> settings -> section (display) -> heading -->
+								<div class="p-ls__se-heading">Display</div> 
+
+								<!-- panel -> settings -> section (display) -> item (graphics) -->
+								<div class="container  stretch--  row--  row-left--  p-ls__se-item  p-ls__di-graphics">
+									<!-- panel -> settings -> section (display) -> item (graphics) -> label -->
+									<div class="container  grow--  row--  row-left--  p-ls__se-it-label">
+										Graphics quality
+									</div>
+
+									<!-- panel -> settings -> section (dsplay) -> item -> options -->
+									<div class="container  row--  row-right--  p-ls__di-gr-options">
+										{#each LOUNGE_CONFIG_GRAPHICS_QUALITY_TYPES as TYPE}
+											<!-- tba -->
+										{/each}
+									</div>
+								</div>
+							</div>
 							
 							<!-- panel -> lsettings -> section (audio) -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-ls__section  p-ls__audio">
+								<!-- panel -> settings -> section (audio) -> heading -->
+								<div class="p-ls__se-heading">Audio</div>
+
+								<!-- panel -> settings -> section (audio) -> item (volume) -->
+								<div class="container  stretch--  row--  row-left--  p-ls__se-item  p-ls__au-volume">
+									<!-- panel -> settings -> section (audio) -> item (volume) -> label -->
+									<div class="container  grow--  row--  row-left--  p-ls__se-it-label">
+										Graphics quality
+									</div>
+
+									<!-- panel -> settings -> section (audio) -> item (volume) -> slider -->
+									<!-- tba -->
+								</div>
+							</div>
 						</div>
 					{:else if view === `rooms`}
 						<!-- panel -> rooms -->
