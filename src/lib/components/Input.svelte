@@ -8,7 +8,7 @@
 	// exports
 
   export let value;
-  export let type = ``; // <`text`, `image`>
+  export let type = ``; // <`text`, `textarea`, `image`>
   export let label = ``;
   export let placeholder = ``;
   export let events = {};
@@ -68,6 +68,9 @@
         placeholder={(placeholder || ``).trim() || ``}
         class="i-textbox"
       />
+		{:else if type === `textarea`}
+			<!-- input (textarea) -> textbox -->
+			<!-- tba -->
     {:else if type === `image`}
       <!-- tba: input type file -->
     {/if}

@@ -83,6 +83,7 @@
 			name: ``,
 			description: ``,
 			background_image_url: ``,
+			new_background_image_base64: ``,
 			polygons: [],
 			access_items: []
 		}
@@ -4810,7 +4811,7 @@
 										d={{}}
 									/>
 
-									<!-- panel -> psettings -> details -> [uploader] (icon image) -->
+									<!-- panel -> psettings -> details -> [input] (icon image) -->
 									<Input
 										bind:value={project_settings_input.new_icon_image_base64}
 										type="image"
@@ -5481,43 +5482,76 @@
 						<div class="container  stretch--  col--  p-rooms">
 							<!-- panel -> rooms -> [heading] -->
 							<div class="container  stretch--  col--  p-heading">
-								<!-- panel -> rooms -> heading -> row -->
-								<div class="container  stretch--  row--  row-left--  p-he__row">
-									<!-- panel -> rooms -> heading -> row -> project -->
-									<div class="container  row--  row-left--  p-he__ro-project">
-										<img
-											src={project.icon_image_url || FALLBACK_USER_IMAGE}
-											alt=""
-										/>
-										<div>{project.name || ``}</div>
-									</div>
-								</div>
+								{#if rooms_edit_input && rooms_edit_input.id}
+									<!-- panel -> rooms -> heading (edit) -> row -->
+									<!-- tba -->
 
-								<!-- panel -> rooms -> heading -> search -->
-								<input
-									bind:value={rooms_search_input}
-									placeholder="Search Rooms..."
-									class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
-								/>
+									<!-- panel -> rooms -> heading (edit) -> room -->
+									<!-- note: use `p-he__ro-room` styles -->
+									<!-- tba -->
+								{:else if rooms_edit_input}
+									<!-- panel -> rooms -> heading (add) -> row -->
+									<!-- tba -->
+								{:else}
+									<!-- panel -> rooms -> heading (view) -> row -->
+									<div class="container  stretch--  row--  row-left--  p-he__row">
+										<!-- panel -> rooms -> heading (view) -> row -> project -->
+										<div class="container  row--  row-left--  p-he__ro-project">
+											<img
+												src={project.icon_image_url || FALLBACK_USER_IMAGE}
+												alt=""
+											/>
+											<div>{project.name || ``}</div>
+										</div>
+									</div>
+
+									<!-- panel -> rooms -> heading (view) -> search -->
+									<input
+										bind:value={rooms_search_input}
+										placeholder="Search Rooms..."
+										class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
+									/>
+								{/if}
 							</div>
 
 							{#if rooms_edit_input}
 								<!-- panel -> rooms -> inputs -->
 								<div class="container  stretch--  col--  p-ro__inputs">
-									<!-- panel -> rooms -> inputs -> [input] name -->
+									<!-- panel -> rooms -> inputs -> [input] (name) -->
+									<Input
+										bind:value={rooms_edit_input.name}
+										type="text"
+										label="Name"
+										placeholder="eg. main-lobby"
+										events={{}}
+										d={{}}
+									/>
+
+									<!-- panel -> rooms -> inputs -> [input] (desc) -->
+									<Input
+										bind:value={rooms_edit_input.description}
+										type="textarea"
+										label="Desc"
+										placeholder="eg. Join the lobby!"
+										events={{}}
+										d={{}}
+									/>
+
+									<!-- panel -> rooms -> inputs -> cxs -->
 									<!-- tba -->
 
-									<!-- panel -> rooms -> inputs -> [input] desc -->
-									<!-- tba -->
+									{#if
+										rooms_edit_input.new_background_image_base64 ||rooms_edit_input.background_image_url
+									}
+										<!-- panel -> rooms -> inputs -> bar -->
+										<!-- tba -->
 
-									<!-- panel -> rooms -> inputs -> [input] nft -->
-									<!-- tba -->
-
-									<!-- panel -> rooms -> inputs -> bar -->
-									<!-- tba -->
-
-									<!-- panel -> rooms -> inputs -> canvas -->
-									<!-- tba -->
+										<!-- panel -> rooms -> inputs -> edit -->
+										<!-- tba -->
+									{:else}
+										<!-- panel -> rooms -> inputs -> [input] (background image) -->
+										<!-- tba -->
+									{/if}
 								</div>
 							{:else}
 								{#if (project.staff_users || []).find(su =>
