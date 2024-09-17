@@ -70,6 +70,20 @@
 	const STRIPE_BUY_PROJECT_LINK_URL = ``; // tba
 	const STRIPE_BUY_PRO_LINK_URL = ``; // tba
 
+	const STRUCTS = {
+		nft_cx: {
+			// tba
+		},
+		room: {
+			id: ``, // note: add if empty, edit if not
+			name: ``,
+			description: ``,
+			background_image_url: ``,
+			polygons: [],
+			access_items: []
+		}
+	}
+
 	// consts (freezed during runtime)
 
 	let LOUNGE_AVATAR_SKINS = [];
@@ -304,8 +318,15 @@
 
 	// vars (rooms)
 
-	let editing_room;
+	let rooms_search_input = ``;
+	let rooms_ids_order = [];
+	let rooms_edit_input = null; // note: use STRUCTS.room
 
+	// vars (nft_cxs)
+	
+	let nft_cxs_search_input = ``;
+	let nft_cxs_edit_input = null; // note: use STRUCTS.nft_cx
+	
 	// vars (project_settings)
 
 	const PROJECT_SETTINGS_TABS = [
@@ -2149,7 +2170,7 @@
 								</div>
 
 								<!-- panel -> main -> cxs -> items -->
-								<div class="container  grow--  row---  row-right--  p-ma__cx-items">
+								<div class="container  grow--  row--  row-right--  p-ma__cx-items">
 									{#each (project.nft_cxs || []) as nft_cx}
 										<!-- item -->
 										<div class="container  stretch--  col--  col-centre--  p-ma__cx-item">
@@ -2315,7 +2336,7 @@
 									<div class="container  row--  row-right--  p-ca__actions">
 										<!-- panel -> main -> row (4) -> user -> [action] (edit) -->
 										<div
-											class="container  stretch--  row--  row-centre--  text  text-white---  card  yellow-  p-ca__action  p-ma__us-edit"
+											class="container  stretch--  row--  row-centre--  text  text-white--  card  yellow-  p-ca__action  p-ma__us-edit"
 											on:click|stopPropagation={() => {
 												try {
 													if (
@@ -4684,11 +4705,11 @@
 									<!-- panel -> psettings -> heading -> row -> button (save) -->
 									<div
 										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
-										class:disabled={[`edit_project_${project.id}`, `merge_project_${project.id}`].some(j => jobs.includes(j))}
+										class:disabled={[`edit_project_${project.id}`, `edit_project_${project.id}_room_ids_order`, `merge_project_${project.id}`].some(j => jobs.includes(j))}
 										on:click|stopPropagation={() => {
 											try {
 												let job_code = `edit_project_${utils.clone(project.id)}`;
-												let other_job_codes = [`merge_project_${project.id}`];
+												let other_job_codes = [`edit_project_${project.id}_room_ids_order`, `merge_project_${project.id}`];
 													
 												if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
 													jobs.push(job_code);
@@ -4711,6 +4732,16 @@
 											{/if}
 										</div>
 									</div>
+								</div>
+
+								<!-- panel -> rooms -> heading -> project -->
+								<!-- note: use `p-he__ro-project` styles -->
+								<div class="container  row--  row-left--  p-he__ro-project">
+									<img
+										src={project.icon_image_url || FALLBACK_USER_IMAGE}
+										alt=""
+									/>
+									<div>{project.name || ``}</div>
 								</div>
 							</div>
 
@@ -4797,6 +4828,7 @@
 										class="container  stretch--  row--  row-left--  text-yellow--  card  yellow--  p-ps__de-rooms"
 										on:click|stopPropagation={() => {
 											try {
+												rooms_ids_order = (project.room_ids_order || []).slice();
 												view = `rooms`;
 											} catch (e) {
 												console.log(e);
@@ -4867,11 +4899,11 @@
 													<!-- paneal -> psettings -> details -> status -> merge -> row -> button -->
 													<div
 														class="container  row--  row-centre--  text  text-cream-light--  card  cream--  p-ps__de-st-me-ro-button"
-														class:disabled={[`edit_project_${utils.clone(project.id)}`, `merge_project_${project.id}`].some(j => jobs.includes(j))}
+														class:disabled={[`edit_project_${utils.clone(project.id)}`, `edit_project_${project.id}_room_ids_order`,  `merge_project_${project.id}`].some(j => jobs.includes(j))}
 														on:click|stopPropagation={() => {
 															try {
 																let job_code = `merge_project_${project.id}`;
-																let other_job_codes = [`edit_project_${utils.clone(project.id)}`];
+																let other_job_codes = [`edit_project_${utils.clone(project.id)}`, `edit_project_${project.id}_room_ids_order`];
 																	
 																if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
 																	jobs.push(job_code);
@@ -5417,11 +5449,31 @@
 						</div>
 					{:else if view === `rooms`}
 						<!-- panel -> rooms -->
+						<!-- note: "rooms" uses `p-rm...` abbrevation, as `p-ro...` is already used by [row] -->
 						<div class="container  stretch--  col--  p-rooms">
 							<!-- panel -> rooms -> [heading] -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> rooms -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> rooms -> heading -> row -> project -->
+									<div class="container  row--  row-left--  p-he__ro-project">
+										<img
+											src={project.icon_image_url || FALLBACK_USER_IMAGE}
+											alt=""
+										/>
+										<div>{project.name || ``}</div>
+									</div>
+								</div>
 
-							{#if editing_room && editing_room.id}
+								<!-- panel -> rooms -> heading -> search -->
+								<input
+									bind:value={rooms_search_input}
+									placeholder="Search Rooms..."
+									class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
+								/>
+							</div>
+
+							{#if rooms_edit_input}
 								<!-- panel -> rooms -> inputs -->
 								<div class="container  stretch--  col--  p-ro__inputs">
 									<!-- panel -> rooms -> inputs -> [input] name -->
@@ -5443,18 +5495,90 @@
 								{#if (project.staff_users || []).find(su =>
 									su.id === user.id
 								)}
-									<!-- panel -> rooms -> add -->
-									<!-- tba -->
+									<!-- panel -> rooms -> actions -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-rm__actions">
+										<!-- panel -> rooms -> action (add) -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-rm__action"
+											on:click|stopPropagation={() => {
+												try {
+													// tba: set rooms_edit_input with STRUCTS.room
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<span>Staff</span>
+											<div>Add a Room</div>
+										</div>
+
+										<!-- panel -> rooms -> action (save) -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-rm__action"
+											class:disabled={[`edit_project_${project.id}`, `edit_project_${project.id}_room_ids_order`, `merge_project_${project.id}`].some(j => jobs.includes(j))}
+											on:click|stopPropagation={() => {
+												try {
+													let job_code = `edit_project_${utils.clone(project.id)}_room_ids_order`;
+													let other_job_codes = [`edit_project_${utils.clone(project.id)}`, `merge_project_${project.id}`];
+														
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: edit project's room_ids_order, using `rooms_ids_order` var
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											{#if jobs.includes(`edit_project_${project.id}_room_ids_order`)}
+												<Loader />
+											{:else}
+												<span>Staff</span>
+												<div>Add a Room</div>
+											{/if}
+										</div>
+									</div>
 								{/if}
 
 								<!-- panel -> rooms -> list -->
-								<!-- tba -->
+								<div
+									class="container  stretch--  col--  p-rm__list"
+									class:disabled={[`edit_project_${project.id}_room_ids_order`].some(j => jobs.includes(j))}
+								>
+									{#each (project.rooms || []).sort((a, b) =>
+										rooms_ids_order.findIndex(id => id === a.id) -
+										rooms_ids_order.findIndex(id => id === b.id)
+									) as room}
+										<!-- item -->
+										<!-- tba -->
+									{/each}
+								</div>
 							{/if}
 						</div>
 					{:else if view === `nft_cxs`}
 						<!-- panel -> cxs -->
 						<div class="container  stretch--  col--  p-cxs">
+							<!-- panel -> cxs -> [heading] -->
 							<!-- tba -->
+
+							{#if nft_cxs_edit_input}
+								<!-- tba -->
+							{:else}
+								{#if (project.staff_users || []).find(su =>
+									su.id === user.id
+								)}
+									<!-- panel -> cxs -> actions -->
+									<!-- note: use `p-rm__actions` styles -->
+									<!-- tba -->
+								{/if}
+
+								<!-- panel -> cxs -> list -->
+								<!-- tba -->
+							{/if}
 						</div>
 					{/if}
 				</div>
