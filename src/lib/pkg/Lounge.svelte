@@ -25,6 +25,10 @@
   import xp_icon from '../assets/images/icons/xp.svg';
 	import users_icon from '../assets/images/icons/users.svg';
 
+	// emoji imports
+
+	import sparkle_emoji from '../assets/images/emojis/sparkle.png';
+
 	// image imports
 
 	import bullishtsuyoneko_shop_image from '../assets/images/shop/bullishtsuyoneko.png';
@@ -53,6 +57,10 @@
 		solana: solana_icon,
 		xp: xp_icon,
 		users: users_icon
+	}
+
+	const EMOJIS = {
+		sparkle: sparkle_emoji
 	}
 
 	const NFT_CXS_LINK_URL = `https://lounge.so/nfts`; // tba
@@ -85,7 +93,7 @@
 	let is_chat_toggled = false;
 
 	let is_panel_toggled = false;
-	let view = `main`; // <`main`, `avatar`, `account`, `projects`, `users`, `friends`, `rooms`, `project_settings`, `shop`, `help`, `lounge_settings`>
+	let view = `main`; // <`main`, `avatar`, `account`, `projects`, `users`, `friends`, `rooms`, `project_settings`, `shop`, `guide`, `lounge_settings`>
 	let overlay_user;
 	let overlay_project;
 
@@ -304,8 +312,13 @@
 		}
 	];
 
-	// vars (help)
-	// todo
+	// vars (guide)
+
+	const GUIDE_ITEMS = [
+		// todo: guide items
+	]
+	
+	let guide_search_input = ``;
 
 	// vars (lounge_settings)
 	// todo
@@ -4129,14 +4142,35 @@
 								You will be redirected to Tensor on viewing NFT.
 							</div>
 						</div>
-					{:else if view === `help`}
-						<!-- panel -> help -->
-						<div class="container  stretch--  col--  p-help">
-							<!-- panel -> help -> [heading] -->
-							<!-- tba -->
+					{:else if view === `guide`}
+						<!-- panel -> guide -->
+						<div class="container  stretch--  col--  p-guide">
+							<!-- panel -> guide -> [heading] -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> guide -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> guide -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Cheat sheet
+									</div>
+								</div>
 
-							<!-- panel -> help -> list -->
-							<!-- tba -->
+								<!-- panel -> guide -> heading -> search -->
+								<input
+									bind:value={guide_search_input}
+									placeholder="Search guide items..."
+									class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
+								/>
+							</div>
+
+							<!-- panel -> guide -> list -->
+							<div class="container  stretch--  col--  p-gu__list">
+								<!-- panel -> guide -> list -> message (none - temp) -->
+								<div class="p-gu__li-message">
+									No guide items to display yet.
+								</div>
+								<!-- todo: guide items -->
+							</div>
 						</div>
 					{:else if view === `project_settings`}
 						<!-- panel -> psettings -->
