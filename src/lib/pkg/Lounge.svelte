@@ -320,6 +320,7 @@
 		name: ``,
 		code: ``,
 		icon_image_url: ``,
+		new_icon_image_base64: ``,
 		description: ``,
 		staff_users: [],
 		component_origin_urls: [],
@@ -2697,6 +2698,7 @@
 									label="Name"
 									placeholder="eg. Le Frost"
 									events={{}}
+									d={{}}
 								/>
 
 								<!-- panel -> account -> inputs -> [input] (code) -->
@@ -2706,6 +2708,7 @@
 									label="@Handle"
 									placeholder="eg. lefrost"
 									events={{}}
+									d={{}}
 								/>
 
 								<!-- panel -> account -> inputs -> [input] (link url) -->
@@ -4461,6 +4464,7 @@
 										label="Name"
 										placeholder="eg. Suave"
 										events={{}}
+										d={{}}
 									/>
 
 									<!-- panel -> psettings -> details -> [input] (code) -->
@@ -4470,10 +4474,19 @@
 										label="Handle"
 										placeholder="eg. suave"
 										events={{}}
+										d={{}}
 									/>
 
 									<!-- panel -> psettings -> details -> [uploader] (icon image) -->
-									<!-- tba -->
+									<Input
+										bind:value={project_settings_input.new_icon_image_base64}
+										type="image"
+										label="Icon image"
+										events={{}}
+										d={{
+											image_prev_image_url: project_settings_input.icon_image_url || ``
+										}}
+									/>
 
 									<!-- panel -> psettings -> details -> [input] (description) -->
 									<Input
@@ -4482,6 +4495,7 @@
 										label="Desc"
 										placeholder="eg. About this Project..."
 										events={{}}
+										d={{}}
 									/>
 
 									<!-- panel -> psettings -> skin -->
@@ -4543,12 +4557,20 @@
 
 										{#if project.status === `inactive`}
 											<!-- panel -> psettings -> details -> status -> merge -->
-											<div class="container  stretch--  row--  row-left--  p-ps__de-st-merge">
+											<div class="container  stretch--  col--  p-ps__de-st-merge">
 												<!-- panel -> psettings -> details -> status -> merge -> label -->
-												<!-- tba -->
+												<div class="p-ps__de-st-me-label">
+													Merge this Project and an active Project you own:
+												</div>
 
 												<!-- panel -> psettings -> details -> status -> merge -> row -->
-												<!-- tba -->
+												<div class="container  stretch--  row--  row-left--  p-ps__de-st-me-row">
+													<!-- panel -> psettings -> details -> status -> merge -> row -> input -->
+													<!-- tba -->
+
+													<!-- paneal -> psettings -> details -> status -> merge -> row -> button -->
+													<!-- tba -->
+												</div>
 											</div>
 										{/if}
 									</div>

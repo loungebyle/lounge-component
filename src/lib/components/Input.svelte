@@ -8,10 +8,11 @@
 	// exports
 
   export let value;
-  export let type = ``; // <`text`, `upload`>
+  export let type = ``; // <`text`, `image`>
   export let label = ``;
   export let placeholder = ``;
   export let events = {};
+	export let d = {}; // {image_prev_image_url?}
 
 	// consts
 
