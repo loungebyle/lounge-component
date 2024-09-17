@@ -16,6 +16,7 @@
 	import bookmark_icon from '../assets/images/icons/bookmark.svg';
   import close_icon from '../assets/images/icons/close.svg';
 	import discord_icon from '../assets/images/icons/discord.svg';
+	import down_icon from '../assets/images/icons/down.svg';
   import friends_icon from '../assets/images/icons/friend.svg';
 	import google_icon from '../assets/images/icons/google.svg';
 	import hashtag_icon from '../assets/images/icons/hashtag.svg';
@@ -24,6 +25,7 @@
 	import rooms_icon from '../assets/images/icons/rooms.svg';
 	import solana_icon from '../assets/images/icons/solana.svg';
   import xp_icon from '../assets/images/icons/xp.svg';
+	import up_icon from '../assets/images/icons/up.svg';
 	import users_icon from '../assets/images/icons/users.svg';
 
 	// emoji imports
@@ -50,6 +52,7 @@
 		bookmark: bookmark_icon,
 		close: close_icon,
 		discord: discord_icon,
+		down: down_icon,
 		friends: friends_icon,
 		google: google_icon,
 		hashtag: hashtag_icon,
@@ -58,6 +61,7 @@
 		rooms: rooms_icon,
 		solana: solana_icon,
 		xp: xp_icon,
+		up: up_icon,
 		users: users_icon
 	}
 
@@ -2268,6 +2272,7 @@
 													r.id === room_id
 												) || {}).user_instances || []).filter(ru =>
 													(user.relationships || []).some(ur =>
+														(ur.status === `active`) &&
 														(ur.users || []).some(uru =>
 															uru.id === ru.id
 														)
@@ -3872,6 +3877,7 @@
 										{#if friends_user_instances.filter(fui =>
 											fui.user_id &&
 											(user.relationships || []).some(ur =>
+												(ur.status === `active`) &&
 												(ur.users || []).some(uru =>
 													(uru.id !== user.id) &&
 													uru.user &&
@@ -3889,6 +3895,7 @@
 														{friends_user_instances.filter(fui =>
 															fui.user_id &&
 															(user.relationships || []).some(ur =>
+																(ur.status === `active`) &&
 																(ur.users || []).some(uru =>
 																	(uru.id !== user.id) &&
 																	uru.user &&
@@ -3906,6 +3913,7 @@
 													{#each friends_user_instances.filter(fui =>
 														fui.user_id &&
 														(user.relationships || []).some(ur =>
+															(ur.status === `active`) &&
 															(ur.users || []).some(uru =>
 																(uru.id !== user.id) &&
 																uru.user &&
@@ -3923,6 +3931,7 @@
 															friends_user_instances.some(fui =>
 																fui.user_id &&
 																(user.relationships || []).some(ur =>
+																	(ur.status === `active`) &&
 																	(ur.users || []).some(uru =>
 																		(uru.id !== user.id) &&
 																		uru.user &&
@@ -3982,6 +3991,7 @@
 																		{#each friends_user_instances.filter(fui =>
 																			fui.user_id &&
 																			(user.relationships || []).some(ur =>
+																				(ur.status === `active`) &&
 																				(ur.users || []).some(uru =>
 																					(uru.id !== user.id) &&
 																					uru.user &&
@@ -4048,6 +4058,7 @@
 										{/if}
 
 										{#if (user.relationships || []).some(ur =>
+											(ur.status === `active`) &&
 											(ur.users || []).some(uru =>
 												(uru.id !== user.id) &&
 												uru.user &&
@@ -4828,7 +4839,24 @@
 										class="container  stretch--  row--  row-left--  text-yellow--  card  yellow--  p-ps__de-rooms"
 										on:click|stopPropagation={() => {
 											try {
-												rooms_ids_order = (project.room_ids_order || []).slice();
+												// note: when setting rooms_ids_order, remove ids of rooms that no longer exist, and add ids of rooms in the project that haven't been included
+
+												rooms_ids_order = (project.room_ids_order || []).filter(id =>
+													!(project.rooms || []).some(pr =>
+														pr.id === id
+													)
+												).slice() || [];
+
+												for (let room of (project.rooms || [])) {
+													if (!room_ids_order.includes(room.id)) {
+														room_ids_order.push(
+															utils.clone(room.id || ``)
+														);
+													}
+												}
+
+												room_ids_order = room_ids_order;
+
 												view = `rooms`;
 											} catch (e) {
 												console.log(e);
@@ -5488,7 +5516,7 @@
 									<!-- panel -> rooms -> inputs -> bar -->
 									<!-- tba -->
 
-									<!-- panel -> rooms -> inputs -> edit -->
+									<!-- panel -> rooms -> inputs -> canvas -->
 									<!-- tba -->
 								</div>
 							{:else}
@@ -5552,9 +5580,156 @@
 									{#each (project.rooms || []).sort((a, b) =>
 										rooms_ids_order.findIndex(id => id === a.id) -
 										rooms_ids_order.findIndex(id => id === b.id)
-									) as room}
+									) as room, ri}
 										<!-- item -->
-										<!-- tba -->
+										<div
+											class="container  stretch--  col--  text  text-white--  card  white--  p-rm__li-item"
+											class:p-active--={room.id === room_id}
+											on:click|stopPropagation={() => {
+												try {
+													// tba: switch to room, update x_perc and y_perc, then call userInstancePush() 
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											{#if (project.staff_users || []).find(su =>
+												su.id === user.id
+											)}
+												<!-- item -> staff -->
+												<div class="container  col--  col-right--  p-rm__li-it-staff">
+													<!-- item -> staff -> edit -->
+													<div
+														class="container  row--  row-centre--  text  text-white--  card  blue--  p-rm__li-it-st-edit"
+														on:click={() => {
+															try {
+																// tba: set rooms_edit_input
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														<div>Staff</div>
+														<div>Edit</div>
+													</div>
+
+													{#if ri > 0}
+														<!-- item -> staff -> move (up) -->
+														<div
+															class="container  row--  row-centre--  card  white--  p-rm__li-it-st-move"
+															on:click={() => {
+																try {
+																	rooms_ids_order.splice(ri, 1);
+																	rooms_ids_order.splice(ri - 1, 0, (utils.clone(room.id) || ``));
+																	rooms_ids_order = rooms_ids_order;
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															<img
+																src={ICONS.up}
+																alt=""
+																class="svg  svg-white--"
+															/>
+														</div>
+													{/if}
+
+													{#if ri < (project.rooms.length - 1)}
+														<!-- item -> staff -> move (down) -->
+														<div
+															class="container  row--  row-centre--  card  white--  p-rm__li-it-st-move"
+															on:click={() => {
+																try {
+																	rooms_ids_order.splice(ri, 1);
+																	rooms_ids_order.splice(ri + 1, 0, (utils.clone(room.id) || ``));
+																	rooms_ids_order = rooms_ids_order;
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															<img
+																src={ICONS.down}
+																alt=""
+																class="svg  svg-white--"
+															/>
+														</div>
+													{/if}
+												</div>
+											{/if}
+
+											<!-- item -> name -->
+											<div class="p-rm__li-it-name">
+												<img
+													src={ICONS.hashtag}
+													alt=""
+													class="svg  svg-white--"
+												/>
+												<div>{room.name || `n/a`}</div>
+											</div>
+
+											{#if room.description}
+												<!-- item -> description -->
+												<div class="p-rm__li-it-description">
+													{room.description || ``}
+												</div>
+											{/if}
+
+											<!-- item -> row -->
+											<div class="container  stretch--  row--  row-left--  row-wrap--  p-rm__li-it-row">
+												{#if room.id === room_id}
+													<!-- item -> row -> inside -->
+													<div class="container  row--  row-centre--  text  text-white--  card  blue--  p-rm__li-it-ro-inside">
+														<div>Inside</div>
+													</div>
+												{/if}
+
+												<!-- item -> row -> stat (online) -->
+												<div class="container  row--  row-left--  p-rm__li-it-ro-stat">
+													<img
+														src={ICONS.users}
+														alt=""
+														class="svg  svg-white--"
+													/>
+													<div>{(room.user_instances || []).length || 0}</div>
+													<div>online</div>
+												</div>
+
+												{#if (room.user_instances || []).some(rui =>
+													rui.user_id &&
+													(user.relationships || []).some(ur =>
+														(ur.status === `active`) &&
+														(ur.users || []).some(uru =>
+															(uru.id !== user.id) &&
+															(uru.id === rui.user_id)
+														)
+													)
+												)}
+													<!-- item -> row -> stat (friends) -->
+													<div class="container  row--  row-left--  p-rm__li-it-ro-stat  p-faded--">
+														<img
+															src={ICONS.friends}
+															alt=""
+															class="svg  svg-white--"
+														/>
+														<div>
+															{(room.user_instances || []).filter(rui =>
+																rui.user_id &&
+																(user.relationships || []).some(ur =>
+																	(ur.status === `active`) &&
+																	(ur.users || []).some(uru =>
+																		(uru.id !== user.id) &&
+																		(uru.id === rui.user_id)
+																	)
+																)
+															).length || 0}
+														</div>
+														<div>friends</div>
+													</div>
+												{/if}
+											</div>
+										</div>
 									{/each}
 								</div>
 							{/if}
