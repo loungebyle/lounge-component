@@ -4190,36 +4190,6 @@
 								<!-- todo: guide items -->
 							</div>
 						</div>
-					{:else if view === `project_settings`}
-						<!-- panel -> psettings -->
-						<div class="container  stretch--  col--  p-psettings">
-							<!-- panel -> psettings -> [heading] -->
-							<!-- tba -->
-
-							<!-- panel -> psettings -> tabs -->
-							<!-- tba -->
-
-							<!-- panel -> psettings -> inputs -->
-							<div class="container  stretch--  col--  p-ps__main">
-								<!-- panel -> psettings -> inputs -> [input] (name) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> [input] (code) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> [input] (description) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> rooms -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> status -->
-								<!-- tba -->
-							</div>
-						</div>
 					{:else if view === `lounge_settings`}
 						<!-- panel -> lsettings -->
 						<div class="container  stretch--  col--  p-lsettings">
@@ -4255,7 +4225,7 @@
 										}}
 									>
 										<div>
-											{#if jobs.includes(`edit_user`)}
+											{#if jobs.includes(`edit_user_settings`)}
 												<Loader />
 											{:else}
 												Save
@@ -4301,6 +4271,75 @@
 									<!-- panel -> settings -> section (audio) -> item (volume) -> slider -->
 									<!-- tba -->
 								</div>
+							</div>
+						</div>
+					{:else if (view === `project_settings`) && project && project.id}
+						<!-- panel -> psettings -->
+						<div class="container  stretch--  col--  p-psettings">
+							<!-- panel -> psettings -> [heading] -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> psettings -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> psettings -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Project Settings
+									</div>
+
+									<!-- panel -> psettings -> heading -> row -> button (save) -->
+									<div
+										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+										class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}
+										on:click|stopPropagation={() => {
+											try {
+												let job_code = `edit_project_${utils.clone(project.id)}`;
+												let other_job_codes = [];
+													
+												if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+													jobs.push(job_code);
+													jobs = jobs;
+
+													// tba: edit active project as staff member
+
+													jobs = jobs.filter(j => j !== job_code);
+												}
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>
+											{#if jobs.includes(`edit_project_${project.id}`)}
+												<Loader />
+											{:else}
+												Save
+											{/if}
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- panel -> psettings -> tabs -->
+							<!-- tba -->
+
+							<!-- panel -> psettings -> inputs -->
+							<div class="container  stretch--  col--  p-ps__main">
+								<!-- panel -> psettings -> inputs -> [input] (name) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [input] (code) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [input] (description) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> rooms -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> status -->
+								<!-- tba -->
 							</div>
 						</div>
 					{:else if view === `rooms`}
