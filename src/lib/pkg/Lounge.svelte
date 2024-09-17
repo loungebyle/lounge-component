@@ -4384,8 +4384,33 @@
 								</div>
 							</div>
 
-							<!-- panel -> psettings -> tabs -->
-							<!-- tba -->
+							<!-- panel -> psettings -> [tabs] -->
+							<div class="container  stretch--  row--  row-left--  p-tabs">
+								{#each PROJECT_SETTINGS_TABS as TAB}
+									<!-- [tab] -->
+									<div
+										class="container  stretch--  row--  row-centre--  text  card  p-tab"
+										class:grow--={TAB.code === project_settings_tab}
+										class:text-cream-light--={TAB.code === project_settings_tab}
+										class:cream--={TAB.code === project_settings_tab}
+										class:text-white--={TAB.code !== project_settings_tab}
+										class:white--={TAB.code !== project_settings_tab}
+										on:click|stopPropagation={() => {
+											try {
+												if (project_settings_tab !== TAB.code) {
+													project_settings_tab = utils.clone(TAB.code) || ``;
+												}
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>
+											{TAB.name || `n/a`}
+										</div>
+									</div>
+								{/each}
+							</div>
 
 							{#if project_settings_tab === `details`}
 								<!-- panel -> psettings -> details -->
