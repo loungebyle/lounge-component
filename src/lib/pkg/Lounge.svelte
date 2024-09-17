@@ -274,7 +274,25 @@
 	let editing_room;
 
 	// vars (project_settings)
-	// todo
+
+	const PROJECT_SETTINGS_TABS = [
+		{
+			code: `details`,
+			name: `Details`
+		},
+		{
+			code: `staff`,
+			name: `Staff`
+		},
+		{
+			code: `component`,
+			name: `Component`
+		}
+	];
+	
+	let project_settings_tab = (PROJECT_SETTINGS_TABS.find(T =>
+		T.code === `details`
+	) || {}).code || (PROJECT_SETTINGS_TABS[0] ||{}).code || ``; // based on PROJECT_SETTINGS_TABS
 
 	// vars (shop)
 	
@@ -2632,7 +2650,10 @@
 							</div>
 
 							<!-- panel -> account -> inputs -->
-							<div class="container  stretch--  col--  p-ac__inputs">
+							<div
+								class="container  stretch--  col--  p-ac__inputs"
+								class:disabled={[`edit_user`].some(j => jobs.includes(j))}
+							>
 								<!-- panel -> account -> inputs -> [input] (name) -->
 								<Input
 									bind:value={account_input.name}
@@ -4235,41 +4256,86 @@
 								</div>
 							</div>
 
-							<!-- panel -> lsettings -> section (display) -->
-							<div class="container  stretch--  col--  p-ls__section  p-ls__display">
-								<!-- panel -> settings -> section (display) -> heading -->
-								<div class="p-ls__se-heading">Display</div> 
+							<!-- panel -> lsettings -> sections -->
+							<div
+								class="container  stretch--  col--  p-ls__sections"
+								class:disabled={[`edit_user`].some(j => jobs.includes(j))}	
+							>	
+								<!-- panel -> lsettings -> section (display) -->
+								<div class="container  stretch--  col--  p-ls__section  p-ls__display">
+									<!-- panel -> lsettings -> section (display) -> heading -->
+									<div class="p-ls__se-heading">Display</div> 
 
-								<!-- panel -> settings -> section (display) -> item (graphics) -->
-								<div class="container  stretch--  row--  row-left--  p-ls__se-item  p-ls__di-graphics">
-									<!-- panel -> settings -> section (display) -> item (graphics) -> label -->
-									<div class="container  grow--  row--  row-left--  p-ls__se-it-label">
-										Graphics quality
-									</div>
+									<!-- panel -> lsettings -> section (display) -> item (graphics) -->
+									<div class="container  stretch--  row--  row-left--  p-ls__se-item  p-ls__di-graphics">
+										<!-- panel -> lsettings -> section (display) -> item (graphics) -> label -->
+										<div class="container  grow--  row--  row-left--  p-ls__se-it-label">
+											Graphics quality
+										</div>
 
-									<!-- panel -> settings -> section (dsplay) -> item -> options -->
-									<div class="container  row--  row-right--  p-ls__di-gr-options">
-										{#each LOUNGE_CONFIG_GRAPHICS_QUALITY_TYPES as TYPE}
-											<!-- tba -->
-										{/each}
+										<!-- panel -> lsettings -> section (display) -> item (graphics) -> options -->
+										<div class="container  row--  row-right--  p-ls__di-gr-options">
+											{#each LOUNGE_CONFIG_GRAPHICS_QUALITY_TYPES as TYPE}
+												<!-- option -->
+												<div
+													class="container  stretch--  row--  row-centre--  text  card  p-ls__di-gr-option"
+													class:text-cream-light--={TYPE.code === lounge_settings_input.graphics_quality}
+													class:cream--={TYPE.code === lounge_settings_input.graphics_quality}
+													class:text-white--={TYPE.code !== lounge_settings_input.graphics_quality}
+													class:white--={TYPE.code !== lounge_settings_input.graphics_quality}
+													on:click={() => {
+														try {
+															if (TYPE.code !== lounge_settings_input.graphics_quality) {
+																lounge_settings_input.graphics_quality = utils.clone(TYPE.code) || ``;
+															}
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<div>{TYPE.name || `n/a`}</div>
+												</div>
+											{/each}
+										</div>
 									</div>
 								</div>
-							</div>
-							
-							<!-- panel -> lsettings -> section (audio) -->
-							<div class="container  stretch--  col--  p-ls__section  p-ls__audio">
-								<!-- panel -> settings -> section (audio) -> heading -->
-								<div class="p-ls__se-heading">Audio</div>
+								
+								<!-- panel -> lsettings -> section (audio) -->
+								<div class="container  stretch--  col--  p-ls__section  p-ls__audio">
+									<!-- panel -> lsettings -> section (audio) -> heading -->
+									<div class="p-ls__se-heading">Audio</div>
 
-								<!-- panel -> settings -> section (audio) -> item (volume) -->
-								<div class="container  stretch--  row--  row-left--  p-ls__se-item  p-ls__au-volume">
-									<!-- panel -> settings -> section (audio) -> item (volume) -> label -->
-									<div class="container  grow--  row--  row-left--  p-ls__se-it-label">
-										Graphics quality
+									<!-- panel -> lsettings -> section (audio) -> item (volume) -->
+									<div class="container  stretch--  row--  row-left--  p-ls__se-item  p-ls__au-volume">
+										<!-- panel -> lsettings -> section (audio) -> item (volume) -> label -->
+										<div class="container  grow--  row--  row-left--  p-ls__se-it-label">
+											Graphics quality
+										</div>
+
+										<!-- panel -> lsettings -> section (audio) -> item (volume) -> slider -->
+										<div
+											class="container  row--  row-left--  card  white--  p-ls__au-vo-slider"
+											on:click={() => {
+												try {
+													// tba: set volume based on x click position on slider
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div
+												class="container  row--  row-centre--  card  cream--"
+												draggable="true"
+												on:drag={() => {
+													try {
+														// tba: https://www.w3schools.com/jsreF/tryit.asp?filename=tryjsref_ondrag
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											/>
+										</div>
 									</div>
-
-									<!-- panel -> settings -> section (audio) -> item (volume) -> slider -->
-									<!-- tba -->
 								</div>
 							</div>
 						</div>
@@ -4321,26 +4387,49 @@
 							<!-- panel -> psettings -> tabs -->
 							<!-- tba -->
 
-							<!-- panel -> psettings -> inputs -->
-							<div class="container  stretch--  col--  p-ps__main">
-								<!-- panel -> psettings -> inputs -> [input] (name) -->
-								<!-- tba -->
+							{#if project_settings_tab === `details`}
+								<!-- panel -> psettings -> details -->
+								<div class="container  stretch--  col--  p-ps__details">
+									<!-- panel -> psettings -> details -> [input] (name) -->
+									<!-- tba -->
 
-								<!-- panel -> psettings -> inputs -> [input] (code) -->
-								<!-- tba -->
+									<!-- panel -> psettings -> details -> [input] (code) -->
+									<!-- tba -->
 
-								<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
-								<!-- tba -->
+									<!-- panel -> psettings -> details -> [uploader] (icon image) -->
+									<!-- tba -->
 
-								<!-- panel -> psettings -> inputs -> [input] (description) -->
-								<!-- tba -->
+									<!-- panel -> psettings -> details -> [input] (description) -->
+									<!-- tba -->
 
-								<!-- panel -> psettings -> inputs -> rooms -->
-								<!-- tba -->
+									<!-- panel -> psettings -> details -> rooms -->
+									<!-- tba -->
 
-								<!-- panel -> psettings -> inputs -> status -->
-								<!-- tba -->
-							</div>
+									<!-- panel -> psettings -> details -> status -->
+									<!-- tba -->
+								</div>
+							{:else if project_settings_tab === `staff`}
+								<!-- panel -> psettings -> staff -->
+								<div class="container  stretch--  col--  p-ps__staff">
+									<!-- panel -> psettings -> staff -> list -->
+									<!-- tba -->
+								</div>
+							{:else if project_settings_tab === `component`}
+								<!-- panel -> psettings -> component -->
+								<div class="container  stretch--  col--  p-ps__component">
+									<!-- panel -> psettings -> component -> key -->
+									<!-- tba -->
+
+									<!-- panel -> psettings -> component -> urls (origin) -->
+									<!-- tba -->
+
+									<!-- panel -> psettings -> component -> urls (excluded) -->
+									<!-- tba -->
+
+									<!-- panel -> psettings -> component -> position -->
+									<!-- tba -->
+								</div>
+							{/if}
 						</div>
 					{:else if view === `rooms`}
 						<!-- panel -> rooms -->
