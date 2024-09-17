@@ -314,6 +314,21 @@
 			name: `Bottom-right`
 		}
 	];
+
+	const COMPONENT_URL_TYPES = [
+		{
+			code: `origin`,
+			heading_hero: `Origin URLs`,
+			heading_description: `URLs that may use the Lounge.so component or script using your Project's API key.`,
+			input_placeholder: `eg. https://lounge.so`
+		},
+		{
+			code: `excluded`,
+			heading_hero: `Excluded URLs`,
+			heading_description: `URLs that you specifically want to avoid using the Lounge.so component or script on.`,
+			input_placeholder: `eg. https://lounge.so/specific-page`
+		}
+	];
 	
 	let project_settings_tab = (PROJECT_SETTINGS_TABS.find(T =>
 		T.code === `details`
@@ -5130,11 +5145,66 @@ utils.</script>
 										{/each}
 									</div>
 
-									<!-- panel -> psettings -> component -> urls (origin) -->
-									<!-- tba -->
+									{#each COMPONENT_URL_TYPES as TYPE}
+										<!-- panel -> psettings -> component -> urls (origin/excluded) -->
+										<div class="container  stretch--  col--  text  text-yellow--  card  yellow--  p-ps__co-urls">
+											<!-- panel -> psettings -> component -> urls (origin/excluded) -> heading -->
+											<div class="p-ps__co-ur-heading">
+												{TYPE.heading_hero || `n/a`}
+												<span class="text  text-white--">
+													{TYPE.heading_description || ``}
+												</span>
+											</div>
 
-									<!-- panel -> psettings -> component -> urls (excluded) -->
-									<!-- tba -->
+											<!-- panel -> psettings -> component -> urls (origin/excluded) -> list -->
+											<div class="container  stretch--  col--  p-ps__co-ur-list">
+												{#each (project_settings_input[`component_${TYPE.code}_urls`] || []) as url, ui}
+													<!-- input -->
+													<div class="container  stretch--  row--  row-left--  p-ps__co-ur-li-input">
+														<!-- input -> textbox -->
+														<input
+															bind:value={project_settings_input[`component_${TYPE.code}_urls`][ui]}
+															type="text"
+															class="container  stretch--  row--  row-left--  text  text-white--  p-ps__co-ur-li-in-textbox"
+														/>
+
+														<!-- input -> del -->
+														<div
+															class="container  row--  row-centre--  text  text-white--  card  black--  p-ps__co-ur-in-del"
+															on:click|stopPropagation={() => {
+																try {
+																	project_settings_input[`component_${TYPE.code}_urls`].splice(ui, 1);
+
+																	project_settings_input[`component_${TYPE.code}_urls`] = project_settings_input[`component_${TYPE.code}_urls`];
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															<img
+																src={ICONS.close}
+																alt=""
+																class="svg  svg-white--"
+															/>
+														</div>
+													</div>
+												{/each}
+												
+												<!-- panel -> psettings -> component -> urls (origin/excluded) -> list -> add -->
+												<div
+													class="container  row--  row-centre--  text  text-green--  card  green--  p-ps__co-ur-li-add"
+													class:disabled={(project_settings_input[`component_${TYPE.code}_urls`] || []).length >= 50}
+												>
+													<div>Add</div>
+													<img
+														src={ICONS.add}
+														alt=""
+														class="svg  svg-green--"
+													/>
+												</div>
+											</div>
+										</div>
+									{/each}
 								</div>
 							{/if}
 						</div>
