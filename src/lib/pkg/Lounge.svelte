@@ -289,10 +289,46 @@
 			name: `Component`
 		}
 	];
+
+	const PROJECT_SETTINGS_COMPONENT_POSITION_OPTIONS = [
+		{
+			y_position: `top`,
+			x_position: `left`,
+			name: `Top-left`
+		},
+		{
+			y_position: `top`,
+			x_position: `right`,
+			name: `Top-right`
+		},
+		{
+			y_position: `bottom`,
+			x_position: `left`,
+			name: `Bottom-left`
+		},
+		{
+			y_position: `bottom`,
+			x_position: `right`,
+			name: `Bottom-right`
+		}
+	];
 	
 	let project_settings_tab = (PROJECT_SETTINGS_TABS.find(T =>
 		T.code === `details`
 	) || {}).code || (PROJECT_SETTINGS_TABS[0] ||{}).code || ``; // based on PROJECT_SETTINGS_TABS
+	let project_settings_input = {
+		name: ``,
+		code: ``,
+		icon_image_url: ``,
+		description: ``,
+		staff_users: [],
+		component_origin_urls: [],
+		component_excluded_urls: [],
+		component_x_position: `right`,
+		component_x_offset_px: 0,
+		component_y_position: `bottom`,
+		component_y_offset_px: 0,
+	}
 
 	// vars (shop)
 	
@@ -4414,34 +4450,124 @@
 
 							{#if project_settings_tab === `details`}
 								<!-- panel -> psettings -> details -->
-								<div class="container  stretch--  col--  p-ps__details">
+								<div
+									class="container  stretch--  col--  p-ps__details"
+									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}	
+								>
 									<!-- panel -> psettings -> details -> [input] (name) -->
-									<!-- tba -->
+									<Input
+										bind:value={project_settings_input.name}
+										type="text"
+										label="Name"
+										placeholder="eg. Suave"
+										events={{}}
+									/>
 
 									<!-- panel -> psettings -> details -> [input] (code) -->
-									<!-- tba -->
+									<Input
+										bind:value={project_settings_input.code}
+										type="text"
+										label="Handle"
+										placeholder="eg. suave"
+										events={{}}
+									/>
 
 									<!-- panel -> psettings -> details -> [uploader] (icon image) -->
 									<!-- tba -->
 
 									<!-- panel -> psettings -> details -> [input] (description) -->
-									<!-- tba -->
+									<Input
+										bind:value={project_settings_input.name}
+										type="textarea"
+										label="Desc"
+										placeholder="eg. About this Project..."
+										events={{}}
+									/>
+
+									<!-- panel -> psettings -> skin -->
+									<!-- todo: "contact lefrost to set a skin for this project" -->
 
 									<!-- panel -> psettings -> details -> rooms -->
-									<!-- tba -->
+									<div
+										class="container  stretch--  row--  row-left--  text-yellow--  card  yellow--  p-ps__de-rooms"
+										on:click={() => {
+											try {
+												view = `rooms`;
+											} catch (e) {
+												console.log(e);
+											}
+										}}
+									>
+										<div>Edit Rooms</div>
+										<div class="text  text-white--">
+											separately in the Rooms page.
+										</div>
+									</div>
 
 									<!-- panel -> psettings -> details -> status -->
-									<!-- tba -->
+									<div
+										class="container  stretch--  col--  text  card  p-ps__de-status"
+										class:text-mint-light--={project.status === `active`}
+										class:text-red-light--={project.status === `inactive`}
+									>
+										<!-- panel -> psettings -> details -> status -> heading -->
+										<div class="p-ps__de-st-heading">
+											<div>Status</div>
+											<div class="text  text-white--">
+												{#if project.status === `active`}
+													Active
+												{:else if project.status === `inactive`}
+													Inactive
+												{:else}
+													Unknown
+												{/if}
+											</div>
+										</div>
+
+										<!-- panel -> psettings -> details -> status -> description -->
+										<div class="text  text-white--  p-ps__de-st-description">
+											{#if project.type === `paid`}
+												This Project was bought with "1x Project".
+											{:else if project.type === `pro`}
+												This Project was created with a Lounge.so Pro subscription.
+											{:else if project.type === `suaveseals`}
+												This Project was created using a Suave Seal NFT.
+											{:else if project.type === `bullishtsuyoneko`}
+												This Project was created using a Bullish Tsuyoneko NFT.
+											{:else if project.type === `free`}
+												This Project is free and limited-access.
+											{:else}
+												This Project was created through unknown means.
+											{/if}
+										</div>
+
+										{#if project.status === `inactive`}
+											<!-- panel -> psettings -> details -> status -> merge -->
+											<div class="container  stretch--  row--  row-left--  p-ps__de-st-merge">
+												<!-- panel -> psettings -> details -> status -> merge -> label -->
+												<!-- tba -->
+
+												<!-- panel -> psettings -> details -> status -> merge -> row -->
+												<!-- tba -->
+											</div>
+										{/if}
+									</div>
 								</div>
 							{:else if project_settings_tab === `staff`}
 								<!-- panel -> psettings -> staff -->
-								<div class="container  stretch--  col--  p-ps__staff">
+								<div
+									class="container  stretch--  col--  p-ps__staff"
+									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}	
+								>
 									<!-- panel -> psettings -> staff -> list -->
 									<!-- tba -->
 								</div>
 							{:else if project_settings_tab === `component`}
 								<!-- panel -> psettings -> component -->
-								<div class="container  stretch--  col--  p-ps__component">
+								<div
+									class="container  stretch--  col--  p-ps__component"
+									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}	
+								>
 									<!-- panel -> psettings -> component -> key -->
 									<!-- tba -->
 
@@ -4493,7 +4619,10 @@
 							{/if}
 						</div>
 					{:else if view === `nft_cxs`}
-						<!-- tba -->
+						<!-- panel -> cxs -->
+						<div class="container  stretch--  col--  p-cxs">
+							<!-- tba -->
+						</div>
 					{/if}
 				</div>
 			{/if}
