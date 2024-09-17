@@ -330,6 +330,7 @@
 		component_y_position: `bottom`,
 		component_y_offset_px: 0,
 	}
+	let project_settings_merge_handle_input = ``;
 
 	// vars (shop)
 	
@@ -4393,11 +4394,11 @@
 									<!-- panel -> psettings -> heading -> row -> button (save) -->
 									<div
 										class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
-										class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}
+										class:disabled={[`edit_project_${project.id}`, `merge_project_${project.id}`].some(j => jobs.includes(j))}
 										on:click|stopPropagation={() => {
 											try {
 												let job_code = `edit_project_${utils.clone(project.id)}`;
-												let other_job_codes = [];
+												let other_job_codes = [`merge_project_${project.id}`];
 													
 												if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
 													jobs.push(job_code);
@@ -4455,7 +4456,7 @@
 								<!-- panel -> psettings -> details -->
 								<div
 									class="container  stretch--  col--  p-ps__details"
-									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}	
+									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}
 								>
 									<!-- panel -> psettings -> details -> [input] (name) -->
 									<Input
@@ -4566,10 +4567,46 @@
 												<!-- panel -> psettings -> details -> status -> merge -> row -->
 												<div class="container  stretch--  row--  row-left--  p-ps__de-st-me-row">
 													<!-- panel -> psettings -> details -> status -> merge -> row -> input -->
-													<!-- tba -->
+													<input
+														bind:value={project_settings_merge_handle_input}
+														type="text"
+														placeholder="Search by handle..."
+														class="container  grow--  row--  row-left--  text  text-white--  p-ps__de-st-me-ro-input"
+													/>
 
 													<!-- paneal -> psettings -> details -> status -> merge -> row -> button -->
-													<!-- tba -->
+													<div
+														class="container  row--  row-centre--  text  text-cream-light--  card  cream--  p-ps__de-st-me-ro-button"
+														class:disabled={[`edit_project_${utils.clone(project.id)}`, `merge_project_${project.id}`].some(j => jobs.includes(j))}
+														on:click|stopPropagation={() => {
+															try {
+																let job_code = `merge_project_${project.id}`;
+																let other_job_codes = [`edit_project_${utils.clone(project.id)}`];
+																	
+																if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+																	jobs.push(job_code);
+																	jobs = jobs;
+				
+																	// tba: merge project
+				
+																	jobs = jobs.filter(j => j !== job_code);
+																}
+															} catch (e) {
+																console.log(e);
+															}
+														}}
+													>
+														{#if [`merge_project_${project.id}`].some(j => jobs.includes(j))}
+															<Loader />
+														{:else}
+															<div>Merge</div>
+															<img
+																src={ICONS.add}
+																alt=""
+																class="svg  svg-cream-light--"
+															/>
+														{/if}
+													</div>
 												</div>
 											</div>
 										{/if}
@@ -4582,7 +4619,18 @@
 									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}	
 								>
 									<!-- panel -> psettings -> staff -> list -->
-									<!-- tba -->
+									<div class="container  stretch--  col--  p-ps__st-list">
+										{#if (project_settings_input.staff_users || []).length === 0}
+											<!-- panel -> psettings -> staff -> list -> message (none) -->
+											<div class="p-ps__st-li-message">
+												No staff users to display.
+											</div>
+										{/if}
+
+										{#each (project_settings_input.staff_users || []) as staff_user}
+											<!-- tba -->
+										{/each}
+									</div>
 								</div>
 							{:else if project_settings_tab === `component`}
 								<!-- panel -> psettings -> component -->
