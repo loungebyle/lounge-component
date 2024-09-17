@@ -4983,7 +4983,7 @@ utils.</script>
 
 											<!-- panel -> psettings -> component -> key -> button (regenerate) -->
 											<div
-												class="container  stretch--  row--  row-centre--  text  text-cream-light--  card  cream--  p-ps__co-ke-button"
+												class="container  stretch--  row--  row-centre--  text  text-cream-light--  card  cream--  p-ps__co-ke-button  p-faded--"
 												class:disabled={[`regenerate_project_api_key`].some(j => jobs.includes(j))}
 												on:click|stopPropagation={async () => {
 													try {
@@ -5015,7 +5015,120 @@ utils.</script>
 									</div>
 
 									<!-- panel -> psettings -> component -> position -->
-									<!-- tba -->
+									<div class="container  stretch--  col--  col-centre--  col-middle--  text  text-green--  card  green--  p-ps__co-position">
+										<!-- panel -> psettings -> component -> position -> main -->
+										<div class="container  stretch--  col--  p-ps__co-po-main">
+											<!-- panel -> psettings -> component -> position -> main -> heading -->
+											<div class="container  stretch--  row--  row-left--  row-bottom--  p-ps__co-po-ma-heading">
+												<div>Position</div>
+												<div class="text  text-white--">
+													of your Lounge.so<br />
+													component
+												</div>
+											</div>
+
+											<!-- panel -> psettings -> component -> position -> main -> row -->
+											<div class="container  stretch--  row--  row-left--  row-wrap--  p-ps__co-po-ma-row">
+												{#each [`x`, `y`] as direction}
+													<!-- panel -> psettings -> component -> position -> main -> row -> input (x/y offset) -->
+													<div class="container  stretch--  row--  row-left--  text  text-white--  p-ps__co-po-ma-ro-input">
+														<!-- panel -> psettings -> component -> position -> main -> row -> input (x/y offset) -> textbox -->
+														<input
+															bind:value={project_settings_input[`component_${direction}_offset_px`]}
+															type="text"
+															class="container  stretch--  row--  row-left--  text  text-green--  card  white--  p-ps__co-po-ma-ro-in-textbox"
+														/>
+
+														<!-- panel -> psettings -> component -> position -> main -> row -> input (x/y offset) -> label -->
+														<div class="p-ps__co-po-ma-ro-in-label">
+															{direction || `n/a`} offset
+														</div>
+
+														<!-- panel -> psettings -> component -> position -> main -> row -> input (x/y offset) -> px -->
+														<div class="p-ps__co-po-ma-ro-in-px">
+															in px
+														</div>
+													</div>
+												{/each}
+
+												<!-- panel -> psettings -> component -> position -> main -> row -> reset -->
+												<div
+													class="container  stretch--  row--  row-centre--  row-middle--  card  yellow--"
+													on:click|stopPropagation={() => {
+														try {
+															project_settings_input.component_x_offset_px = 0;
+															project_settings_input.component_y_offset_px = 0;
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<img
+														src={ICONS.reset}
+														alt=""
+														class="svg  svg-yellow--"
+													/>
+												</div>
+											</div>
+										</div>
+
+										{#each PROJECT_SETTINGS_COMPONENT_POSITION_OPTIONS as OPTION}
+											<!-- option -->
+											<div
+												class="container  row--  row-centre--  text  card  p-ps__co-po-option"
+												class:text-green--={(
+													(OPTION.x_position === project_settings_input.component_x_position) &&
+													(OPTION.y_position === project_settings_input.component_y_position)
+												)}
+												class:green--={(
+													(OPTION.x_position === project_settings_input.component_x_position) &&
+													(OPTION.y_position === project_settings_input.component_y_position)
+												)}
+												class:text-white--={!(
+													(OPTION.x_position === project_settings_input.component_x_position) &&
+													(OPTION.y_position === project_settings_input.component_y_position)
+												)}
+												class:white--={!(
+													(OPTION.x_position === project_settings_input.component_x_position) &&
+													(OPTION.y_position === project_settings_input.component_y_position)
+												)}
+												on:click={() => {
+													try {
+														if (!(
+															(OPTION.x_position === project_settings_input.component_x_position) &&
+															(OPTION.y_position === project_settings_input.component_y_position)
+														)) {
+															project_settings_input.component_x_position = utils.clone(OPTION.x_position) || ``;
+
+															project_settings_input.component_y_position = utils.clone(OPTION.y_position) || ``;
+														}
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<!-- option -> name -->
+												<div class="p-ps__co-po-op-name">
+													{OPTION.name || `n/a`}
+												</div>
+
+												{#if 
+													(OPTION.x_position === project_settings_input.component_x_position) &&
+													(OPTION.y_position === project_settings_input.component_y_position)
+												}
+													{#each [`x`, `y`] as direction}
+														{#if project_settings_input[`component_${direction}_offset_px`] !== 0}
+															<!-- option -> label (x/y offset) -->
+															<div class="p-ps__co-po-op-label  p-{direction}--">
+																{(project_settings_input[`component_${direction}_offset_px`] > 0) ? `+` : ``}{project_settings_input[`component_${direction}_offset_px`] || 0}
+																offset
+															</div>
+														{/if}
+													{/each}
+												{/if}
+											</div>
+										{/each}
+									</div>
 
 									<!-- panel -> psettings -> component -> urls (origin) -->
 									<!-- tba -->
