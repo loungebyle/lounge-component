@@ -78,6 +78,7 @@
 
 	let is_active = false;
 	let socket;
+	let load_error = ``;
 	let data;
 	let user;
 	let project;
@@ -462,10 +463,6 @@
 			jobs.push(`get_data`);
 			jobs = jobs;
 
-			if (!socket) {
-				await initSocket();
-			}
-
 			user = await api.getCurrentUser() || null;
 
 			if (!(user && user.id)) {
@@ -483,7 +480,9 @@
 					}
 				}) || null;
 
-				if (data) {
+				if (data && !data.error) {
+					load_error = ``;
+					
 					user = data.user || null;
 
 					// tba: parse lounge_settings_input from user.settings
@@ -497,9 +496,17 @@
 
 					LOUNGE_AVATAR_SKINS = data.LOUNGE_AVATAR_SKINS || [];
 					Object.freeze(LOUNGE_AVATAR_SKINS);
+					
+					if (!socket) {
+						await initSocket();
+					}
+					
+					userInstancePush();
+				} else if (data && data.error) {
+					load_error = data.error || `Unknown error`;
+				} else {
+					load_error = `Unknown error`;
 				}
-
-				userInstancePush();
 			}
 
 			jobs = jobs.filter(j => j !== `get_data`);
@@ -1744,8 +1751,15 @@ utils.</script>
 						<!-- tba: logged-out view -->
 					{:else if jobs.includes(`get_data`)}
 						<Loader />
+					{:else if load_error}
+						<div class="text  text-red--  p-error">
+							{load_error || `Unknown error`}.
+						</div>
 					{:else if !(project && project.id)}
-						<!-- tba: error -->
+						<!-- panel -> error (no project) -->
+						<div class="text  text-red--  p-error">
+							Project not found.
+						</div>
 					{:else if view === `main`}
 						<!-- panel -> main -->
 						<div class="container  stretch--  col--  p-main">
@@ -2081,7 +2095,7 @@ utils.</script>
 													user_avatar_inputs.project = utils.clone((user.avatars || []).find(ua =>
 														(ua.type === `project`) &&
 														ua.project_id &&
-														((project || {}).id === ua.project_id)
+														(project.id === ua.project_id)
 													)) || null;
 												}
 
@@ -2274,7 +2288,7 @@ utils.</script>
 												(
 													(TAB.code === `project`) &&
 													user_avatar_inputs[TAB.code].project_id &&
-													(user_avatar_inputs[TAB.code].project_id === (project || {}).id)
+													(user_avatar_inputs[TAB.code].project_id === project.id)
 												)
 											)
 										}
@@ -2302,7 +2316,7 @@ utils.</script>
 										<div class="container  grow--  col--  p-av__pr-text">
 											<div>
 												{#if TAB.code === `project`}
-													{(project || {}).name || `n/a`}
+													{project.name || `n/a`}
 												{:else if TAB.code === `default`}
 													Default
 												{:else}
@@ -2322,7 +2336,7 @@ utils.</script>
 									(
 										(avatar_profile_tab === `project`) &&
 										user_avatar_inputs[avatar_profile_tab].project_id &&
-										(user_avatar_inputs[avatar_profile_tab].project_id === (project || {}).id)
+										(user_avatar_inputs[avatar_profile_tab].project_id === project.id)
 									)
 								)
 							}
@@ -2394,7 +2408,7 @@ utils.</script>
 											<div class="container  stretch--  co--  p-av__pr-delete">
 												<!-- panel -> avatar -> preview (project) -> delete -> text -->
 												<div class="p-av__pr-de-text">
-													This avatar profile is only applied inside {(project || {}).name || `n/a`}.
+													This avatar profile is only applied inside {project.name || `n/a`}.
 												</div>
 
 												<!-- panel -> avatar -> preview (project) -> delete -> button -->
@@ -3517,7 +3531,7 @@ utils.</script>
 												/>
 
 												{utils.shortenString({
-													string: (((project || {}).rooms || []).find(r =>
+													string: ((project.rooms || []).find(r =>
 														r.id === room_id
 													) || {}).name || ``,
 													length: 15
@@ -4462,7 +4476,7 @@ utils.</script>
 								</div>
 							</div>
 						</div>
-					{:else if (view === `project_settings`) && project && project.id}
+					{:else if view === `project_settings`}
 						<!-- panel -> psettings -->
 						<div class="container  stretch--  col--  p-psettings">
 							<!-- panel -> psettings -> [heading] -->
