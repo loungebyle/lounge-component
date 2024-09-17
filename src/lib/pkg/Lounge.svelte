@@ -109,7 +109,37 @@
 
 	// vars (login)
 	
-	let access_token_string = ``;
+	let login_search_input = ``;
+	let is_login_auth_matching_user_searched = false;
+	let login_auth_matching_user = null;
+	let login_auth_seconds_left = null;
+	let login_access_token_string = ``;
+
+	async function execLoginAuthSeconds() {
+		try {
+			await utils.wait(1);
+
+			if (login_auth_seconds_left > 0) {
+				login_auth_seconds_left -= 1;
+				execLoginAuthSeconds();
+			}
+		} catch (e) {
+			console.log(e);
+			login_auth_seconds_left = 0;
+		}
+	}
+
+	function resetLoginVars() {
+		try {
+			login_search_input = ``;
+			is_login_auth_matching_user_searched = false;
+			login_auth_matching_user = null;
+			login_auth_seconds_left = null;
+			login_access_token_string = ``;
+		} catch (e) {
+			console.log(e);
+		}
+	}
 
 	// vars (avatar)
 
@@ -1066,11 +1096,13 @@
 								// check if inbound access token string matches the `access_token_string` var previously generated during login ui flow in this client --- if yes, then set the `user` var to the inbound user obj, and call the getData mount function again
 								
 								if (
-									access_token_string &&
-									(inbound_access_token_string === access_token_string)
+									login_access_token_string &&
+									(inbound_access_token_string === login_access_token_string) &&
+									(login_auth_seconds_left > 0)
 								) {
 									user = utils.clone(logged_in_user);
 									getData();
+									resetLoginVars();
 								}
 
 								break;
@@ -1292,7 +1324,7 @@
 			console.log(e);
 		}
 	}
-utils.</script>
+</script>
 
 <svelte:window on:keydown|preventDefault={(e) => {
 	try {
@@ -1748,7 +1780,168 @@ utils.</script>
 					</div>
 			
 					{#if !(user && user.id)}
-						<!-- tba: logged-out view -->
+						<!-- login -->
+						<div class="container  stretch--  col--  p-login">
+							{#if login_auth_seconds_left >= 0}
+								<!-- login -> auth (pending) -->
+								<div class="container  stretch--  col--  text  text-cream-light--  p-lo__auth">
+									<!-- login -> auth (pending) -> text -->
+									<div class="p-lo__au-text">
+										Pending login, authorise in Lounge.so/auth. Session expires in 60 seconds. Do not close this page until login is complete.
+									</div>
+
+									<!-- login -> auth (pending) -> buttons -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-lo__au-buttons">
+										<!-- login -> auth (pending) -> button (reopen) -->
+										<div
+											class="container  grow--  stretch--  row--  row-centre--  text  text-cream-light--  card  cream--  p-lo__au-button"
+											on:click|stopPropagation={() => {
+												try {
+													resetLoginVars();
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>Re-open Lounge.so/auth</div>
+											<img
+												src={ICONS.right}
+												alt=""
+												class="svg  svg-cream-light--"
+											/>
+										</div>
+
+										<!-- login -> auth (pending) -> button (restart) -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-lo__au-button"
+											on:click|stopPropagation={() => {
+												try {
+													resetLoginVars();
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>Restart</div>
+										</div>
+									</div>
+								</div>
+							{:else if login_auth_seconds_left === 0}
+								<!-- login -> auth (expired) -->
+								<div class="container  stretch--  col--  text  text-red-light--  p-lo__auth">
+									<!-- login -> auth (expired) -> text -->
+									<div class="p-lo__au-text">
+										Login authorisation period has expired. Restart the login process.
+									</div>
+
+									<!-- login -> auth (expired) -> buttons -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-lo__au-buttons">
+										<!-- login -> auth (expired) -> button (restart) -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  text-red-light--  card  red--  p-lo__au-button"
+											on:click|stopPropagation={() => {
+												try {
+													resetLoginVars();
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>Restart</div>
+										</div>
+									</div>
+								</div>
+							{:else}
+								<!-- login -> input -->
+								<div class="container  stretch--  col--  p-lo__input">
+									<!-- login -> input -> row -->
+									<div class="container  stretch--  row--  row-left--  p-lo__in-row">
+										<!-- login -> input -> row -> textbox -->
+										<input
+											bind:value={login_search_input}
+											type="text"
+											placeholder="Username, email, or wallet..."
+											class="container  grow--  stretch--  row--  row-left--  text  text-white--  card  white--  p-lo__in-ro-textbox"
+										/>
+
+										<!-- login -> input -> row -> submit -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-lo__in-ro-submit"
+											class:disabled={[`search_login_user`].some(j => jobs.includes(j))}
+											on:click|stopPropagation={async () => {
+												try {
+													let job_code = `search_login_user`;
+													let other_job_codes = [];
+													
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: search login matching user; begin auth process if found, call execLoginAuthSeconds()
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`search_login_user`)}
+													<Loader />
+												{:else}
+													<img
+														src={ICONS.right}
+														alt=""
+														class="svg  svg-green--"
+													/>
+												{/if}
+											</div>
+										</div>
+									</div>
+
+									<!-- login -> input -> note -->
+									<div class="text  text-green--  p-lo__in-note">
+										You will be redirected to the Lounge.so/auth page, where you will need to authorise this login.
+									</div>
+								</div>
+
+								{#if
+									is_login_auth_matching_user_searched &&
+									!(login_auth_matching_user && login_auth_matching_user.id)
+								}
+									<!-- login -> none -->
+									<div class="container  stretch--  col--  text  text-red-light--  p-lo__none">
+										<!-- login -> none -> text -->
+										<div class="p-lo__no-text">
+											No Lounge account found.
+										</div>
+
+										<!-- login -> none -> button -->
+										<a
+											href="https://lounge.so/login"
+											target="_blank"
+											rel="noreferrer"
+											class="container  row--  row-centre--  text  text-red-light--  card  red--  p-lo__no-button"
+											on:click|stopPropagation={() => {
+												try {
+													is_login_auth_matching_user_searched = false;
+													login_auth_matching_user = null;
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>Create a new Lounge account</div>
+											<img
+												src={ICONS.right}
+												alt=""
+											/>
+										</a>
+									</div>
+								{/if}
+							{/if}
+						</div>
 					{:else if jobs.includes(`get_data`)}
 						<Loader />
 					{:else if load_error}
