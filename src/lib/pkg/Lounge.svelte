@@ -5107,7 +5107,7 @@ utils.</script>
 													(OPTION.x_position === project_settings_input.component_x_position) &&
 													(OPTION.y_position === project_settings_input.component_y_position)
 												)}
-												on:click={() => {
+												on:click|stopPropagation={() => {
 													try {
 														if (!(
 															(OPTION.x_position === project_settings_input.component_x_position) &&
