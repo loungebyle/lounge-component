@@ -25,6 +25,12 @@
   import xp_icon from '../assets/images/icons/xp.svg';
 	import users_icon from '../assets/images/icons/users.svg';
 
+	// image imports
+
+	import bullishtsuyoneko_shop_image from '../assets/images/shop/bullishtsuyoneko.png';
+	import suaveseals_shop_image from '../assets/images/shop/suaveseals.png';
+
+
 	// exports
 
   export let api_key = ``;
@@ -51,7 +57,8 @@
 
 	const NFT_CXS_LINK_URL = `https://lounge.so/nfts`; // tba
 
-	const STRIPE_BUY_LINK_URL = ``; // tba
+	const STRIPE_BUY_PROJECT_LINK_URL = ``; // tba
+	const STRIPE_BUY_PRO_LINK_URL = ``; // tba
 
 	// consts (freezed during runtime)
 
@@ -262,7 +269,40 @@
 	// todo
 
 	// vars (shop)
-	// todo
+	
+	const SHOP_CHECKOUT_ITEMS = [
+		{
+			price_usd: 19,
+			name: `1x Project`,
+			label: `With up to 10x Rooms`,
+			link_url: STRIPE_BUY_PROJECT_LINK_URL,
+			is_highligted: false
+		},
+		{
+			price_usd: 39,
+			name: `Lounge.so Pro`,
+			label: `Create unlimited Projects`,
+			link_url: STRIPE_BUY_PRO_LINK_URL,
+			is_highlighted: true
+		}
+	];
+
+	const SHOP_NFTS_ITEMS = [
+		{
+			image_url: suaveseals_shop_image,
+			name: `Suave Seal`,
+			label: `1x Seal = 5x Projects`,
+			link_url: `https://tensor.trade/trade/suaveseals`,
+			is_highlighted: true
+		},
+		{
+			image_url: bullishtsuyoneko_shop_image,
+			name: `Bullish Tsuyoneko`,
+			label: `1x Tsuyoneko = 1x Project`,
+			link_url: `https://tensor.trade/trade/tsuyoneko`,
+			is_highlighted: false,
+		}
+	];
 
 	// vars (help)
 	// todo
@@ -2867,14 +2907,18 @@
 									<!-- panel -> projects -> add -> row -->
 									<div class="container  stretch--  row--  row-left--  row-wrap--  p-pr__ad-row">
 										<!-- panel -> projects -> add -> row -> option (buy) -->
-										<a
-											href={STRIPE_BUY_LINK_URL}
-											target="_blank"
-											rel="noreferrer"
+										<div
 											class="container  grow--  stretch--  row--  row-centre--  text  text-green--  card  green--  p-pr__ad-ro-option"
+											on:click|stopPropagation={() => {
+												try {
+													view = `shop`;
+												} catch (e) {
+													console.log(e);
+												}
+											}}
 										>
 											<div>Buy Project</div>
-										</a>
+										</div>
 
 										<!-- panel -> projects -> add -> row -> option (add) -->
 										<div
@@ -3990,6 +4034,152 @@
 								</div>
 							{/if}
 						</div>
+					{:else if view === `shop`}
+						<!-- panel -> shop -->
+						<div class="container  stretch--  col--  p-shop">
+							<!-- panel -> shop -> [heading] -->
+							<div class="container  stretch--  col--  p-heading">
+								<!-- panel -> shop -> heading -> row -->
+								<div class="container  stretch--  row--  row-left--  p-he__row">
+									<!-- panel -> shop -> heading -> row -> heading -->
+									<div class="p-he__ro-heading">
+										Shop
+									</div>
+								</div>
+							</div>
+
+							<!-- panel -> shop -> note (checkout email) -->
+							<div class="p-sh__note">
+								When checking out with Stripe,
+								<span class="text  text-red--">
+									please use the same email address as the email you use to login to Lounge.so:
+								</span>
+								{((user.connections || []).find(uc =>
+									(uc.type === `email`) &&
+									uc.code
+								) || {}).code || `n/a`}
+							</div>
+
+							<!-- panel -> shop -> checkout -->
+							<div class="container  stretch--  col--  p-sh__checkout">
+								{#each SHOP_CHECKOUT_ITEMS as ITEM}
+									<!-- item -->
+									<a
+										href={ITEM.link_url || null}
+										target="_blank"
+										rel="noreferrer"
+										class="container  stretch--  row--  row-left--  text  text-white--  card  green--  p-sh__ch-item"
+										class:p-highlighted--={ITEM.is_highlighted}
+									>
+										<!-- item -> price -->
+										<div class="container  row--  row-top--  text  text-green--  p-sh__ch-it-price">
+											<div>$</div>
+											<div>{ITEM.price_usd || `n/a`}</div>
+										</div>
+
+										<!-- item -> text -->
+										<div class="container  grow--  col--  text  text-white--  p-sh__ch-it-text">
+											<div>{ITEM.name || `n/a`}</div>
+											<div>{ITEM.label || ``}</div>
+										</div>
+									</a>
+								{/each}
+							</div>
+
+							<!-- panel -> shop -> note (stripe redirect) -->
+							<div class="p-sh__note  p-faded--">
+								You will be redirected to Stripe on checkout.
+							</div>
+
+							<!-- panel -> shop -> nfts -->
+							<div class="container  stretch--  col--  p-sh__nfts">
+								{#each SHOP_NFTS_ITEMS as ITEM}
+									<!-- item -->
+									<a
+										href={ITEM.link_url || null}
+										target="_blank"
+										rel="noreferrer"
+										class="container  stretch--  row--  row-left--  text  text-white--  card  blue--  p-sh__nf-item"
+										class:p-highlighted--={ITEM.is_highlighted}
+									>
+										<!-- item -> image -->
+										<img
+											src={ITEM.image_url || ``}
+											alt=""
+											class="p-sh__nf-it-image"
+										/>
+
+										<!-- item -> text -->
+										<div class="container  grow--  col--  p-sh__nf-it-text">
+											<div>
+												Buy a
+												<span class="text  text-blue-light--">
+													{ITEM.name || `n/a`}
+												</span>
+												NFT
+											</div>
+											<div>{ITEM.label || ``}</div>
+										</div>
+									</a>
+								{/each}
+							</div>
+
+							<!-- panel -> shop -> note (tensor redirect) -->
+							<div class="p-sh__note  p-faded--">
+								You will be redirected to Tensor on viewing NFT.
+							</div>
+						</div>
+					{:else if view === `help`}
+						<!-- panel -> help -->
+						<div class="container  stretch--  col--  p-help">
+							<!-- panel -> help -> [heading] -->
+							<!-- tba -->
+
+							<!-- panel -> help -> list -->
+							<!-- tba -->
+						</div>
+					{:else if view === `project_settings`}
+						<!-- panel -> psettings -->
+						<div class="container  stretch--  col--  p-psettings">
+							<!-- panel -> psettings -> [heading] -->
+							<!-- tba -->
+
+							<!-- panel -> psettings -> tabs -->
+							<!-- tba -->
+
+							<!-- panel -> psettings -> inputs -->
+							<div class="container  stretch--  col--  p-ps__main">
+								<!-- panel -> psettings -> inputs -> [input] (name) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [input] (code) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> [input] (description) -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> rooms -->
+								<!-- tba -->
+
+								<!-- panel -> psettings -> inputs -> status -->
+								<!-- tba -->
+							</div>
+						</div>
+					{:else if view === `lounge_settings`}
+						<!-- panel -> lsettings -->
+						<div class="container  stretch--  col--  p-lsettings">
+							<!-- panel -> lsettings -> [heading] -->
+							<!-- tba -->
+
+							<!-- panel -> lsettings -> section (display) -->
+							<!-- tba -->
+							
+							<!-- panel -> lsettings -> section (audio) -->
+							<!-- tba -->
+						</div>
 					{:else if view === `rooms`}
 						<!-- panel -> rooms -->
 						<div class="container  stretch--  col--  p-rooms">
@@ -4025,78 +4215,6 @@
 								<!-- panel -> rooms -> list -->
 								<!-- tba -->
 							{/if}
-						</div>
-					{:else if view === `project_settings`}
-						<!-- panel -> psettings -->
-						<div class="container  stretch--  col--  p-psettings">
-							<!-- panel -> psettings -> [heading] -->
-							<!-- tba -->
-
-							<!-- panel -> psettings -> tabs -->
-							<!-- tba -->
-
-							<!-- panel -> psettings -> inputs -->
-							<div class="container  stretch--  col--  p-ps__main">
-								<!-- panel -> psettings -> inputs -> [input] (name) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> [input] (code) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> [uploader] (icon image) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> [input] (description) -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> rooms -->
-								<!-- tba -->
-
-								<!-- panel -> psettings -> inputs -> status -->
-								<!-- tba -->
-							</div>
-						</div>
-					{:else if view === `shop`}
-						<!-- panel -> shop -->
-						<div class="container  stretch--  col--  p-shop">
-							<!-- panel -> shop -> [heading] -->
-							<!-- tba -->
-
-							<!-- panel -> shop -> note (checkout email) -->
-							<!-- tba -->
-
-							<!-- panel -> shop -> list (checkout) -->
-							<!-- tba -->
-
-							<!-- panel -> shop -> note (stripe redirect) -->
-							<!-- tba -->
-
-							<!-- panel -> shop -> list (nft) -->
-							<!-- tba -->
-
-							<!-- panel -> shop -> note (tensor redirect) -->
-							<!-- tba -->
-						</div>
-					{:else if view === `help`}
-						<!-- panel -> help -->
-						<div class="container  stretch--  col--  p-help">
-							<!-- panel -> help -> [heading] -->
-							<!-- tba -->
-
-							<!-- panel -> help -> list -->
-							<!-- tba -->
-						</div>
-					{:else if view === `lounge_settings`}
-						<!-- panel -> lsettings -->
-						<div class="container  stretch--  col--  p-lsettings">
-							<!-- panel -> lsettings -> [heading] -->
-							<!-- tba -->
-
-							<!-- panel -> lsettings -> section (display) -->
-							<!-- tba -->
-							
-							<!-- panel -> lsettings -> section (audio) -->
-							<!-- tba -->
 						</div>
 					{:else if view === `nft_cxs`}
 						<!-- tba -->
