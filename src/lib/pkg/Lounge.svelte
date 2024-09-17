@@ -19,6 +19,7 @@
   import friends_icon from '../assets/images/icons/friend.svg';
 	import google_icon from '../assets/images/icons/google.svg';
 	import hashtag_icon from '../assets/images/icons/hashtag.svg';
+	import reset_icon from '../assets/images/icons/reset.svg';
 	import right_icon from '../assets/images/icons/right.svg';
 	import rooms_icon from '../assets/images/icons/rooms.svg';
 	import solana_icon from '../assets/images/icons/solana.svg';
@@ -52,6 +53,7 @@
 		friends: friends_icon,
 		google: google_icon,
 		hashtag: hashtag_icon,
+		reset: reset_icon,
 		right: right_icon,
 		rooms: rooms_icon,
 		solana: solana_icon,
@@ -333,6 +335,7 @@
 	let project_settings_merge_handle_input = ``;
 	let project_settings_staff_users_search_input = ``;
 	let project_settings_staff_admins_search_input = ``;
+	let is_project_settings_api_key_hidden = true;
 
 	// vars (shop)
 	
@@ -1267,7 +1270,7 @@
 			console.log(e);
 		}
 	}
-</script>
+utils.</script>
 
 <svelte:window on:keydown|preventDefault={(e) => {
 	try {
@@ -1904,7 +1907,7 @@
 							<!-- panel -> main -> cxs -->
 							<div
 								class="container  stretch--  row--  row-left--  text  text-purple-light--  card  purple--  p-ma__cxs"
-								on:click={() => {
+								on:click|stopPropagation={() => {
 									try {
 										view = `nft_cxs`;
 									} catch (e) {
@@ -4388,7 +4391,7 @@
 													class:cream--={TYPE.code === lounge_settings_input.graphics_quality}
 													class:text-white--={TYPE.code !== lounge_settings_input.graphics_quality}
 													class:white--={TYPE.code !== lounge_settings_input.graphics_quality}
-													on:click={() => {
+													on:click|stopPropagation={() => {
 														try {
 															if (TYPE.code !== lounge_settings_input.graphics_quality) {
 																lounge_settings_input.graphics_quality = utils.clone(TYPE.code) || ``;
@@ -4420,7 +4423,7 @@
 										<!-- panel -> lsettings -> section (audio) -> item (volume) -> slider -->
 										<div
 											class="container  row--  row-left--  card  white--  p-ls__au-vo-slider"
-											on:click={() => {
+											on:click|stopPropagation={() => {
 												try {
 													// tba: set volume based on x click position on slider
 												} catch (e) {
@@ -4570,7 +4573,7 @@
 									<!-- panel -> psettings -> details -> rooms -->
 									<div
 										class="container  stretch--  row--  row-left--  text-yellow--  card  yellow--  p-ps__de-rooms"
-										on:click={() => {
+										on:click|stopPropagation={() => {
 											try {
 												view = `rooms`;
 											} catch (e) {
@@ -4698,7 +4701,7 @@
 											<div
 												class="container  row--  row-centre--  text  text-green--  card  green--  p-ps__st-se-to-add"
 												class:disabled={[`search_project_staff_users`].some(j => jobs.includes(j))}
-												on:click={async () => {
+												on:click|stopPropagation={async () => {
 													try {
 														let job_code = `search_project_staff_users`;
 														let other_job_codes = [];
@@ -4785,7 +4788,7 @@
 														<!-- item -> del -->
 														<div
 															class="container  grow--  row--  row-right--  p-ps__st-se-it-del"
-															on:click={() => {
+															on:click|stopPropagation={() => {
 																try {
 																	project_settings_input.staff_users = project_settings_input.staff_users.filter(su =>
 																		su.id !== staff_user.id
@@ -4821,7 +4824,7 @@
 											<!-- panel -> psettings -> staff -> section (admins) -> top -> add -->
 											<div
 												class="container  row--  row-centre--  text  text-green--  card  green--  p-ps__st-se-to-add"
-												on:click={async () => {
+												on:click|stopPropagation={async () => {
 													try {
 														// tba: add non-staff matching staff user as admin
 													} catch (e) {
@@ -4889,7 +4892,7 @@
 														<!-- item -> del -->
 														<div
 															class="container  grow--  row--  row-right--  p-ps__st-se-it-del"
-															on:click={() => {
+															on:click|stopPropagation={() => {
 																try {
 																	let staff_user_index = (project_settings_input.staff_users || []).findIndex(su =>
 																		su.id === staff_user.id
@@ -4922,15 +4925,102 @@
 									class:disabled={[`edit_project_${project.id}`].some(j => jobs.includes(j))}	
 								>
 									<!-- panel -> psettings -> component -> key -->
+									<div class="container  stretch--  col--  text  text-cream-light--  card  cream--  p-ps__co-key">
+										<!-- panel -> psettings -> component -> key -> heaading -->
+										<div class="p-ps__co-ke-heading">
+											API key
+											<span class="text  text-white--">
+												{#if !is_project_settings_api_key_hidden}
+													{project.api_key || `n/a`}
+												{:else}
+													{#each Array(20) as _}
+														*
+													{/each}
+												{/if}
+											</span>
+										</div>
+
+										<!-- panel -> psettings -> component -> key -> descsription -->
+										<div class="p-ps__co-ke-description">
+											Use this key to enable the Lounge.so component, and access the Lounge.so API, on behalf of your Project.
+										</div>
+
+										<!-- panel -> psettings -> component -> key -> buttons -->
+										<div class="container  stretch--  row--  row-left--  row-wrap--  p-ps__co-ke-buttons">
+											<!-- panel -> psettings -> component -> key -> button (copy) -->
+											<div
+												class="container  grow--  stretch--  row--  row-centre--  text  text-green--  card  green--  p-ps__co-ke-button"
+												on:click|stopPropagation={() => {
+													try {
+														utils.copyToClipboard(project.api_key || ``);
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<div>Copy</div>
+											</div>
+
+											<!-- panel -> psettings -> component -> key -> button (hide) -->
+											<div
+												class="container  stretch--  row--  row-centre--  text  text-cream-light--  card  cream--  p-ps__co-ke-button"
+												on:click|stopPropagation={() => {
+													try {
+														is_project_settings_api_key_hidden = !is_project_settings_api_key_hidden;
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<div>
+													{#if !is_project_settings_api_key_hidden}
+														Hide key
+													{:else}
+														Reveal key
+													{/if}
+												</div>
+											</div>
+
+											<!-- panel -> psettings -> component -> key -> button (regenerate) -->
+											<div
+												class="container  stretch--  row--  row-centre--  text  text-cream-light--  card  cream--  p-ps__co-ke-button"
+												class:disabled={[`regenerate_project_api_key`].some(j => jobs.includes(j))}
+												on:click|stopPropagation={async () => {
+													try {
+														let job_code = `regenerate_project_api_key`;
+														let other_job_codes = [];
+														
+														if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+															jobs.push(job_code);
+															jobs = jobs;
+
+															// tba: regenerate project api key
+
+															jobs = jobs.filter(j => j !== job_code);
+														}
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<div>
+													{#if jobs.includes(`regenerate_project_api_key`)}
+														<Loader />
+													{:else}
+														Regenerate key
+													{/if}
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<!-- panel -> psettings -> component -> position -->
 									<!-- tba -->
 
 									<!-- panel -> psettings -> component -> urls (origin) -->
 									<!-- tba -->
 
 									<!-- panel -> psettings -> component -> urls (excluded) -->
-									<!-- tba -->
-
-									<!-- panel -> psettings -> component -> position -->
 									<!-- tba -->
 								</div>
 							{/if}
