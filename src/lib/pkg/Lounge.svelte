@@ -1389,7 +1389,11 @@
 			<!-- tba -->
 
 			<!-- label (powered by) -->
-			<!-- tba -->
+			<div class="container  row--  row-centre--  text  text-white--  card  black--  label">
+				<div>Powered by</div>
+				<div>Lounge.so</div>
+				<div>by Lefrost</div>
+			</div>
 			
 			<!-- chat -->
 			<!-- tba: use is_chat_toggled to switch between "minimised" and "opened" ui -->
@@ -5484,14 +5488,97 @@
 							<div class="container  stretch--  col--  p-heading">
 								{#if rooms_edit_input && rooms_edit_input.id}
 									<!-- panel -> rooms -> heading (edit) -> row -->
-									<!-- tba -->
+									<div class="container  stretch--  row--  row-left--  p-he__row">
+										<!-- panel -> rooms -> heading (edit) -> row -> heading -->
+										<div class="p-he__ro-heading">
+											Edit Room
+										</div>
+
+										<!-- panel -> rooms -> heading (edit) -> row -> button (save) -->
+										<div
+											class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+											class:disabled={[`del_room_${rooms_edit_input.id}`, `edit_room_${rooms_edit_input.id}`].some(j => jobs.includes(j))}
+											on:click|stopPropagation={() => {
+												try {
+													let job_code = `edit_room_${rooms_edit_input.id}`;
+													let other_job_codes = [`del_room_${rooms_edit_input.id}`];
+														
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: edit room
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`edit_room_${rooms_edit_input.id}`)}
+													<Loader />
+												{:else}
+													Save
+												{/if}
+											</div>
+										</div>
+									</div>
 
 									<!-- panel -> rooms -> heading (edit) -> room -->
 									<!-- note: use `p-he__ro-room` styles -->
-									<!-- tba -->
+									<div class="container  row--  row-left--  p-he__ro-room">
+										<img
+											src={ICONS.hashtag}
+											alt=""
+											class="svg  svg-white--"
+										/>
+										<div>
+											{((project.rooms || []).find(pr =>
+												pr.id === rooms_edit_input.id
+											) || {}).name || `n/a`}
+										</div>
+									</div>
 								{:else if rooms_edit_input}
 									<!-- panel -> rooms -> heading (add) -> row -->
-									<!-- tba -->
+									<div class="container  stretch--  row--  row-left--  p-he__row">
+										<!-- panel -> rooms -> heading (add) -> row -> heading -->
+										<div class="p-he__ro-heading">
+											Add Room
+										</div>
+
+										<!-- panel -> rooms -> heading (add) -> row -> button (add) -->
+										<div
+											class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+											class:disabled={[`add_room`].some(j => jobs.includes(j))}
+											on:click|stopPropagation={async () => {
+												try {
+													let job_code = `add_room`;
+													let other_job_codes = [];
+														
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: add room
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`add_room`)}
+													<Loader />
+												{:else}
+													Add
+												{/if}
+											</div>
+										</div>
+									</div>
 								{:else}
 									<!-- panel -> rooms -> heading (view) -> row -->
 									<div class="container  stretch--  row--  row-left--  p-he__row">
@@ -5516,7 +5603,10 @@
 
 							{#if rooms_edit_input}
 								<!-- panel -> rooms -> inputs -->
-								<div class="container  stretch--  col--  p-ro__inputs">
+								<div
+									class="container  stretch--  col--  p-ro__inputs"
+									class:disabled={[`add_room`, `edit_room_${rooms_edit_input.id}`].some(j => jobs.includes(j))}	
+								>
 									<!-- panel -> rooms -> inputs -> [input] (name) -->
 									<Input
 										bind:value={rooms_edit_input.name}
@@ -5544,13 +5634,76 @@
 										rooms_edit_input.new_background_image_base64 ||rooms_edit_input.background_image_url
 									}
 										<!-- panel -> rooms -> inputs -> bar -->
-										<!-- tba -->
+										<div class="container  stretch--  row--  row-left--  text  text-yellow--  card  yellow--  p-rm__in-bar">
+											<div class="container  grow--  row--  row-left--">
+												Edit Room
+											</div>
+											<div class="text  text-white--">
+												Drag below to pan around
+											</div>
+										</div>
 
 										<!-- panel -> rooms -> inputs -> edit -->
-										<!-- tba -->
+										<div class="container  stretch--  col--  col-centre--  p-rm__in-edit">
+											<!-- panel -> rooms -> inputs -> edit -> canvas -->
+											<!-- tba: background, polygons -->
+
+											<!-- panel -> rooms -> inputs -> edit -> buttons -->
+											<div class="container  row--  row-centre--  row-wrap--  p-rm__in-ed-buttons">
+												<!-- panel -> rooms -> inputs -> edit -> button (change background) -->
+												<!-- tba -->
+
+												<!-- panel -> rooms -> inputs -> edit -> button (clear polygons) -->
+												<!-- tba -->
+
+												<!-- panel -> rooms -> inputs -> edit -> button (add polygon) -->
+												<!-- tba -->
+											</div>
+										</div>
 									{:else}
 										<!-- panel -> rooms -> inputs -> [input] (background image) -->
-										<!-- tba -->
+										<Input
+											bind:value={rooms_edit_input.new_background_image_base64}
+											type="image"
+											label="Icon image"
+											events={{}}
+											d={{
+												image_prev_image_url: rooms_edit_input.background_image_url || ``
+											}}
+										/>
+									{/if}
+
+									{#if rooms_edit_input.id}
+									<!-- panel -> rooms -> del -->
+										<div
+											class="container  row--  row-centre--  text  text-red-light--  card  red--  p-rm__del"
+											class:disabled={[`del_room_${rooms_edit_input.id}`]}
+											on:click|stopPropagation={async () => {
+												try {
+													let job_code = `del_room_${rooms_edit_input.id}`;
+													let other_job_codes = [`edit_room_${rooms_edit_input.id}`];
+													
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: del room, then clear rooms_edit_input
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`del_room_${rooms_edit_input.id}`)}
+													<Loader />
+												{:else}
+													Delete Room
+												{/if}
+											</div>
+										</div>
 									{/if}
 								</div>
 							{:else}
@@ -5635,7 +5788,7 @@
 													<!-- item -> staff -> edit -->
 													<div
 														class="container  row--  row-centre--  text  text-white--  card  blue--  p-rm__li-it-st-edit"
-														on:click={() => {
+														on:click|stopPropagation={() => {
 															try {
 																// tba: set rooms_edit_input
 															} catch (e) {
@@ -5651,7 +5804,7 @@
 														<!-- item -> staff -> move (up) -->
 														<div
 															class="container  row--  row-centre--  card  white--  p-rm__li-it-st-move"
-															on:click={() => {
+															on:click|stopPropagation={() => {
 																try {
 																	rooms_ids_order.splice(ri, 1);
 																	rooms_ids_order.splice(ri - 1, 0, (utils.clone(room.id) || ``));
@@ -5673,7 +5826,7 @@
 														<!-- item -> staff -> move (down) -->
 														<div
 															class="container  row--  row-centre--  card  white--  p-rm__li-it-st-move"
-															on:click={() => {
+															on:click|stopPropagation={() => {
 																try {
 																	rooms_ids_order.splice(ri, 1);
 																	rooms_ids_order.splice(ri + 1, 0, (utils.clone(room.id) || ``));
