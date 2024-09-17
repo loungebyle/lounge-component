@@ -41,7 +41,7 @@
 	// exports
 
   export let api_key = ``;
-	export let context = ``; // <`component`, `frame`, `fullscreen`>
+	export let context = ``; // <`component`, `frame`>
 
 	// consts
 
@@ -1643,7 +1643,7 @@
 											<!-- note: use `p-ov__us-profile` styles -->
 											<a
 												href="https://lounge.so/{overlay_project.code}"
-												target={[`component`, `frame`].includes(context) ? `_blank` : ``}
+												target="_blank"
 												class="container  grow--  stretch  col--  text  text-cream--  card  cream--  p-ov__us-profile"
 											>
 												<div class="text  text-white--">{overlay_project.name || `n/a`}</div>
