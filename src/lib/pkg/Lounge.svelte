@@ -20,13 +20,16 @@
   import friends_icon from '../assets/images/icons/friend.svg';
 	import google_icon from '../assets/images/icons/google.svg';
 	import hashtag_icon from '../assets/images/icons/hashtag.svg';
+	import polygons_icon from '../assets/images/icons/polygons.svg';
 	import reset_icon from '../assets/images/icons/reset.svg';
 	import right_icon from '../assets/images/icons/right.svg';
 	import rooms_icon from '../assets/images/icons/rooms.svg';
 	import solana_icon from '../assets/images/icons/solana.svg';
+	import star_icon from '../assets/images/icons/star.svg';
   import xp_icon from '../assets/images/icons/xp.svg';
 	import up_icon from '../assets/images/icons/up.svg';
 	import users_icon from '../assets/images/icons/users.svg';
+	import verified_icon from '../assets/images/icons/verified.svg';
 
 	// emoji imports
 
@@ -56,13 +59,16 @@
 		friends: friends_icon,
 		google: google_icon,
 		hashtag: hashtag_icon,
+		polygons: polygons_icon,
 		reset: reset_icon,
 		right: right_icon,
 		rooms: rooms_icon,
 		solana: solana_icon,
+		star: star_icon,
 		xp: xp_icon,
 		up: up_icon,
-		users: users_icon
+		users: users_icon,
+		verified: verified_icon
 	}
 
 	const EMOJIS = {
@@ -109,6 +115,7 @@
 		explorable: []
 	}
 	let friends_user_instances = [];
+	let nft_cxs = []; // note: only filled on mount if user is staff in active project; used when selecting nft_cxs for access_items in add/edit room input
 
 	let is_component_toggled = ([`component`].includes(context)) ? false : true;
 
@@ -322,6 +329,21 @@
 	) || {}).code || (FRIENDS_TABS[0] || {}).code || ``;
 
 	// vars (rooms)
+
+	const ROOM_POLYGON_RESIZERS = [
+		{
+			code: `topleft`,
+		},
+		{
+			code: `topright`
+		},
+		{
+			code: `bottomleft`
+		},
+		{
+			code: `bottomright`
+		}
+	];
 
 	let rooms_search_input = ``;
 	let rooms_ids_order = [];
@@ -549,6 +571,8 @@
 					project_arrs.bookmarked = data.bookmarked_projects || [];
 					project_arrs.explorable = data.explorable_projects || [];
 					friends_user_instances = data.friends_user_instances || [];
+
+					nft_cxs = data.nft_cxs || []; // note: only filled from backend if user is staff in active project
 
 					LOUNGE_AVATAR_SKINS = data.LOUNGE_AVATAR_SKINS || [];
 					Object.freeze(LOUNGE_AVATAR_SKINS);
@@ -3468,9 +3492,9 @@
 										) :
 										true
 								) as project}
-									<!-- [card] item -->
+									<!-- item -->
 									<div
-										class="container  stretch--  row--  row-left--  p-card  p-pr__li-item"
+										class="container  stretch--  row--  row-left--  p-pr__li-item"
 										on:click|stopPropagation={() => {
 											try {
 												overlay_project = utils.clone(project);
@@ -3486,9 +3510,9 @@
 											class="p-pr__li-it-image"
 										/>
 
-										<!-- item -> main -->
+										<!-- item -> [card] main -->
 										<div
-											class="container  grow--  stretch--  col--  text  card  p-pr__li-it-main"
+											class="container  grow--  stretch--  col--  text  card  p-card  p-pr__li-it-main"
 											class:text-cream-light--={project.status === `active`}
 											class:cream--={project.status === `active`}
 											class:text-red-light--={project.status === `inactive`}
@@ -3668,7 +3692,7 @@
 															}
 														}}
 													>
-														<!-- item -> avatar -->
+														<!-- item -> [avatar] -->
 														<Avatar
 															display="icon"
 															body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
@@ -3847,7 +3871,7 @@
 																}
 															}}
 														>
-															<!-- item -> avatar -->
+															<!-- item -> [avatar] -->
 															<Avatar
 																display="icon"
 																body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
@@ -4025,7 +4049,7 @@
 																					}
 																				}}
 																			>
-																				<!-- item -> avatar -->
+																				<!-- item -> [avatar] -->
 																				<Avatar
 																					display="icon"
 																					body={(user_instance.user_avatar || {}).parts.find(p => p.type === `body`) || null}
@@ -4126,7 +4150,7 @@
 																}
 															}}
 														>
-															<!-- item -> avatar -->
+															<!-- item -> [avatar] -->
 															<Avatar
 																display="icon"
 																body={(friend_user.default_avatar || {}).parts.find(p => p.type === `body`) || null}
@@ -4212,7 +4236,7 @@
 															}
 														}}
 													>
-														<!-- item -> avatar -->
+														<!-- item -> [avatar] -->
 														<Avatar
 															display="icon"
 															body={(user_relationship.users.find(uru =>
@@ -4375,7 +4399,7 @@
 															}
 														}}
 													>
-														<!-- item -> avatar -->
+														<!-- item -> [avatar] -->
 														<Avatar
 															display="icon"
 															body={(user_relationship.users.find(uru =>
@@ -4750,7 +4774,7 @@
 									</div>
 								</div>
 
-								<!-- panel -> rooms -> heading -> project -->
+								<!-- panel -> psettings -> heading -> project -->
 								<!-- note: use `p-he__ro-project` styles -->
 								<div class="container  row--  row-left--  p-he__ro-project">
 									<img
@@ -4853,14 +4877,14 @@
 												).slice() || [];
 
 												for (let room of (project.rooms || [])) {
-													if (!room_ids_order.includes(room.id)) {
-														room_ids_order.push(
+													if (!rooms_ids_order.includes(room.id)) {
+														rooms_ids_order.push(
 															utils.clone(room.id || ``)
 														);
 													}
 												}
 
-												room_ids_order = room_ids_order;
+												rooms_ids_order = rooms_ids_order;
 
 												view = `rooms`;
 											} catch (e) {
@@ -5628,7 +5652,113 @@
 									/>
 
 									<!-- panel -> rooms -> inputs -> cxs -->
-									<!-- tba -->
+									<div class="container  stretch--  col--  text  text-yellow-light--  card  yellow--  p-rm__in-cxs">
+										<!-- panel -> rooms -> inputs -> cxs -> top -->
+										<div class="container  stretch--  row--  row-left--  p-rm__in-cx-top">
+											<!-- panel -> rooms -> inputs -> cxs -> top -> heading -->
+											<div class="container  grow--  row--  row-left--  text  text-yellow--  p-rm__in-cx-to-heading">
+												<div>NFT</div>
+												<div class="text  text-white--">
+													Access
+												</div>
+											</div>
+
+											<!-- panel -> rooms -> inputs -> cxs -> top -> link -->
+											<a
+												href={NFT_CXS_LINK_URL}
+												target="_blank"
+												rel="noreferrer"
+												class="p-rm__in-cx-to-link"
+											>
+												Supported collections →
+											</a>
+										</div>
+
+										<!-- panel -> rooms -> inputs -> cxs -> list -->
+										<!-- note: partly use `p-av__pa-se-list` styles -->
+										<div class="container  stretch--  row--  row-left--  row-wrap--  p-av__pa-se-list  p-rm__in-cx-list">
+											<!-- panel -> rooms -> inputs -> cxs -> list -> all -->
+											<div
+												class="container  stretch--  row--  row-centre--  row-middle--  card  green--  text  text-green--  p-rm__in-cx-li-all"
+												class:p-selected--={(rooms_edit_input.access_items || []).filter(ai =>
+													ai.type === `nft_cx`
+												).length === 0}
+												on:click|stopPropagation={() => {
+													try {
+														rooms_edit_input.access_items = rooms_edit_input.access_items.filter(ai =>
+															ai.type !== `nft_cx`
+														) || [];
+													} catch (e) {
+														console.log(e);
+													}
+												}}
+											>
+												<div>All</div>
+											</div>
+
+											{#each nft_cxs as nft_cx} 
+												<!-- item (cx) -->
+												<!-- note: use `p-av__pa-se-li-item` styles -->
+												<div
+													class="container  stretch--  col--  col-centre--  p-av__pa-se-li-item"
+													class:p-selected--={(rooms_edit_input.access_items || []).some(ai =>
+														(ai.type === `nft_cx`) &&
+														ai.data &&
+														ai.data.nft_cx_id &&
+														(ai.data.nft_cx_id === nft_cx.id)
+													)}
+													on:click|stopPropagation={() => {
+														try {
+															if ((rooms_edit_input.access_items || []).some(ai =>
+																(ai.type === `nft_cx`) &&
+																ai.data &&
+																ai.data.nft_cx_id &&
+																(ai.data.nft_cx_id === nft_cx.id)
+															)) {
+																rooms_edit_input.access_items = rooms_edit_input.access_items.filter(ai =>
+																	!(
+																		(ai.type === `nft_cx`) &&
+																		ai.data &&
+																		ai.data.nft_cx_id &&
+																		(ai.data.nft_cx_id === nft_cx.id)
+																	)
+																);
+															} else {
+																rooms_edit_input.access_items.push({
+																	type: `nft_cx`,
+																	data: {
+																		nft_cx_id: utils.clone(nft_cx.id) || ``,
+																		nft_count: 1
+																	}
+																});
+
+																rooms_edit_input.access_items = rooms_edit_input.access_items;
+															}
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<!-- item (cx) -> label -->
+													<div class="container  row--  row-centre--  text  text-white--  card  black--  p-av__pa-se-li-it-label">
+														<div>
+															{utils.shortenString({
+																string: utils.clone(nft_cx.name) || ``,
+																length: 25
+															}) || `n/a`}
+														</div>
+													</div>
+
+													<!-- item (cx) -> image -->
+													<img
+														src={nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
+														alt=""
+														class="p-av__pa-se-li-it-image"
+													/>
+												</div>
+											{/each}
+										</div>
+									</div>
 
 									{#if
 										rooms_edit_input.new_background_image_base64 ||rooms_edit_input.background_image_url
@@ -5645,19 +5775,156 @@
 
 										<!-- panel -> rooms -> inputs -> edit -->
 										<div class="container  stretch--  col--  col-centre--  p-rm__in-edit">
-											<!-- panel -> rooms -> inputs -> edit -> canvas -->
-											<!-- tba: background, polygons -->
+											<!-- panel -> rooms -> inputs -> edit -> frame -->
+											<div class="container  stretch--  col--  col-centre--  p-rm__in-ed-frame">
+												<!-- panel -> rooms -> inputs -> edit -> frame -> canvas -->
+												<div
+													class="container  col--  col-centre--  p-rm__in-ed-fr-canvas"
+													style="
+														background_image_url: src('{rooms_edit_input.new_background_image_base64 || rooms_edit_input.background_image_url || ``}');
+													"
+													on:drag={() => {
+														try {
+															// tba: drag canvas around to pan within frame
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													{#each (rooms_edit_input.polygons || []) as polygon}
+														<!-- polygon -->
+														<div
+															class="container  row--  row-centre--  text  text-white--  card  black--  p-rm__in-ed-fr-polygon"
+															on:drag={() => {
+																try {
+																	// tba: drag polygon to move it
+																} catch (e) {
+																	console.log(e);
+																}
+															}}
+														>
+															{#each ROOM_POLYGON_RESIZERS as RESIZER}
+																<!-- polygon -> resizer -->
+																<div
+																	class="container  row--  row-centre--  card  white--  p-rm__in-ed-fr-po-resizer  p-{RESIZER.code}--"
+																	on:drag={() => {
+																		try {
+																			switch (RESIZER.code) {
+																				case `topleft`: {
+																					// tba: resize polygon from topleft, affects a.x_perc and a.y_perc
+																					break;
+																				}
+
+																				case `topright`: {
+																					// tba: resize polygon from topright, affects a.y_perc and b.x_perc
+																					break;
+																				}
+
+																				case `bottomleft`: {
+																					// tba: resize polygon from bottomleft, affects a.x_perc and b.y_perc
+																					break;
+																				}
+																				
+																				case `bottomright`: {
+																					// tba: resize polygon from bottomright, affects b.x_perc and b.y_perc
+																					break;
+																				}
+																			}
+																		} catch (e) {
+																			console.log(e);
+																		}
+																	}}
+																>
+																	<!-- polygon -> resizer -> label -->
+																	<div
+																		class="container  row--  row-centre--  text  text-white--  card  black--  p-rm__in-ed-fr-po-re-label"
+																	>
+																		<div>Drag to resize</div>
+																	</div>
+																</div>
+															{/each}
+														</div>
+													{/each}
+												</div>
+											</div>
 
 											<!-- panel -> rooms -> inputs -> edit -> buttons -->
 											<div class="container  row--  row-centre--  row-wrap--  p-rm__in-ed-buttons">
 												<!-- panel -> rooms -> inputs -> edit -> button (change background) -->
-												<!-- tba -->
+												<div
+													class="container  row--  row-centre--  text  text-red-light--  card  red--  p-rm__in-ed-button"
+													on:click={() => {
+														try {
+															rooms_edit_input.background_image_url = ``;
+															rooms_edit_input.new_background_image_base64 = ``;
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>	
+													<div>Change background</div>
+													<img
+														src={ICONS.reset}
+														alt=""
+														class="svg  svg-red-light--"
+													/>
+												</div>
 
 												<!-- panel -> rooms -> inputs -> edit -> button (clear polygons) -->
-												<!-- tba -->
+												<div
+													class="container  row--  row-centre--  text  text-cream-light--  card  cream--  p-rm__in-ed-button"
+													on:click={() => {
+														try {
+															rooms_edit_input.polygons = [];
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<div>Clear areas</div>
+													<img
+														src={ICONS.polygons}
+														alt=""
+														class="svg  svg-cream-light--"
+													/>
+												</div>
 
 												<!-- panel -> rooms -> inputs -> edit -> button (add polygon) -->
-												<!-- tba -->
+												<div
+													class="container  row--  row-centre--  text  text-green-light--  card  green--  p-rm__in-ed-button"
+													class:disabled={rooms_edit_input.polygons.length >= 100}
+													on:click={() => {
+														try {
+															if (rooms_edit_input.polygons.length < 100) {
+																rooms_edit_input.polygons.push({
+																	a: {
+																		x_perc: 40,
+																		y_perc: 40
+																	},
+																	b: {
+																		x_perc: 60,
+																		y_perc: 60
+																	}
+																});
+															}
+														} catch (e) {
+															console.log(e);
+														}
+													}}
+												>
+													<div>
+														{#if rooms_edit_input.polygons.length >= 100}
+															Max 100 areas
+														{:else}
+															Add area
+														{/if}
+													</div>
+													<img
+														src={ICONS.polygons}
+														alt=""
+														class="svg  svg-green-light--"
+													/>
+												</div>
 											</div>
 										</div>
 									{:else}
@@ -5671,6 +5938,10 @@
 												image_prev_image_url: rooms_edit_input.background_image_url || ``
 											}}
 										/>
+
+										<!-- panel -> rooms -> inputs -> note (backgroudn aspect ratio) -->
+										<div class="p-rm__in-note"> Recommendations: 1:1 aspect ratio, 1920px minimum width. Maximum file size is 10MB. GIFs allowed.
+										</div>
 									{/if}
 
 									{#if rooms_edit_input.id}
@@ -5764,7 +6035,30 @@
 									class="container  stretch--  col--  p-rm__list"
 									class:disabled={[`edit_project_${project.id}_room_ids_order`].some(j => jobs.includes(j))}
 								>
-									{#each (project.rooms || []).sort((a, b) =>
+									{#if (project.rooms || []).filter(r =>
+										(rooms_search_input || ``).trim() ?
+											(
+												(utils.sanitiseString(r.name)).includes(utils.sanitiseString(rooms_search_input))
+											) :
+											true
+									).length === 0}
+										<!-- panel -> rooms -> list -> message (none) -->
+										<div class="p-rm__li-message">
+											{#if (rooms_search_input || ``).trim()}
+												No matching Rooms defined in this Project to display.
+											{:else}
+												No Rooms defined in this Project to display.
+											{/if}
+										</div>
+									{/if}
+
+									{#each (project.rooms || []).filter(r =>
+										(rooms_search_input || ``).trim() ?
+											(
+												(utils.sanitiseString(r.name)).includes(utils.sanitiseString(rooms_search_input))
+											) :
+											true
+									).sort((a, b) =>
 										rooms_ids_order.findIndex(id => id === a.id) -
 										rooms_ids_order.findIndex(id => id === b.id)
 									) as room, ri}
@@ -5925,21 +6219,268 @@
 						<!-- panel -> cxs -->
 						<div class="container  stretch--  col--  p-cxs">
 							<!-- panel -> cxs -> [heading] -->
-							<!-- tba -->
+							<div class="container  stretch--  col--  p-heading">
+								{#if nft_cxs_edit_input && nft_cxs_edit_input.id}
+									<!-- panel -> cxs -> heading (edit) -> row -->
+									<div class="container  stretch--  row--  row-left--  p-he__row">
+										<!-- panel -> cxs -> heading (edit) -> row -> heading -->
+										<div class="p-he__ro-heading">
+											Edit Collection
+										</div>
+
+										<!-- panel -> cxs -> heading (edit) -> row -> button (save) -->
+										<div
+											class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+											class:disabled={[`del_nft_cx_${nft_cxs_edit_input.id}`, `edit_nft_cx_${nft_cxs_edit_input.id}`].some(j => jobs.includes(j))}
+											on:click|stopPropagation={() => {
+												try {
+													let job_code = `edit_nft_cx_${nft_cxs_edit_input.id}`;
+													let other_job_codes = [`del_nft_cx_${nft_cxs_edit_input.id}`];
+														
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: edit nft cx
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`edit_nft_cx_${nft_cxs_edit_input.id}`)}
+													<Loader />
+												{:else}
+													Save
+												{/if}
+											</div>
+										</div>
+									</div>
+
+									<!-- panel -> cxs -> heading -> project -->
+									<!-- note: use `p-he__ro-project` styles -->
+									<div class="container  row--  row-left--  p-he__ro-project">
+										<img
+											src={((project.nft_cxs || []).find(pc =>
+												pc.id === rooms_edit_input.id
+											) || {}).icon_image_url || FALLBACK_USER_IMAGE}
+											alt=""
+										/>
+										<div>
+											{((project.nft_cxs || []).find(pc =>
+												pc.id === rooms_edit_input.id
+											) || {}).name || `n/a`}
+										</div>
+									</div>
+								{:else if nft_cxs_edit_input}
+									<!-- panel -> cxs -> heading (add) -> row -->
+									<div class="container  stretch--  row--  row-left--  p-he__row">
+										<!-- panel -> cxs -> heading (add) -> row -> heading -->
+										<div class="p-he__ro-heading">
+											Add Collection
+										</div>
+
+										<!-- panel -> cxs -> heading (add) -> row -> button (add) -->
+										<div
+											class="container  row--  row-centre--  text  text-green--  card  green--  p-he__ro-button"
+											class:disabled={[`add_nft_cx`].some(j => jobs.includes(j))}
+											on:click|stopPropagation={() => {
+												try {
+													let job_code = `add_nft_cx`;
+													let other_job_codes = [];
+														
+													if (![job_code, ...other_job_codes].some(j => jobs.includes(j))) {
+														jobs.push(job_code);
+														jobs = jobs;
+
+														// tba: add nft cx
+
+														jobs = jobs.filter(j => j !== job_code);
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<div>
+												{#if jobs.includes(`add_nft_cx`)}
+													<Loader />
+												{:else}
+													Add
+												{/if}
+											</div>
+										</div>
+									</div>
+								{:else}
+									<!-- panel -> cxs -> heading (view) -> row -->
+									<div class="container  stretch--  row--  row-left--  p-he__row">
+										<!-- panel -> cxs -> heading (view) -> row -> project -->
+										<div class="container  row--  row-left--  p-he__ro-project">
+											<img
+												src={project.icon_image_url || FALLBACK_USER_IMAGE}
+												alt=""
+											/>
+											<div>{project.name || ``}</div>
+										</div>
+									</div>
+
+									<!-- panel -> cxs -> heading (view) -> search -->
+									<input
+										bind:value={nft_cxs_search_input}
+										placeholder="Search NFT Collections..."
+										class="container  stretch--  row--  row-left--  text  text-white--  p-he__search"
+									/>
+								{/if}
+							</div>
 
 							{#if nft_cxs_edit_input}
-								<!-- tba -->
+								<!-- panel -> cxs -> inputs -->
+								<div
+									class="container  stretch--  col--  p-ro__inputs"
+									class:disabled={[`add_room`, `edit_room_${rooms_edit_input.id}`].some(j => jobs.includes(j))}	
+								>
+									<!-- panel -> cxs -> inputs -> guide -->
+									<!-- tba -->
+
+									<!-- panel -> cxs -> inputs -> chain -->
+									<!-- tba -->
+
+									<!-- panel -> cxs -> inputs -> [input] (code) -->
+									<!-- tba -->
+
+									<!-- panel -> cxs -> inputs -> [input] (name) -->
+									<!-- tba -->
+
+									<!-- panel -> cxs -> inputs -> nfts -->
+									<!-- tba -->
+
+									<!-- panel -> cxs -> inputs -> traits -->
+									<!-- tba -->
+								</div>
 							{:else}
 								{#if (project.staff_users || []).find(su =>
 									su.id === user.id
 								)}
 									<!-- panel -> cxs -> actions -->
 									<!-- note: use `p-rm__actions` styles -->
-									<!-- tba -->
+									<div class="container  stretch--  row--  row-left--  row-wrap--  p-rm__actions">
+										<!-- panel -> cxs -> action (add) -->
+										<div
+											class="container  stretch--  row--  row-centre--  text  text-green--  card  green--  p-rm__action"
+											on:click|stopPropagation={() => {
+												try {
+													// tba: set nft_cxs_edit_input with STRUCTS.nft_cx
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>
+											<span>Staff</span>
+											<div>Add an NFT Collection</div>
+										</div>
+									</div> 
 								{/if}
 
 								<!-- panel -> cxs -> list -->
-								<!-- tba -->
+								<!-- note: partially use `p-pr__list` styles -->
+								<div class="container  stretch--  col--  p-pr__list  p-cx__list">
+									{#if (project.nft_cx || []).filter(c =>
+										(nft_cxs_search_input || ``).trim() ?
+											(
+												(utils.sanitiseString(c.code)).includes(utils.sanitiseString(nft_cxs_search_input)) ||
+												(utils.sanitiseString(c.name)).includes(utils.sanitiseString(nft_cxs_search_input))
+											) :
+											true
+									).length === 0}
+										<!-- panel -> cxs -> list -> message (none) -->
+										<div class="p-pr__li-message">
+											{#if (nft_cxs_search_input || ``).trim()}
+												No matching NFT Collections defined in this Project to display.
+											{:else}
+												No NFT Collections defined in this Project to display.
+											{/if}
+										</div>
+									{/if}
+
+									{#each (project.nft_cx || []).filter(c =>
+										(nft_cxs_search_input || ``).trim() ?
+											(
+												(utils.sanitiseString(c.code)).includes(utils.sanitiseString(nft_cxs_search_input)) ||
+												(utils.sanitiseString(c.name)).includes(utils.sanitiseString(nft_cxs_search_input))
+											) :
+											true
+									) as nft_cx}
+										<!-- item -->
+										<div
+											class="container  stretch--  row--  row-left--  p-card  p-pr__li-item  p-cx__li-item"
+											on:click|stopPropagation={() => {
+												try {
+													if (user_staff_type) {
+														// tba: set nft_cxs_edit_input based on STRUCTS.nft_cx + `nft_cx`
+													}
+												} catch (e) {
+													console.log(e);
+												}
+											}}
+										>	
+											<!-- item -> image -->
+											<img
+												src={nft_cx.icon_image_url || FALLBACK_USER_IMAGE}
+												alt=""
+												class="p-pr__li-it-image"
+											/>
+
+											<!-- item -> [card] main -->
+											<div class="container  grow--  stretch--  col--  text  text-cream-light--  card  p-card  cream--  p-pr__li-it-main  p-cx__li-it-main">
+												{#if user_staff_type}
+													<!-- item -> main -> staff -->
+													<!-- note: click event for staff is defined on the entire item div, rather than just this button -->
+													<div class="container  row--  row-centre--  text  text-white--  card  blue--  p-cx__li-it-ma-staff">
+														<div>Staff</div>
+														<div>Edit</div>
+													</div>
+												{/if}
+
+												<!-- item -> main -> name -->
+												<div class="text  text-white--  p-pr__li-it-ma-name">
+													{nft_cx.name || `n/a`}
+												</div>
+
+												<!-- item -> main -> [notes] -->
+												<div class="container  stretch--  row--  row-left--  p-ca__notes">
+													<!-- item -> main -> [note] (nfts) -->
+													<div class="container  row--  row-left-- p-ca__note">
+														<img
+															src={ICONS.verified}
+															alt=""
+															class="svg  svg-cream-light--"
+														/>
+														<div>
+															{(nft_cx.nfts || []).length || 0}
+															NFTs
+														</div>
+													</div>
+
+													<!-- item -> main -> [note] (traits) -->
+													<div class="container  row--  row-left-- p-ca__note  p-faded--">
+														<img
+															src={ICONS.star}
+															alt=""
+															class="svg  svg-cream-light--"
+														/>
+														<div>
+															{(nft_cx.traits || []).length || 0}
+															trait types
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									{/each}
+								</div>
 							{/if}
 						</div>
 					{/if}
